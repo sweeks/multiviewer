@@ -32,7 +32,7 @@ There are manuals for the J-Tech and iTach devices in docs/manuals/.
 
 Here is the remote-control home screen:
 
-![home screen](remote-control/home-screen.jpg)
+<img src="remote-control/home-screen.jpg" width="300">
 
 The remote control buttons are iOS shortcuts.  Each button is a simple shortcut that
 invokes a shared main shortcut (remote-control/MV-Do-Command.shortcut) with the button's
