@@ -26,7 +26,7 @@ turn controls the J-Tech, the Apple TVs, and soundbar volume.
 - iTach IP2SL, connected to J-Tech
 - iTach WF2IR, which sends IR to soundbar
 
-There are manuals for the J-Tech and iTach devices in docs/manuals/.
+There are manuals for the J-Tech and iTach devices in <docs/manuals/>.
 
 # Remote Control
 
@@ -35,23 +35,23 @@ Here is the remote-control home screen:
 <img src="remote-control/home-screen.jpg" width="300">
 
 The remote control buttons are iOS shortcuts.  Each button is a simple shortcut that
-invokes a shared main shortcut (remote-control/MV-Do-Command.shortcut) with the button's
+invokes a shared [main shortcut](remote-control/MV-Do-Command.shortcut) with the button's
 name ("Home", "Up", "Play_pause", etc).  The main shortcut sends a simple HTTP request to
 the daemon with the button name -- all of the multiviewer logic happens in the daemon. For
-each button, the remote-control/ directory has a `.shortcut` file and a `.png` file with
+each button, the <remote-control/> directory has a `.shortcut` file and a `.png` file with
 its icon. From the Shortcuts app, `Add to Home Screen`, and choose the icon as its image.
 
 # Daemon
 
 The daemon is a few thousand lines of Python, and uses the `asyncio` and `pyatv`
-libraries. The src/multiviewer/ directory has all of the code except for tests. The daemon
-runs an HTTP server that receives commands from the remote-control shortcuts, updates its
-virtual multiviewer state and responds to the request, and then in the background sends
-commands to the J-Tech, Apple TVs, and soundbar.
+libraries. The <src/multiviewer/> directory has all of the code except
+for tests. The daemon runs an HTTP server that receives commands from the remote-control
+shortcuts, updates its virtual multiviewer state and responds to the request, and then in
+the background sends commands to the J-Tech, Apple TVs, and soundbar.
 
 # Configuration
 
-src/multiviewer/config.py has host names, IP addresses, and ports.
+<src/multiviewer/config.py> has host names, IP addresses, and ports.
 
 Currently, the daemon uses a `.pyatv.conf` that lives outside the repo.  That file has
 pairing info for the Apple TVs that is required in order for `pyatv` to connect to them.
@@ -60,16 +60,16 @@ I plan to move the pairing info into the repo at some point.
 # Installation
 
 The project uses a virtual environment to install dependencies and the multiviewer package
-(used by tests).  To set up `.venv`, run bin/setup-venv.sh.
+(used by tests).  To set up `.venv`, run <bin/setup-venv.sh>.
 
 # Running
 
-bin/mvd-start.sh starts the daemon.  At startup, the new daemon first kills the prior
+<bin/mvd-start.sh> starts the daemon.  At startup, the new daemon first kills the prior
 daemon and then starts a new HTTP server.
 
 # Testing
 
-The tests/ directory has end-to-end tests that run the multiviewer through its commands
+The <tests/> directory has end-to-end tests that run the multiviewer through its commands
 and check that the J-Tech's screen matches what is expected.
 
 To run all tests:
