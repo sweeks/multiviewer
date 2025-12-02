@@ -39,7 +39,7 @@ shared [main shortcut](remote-control/MV-Do-Command.shortcut) with the button's 
 ("Home", "Up", "Play_pause", etc).  The main shortcut sends a simple HTTP request to the
 daemon with the button name -- all of the multiviewer logic happens in the daemon. For
 each button, the [remote-control/](remote-control) directory has a `.shortcut` file and a
-`.png` file with its icon. From the Shortcuts app, `Add to Home Screen`, and choose the
+`.jpg` file with its icon. From the Shortcuts app, `Add to Home Screen`, and choose the
 icon as its image.
 
 # Daemon
