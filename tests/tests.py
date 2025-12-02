@@ -1,0 +1,355 @@
+# This file should only be run from the command line, via:
+#    python tests.py all
+#    python tests.py LINE
+# The line numbers correspond to @test annotations.
+
+from __future__ import annotations
+
+import json
+import inspect
+import sys
+import time
+import traceback
+
+from multiviewer import aio, mv
+from multiviewer.base import *
+from multiviewer.mv import Multiviewer
+
+RunMode.set(RunMode.Testing)
+
+_the_mv: None | Multiviewer = None
+
+def the_mv() -> Multiviewer:
+    if _the_mv is None:
+        fail("did not set the_mv")
+    return _the_mv
+
+def expect(actual, expected, frame_index=2):
+    if actual != expected:
+        frame = inspect.stack()[frame_index]
+        lineno = frame.lineno
+        print(f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}")
+
+async def tv_do(s, e=None):
+    if False: debug_print(s)
+    commands = [part.split() for part in s.split(';') if part.strip()]
+    last = None
+    for c in commands:
+        if False: debug_print(c)
+        j = await mv.do_command_and_update_screen(the_mv(), c)
+        last = json.dumps(j)
+    if e is not None:
+        expect(last, e)
+
+async def tv_is(expected):
+    await mv.synced(the_mv())
+    expect(await mv.describe_screen(the_mv()), expected)
+
+async def vol_is(expected):
+    await mv.synced(the_mv())
+    expect(mv.describe_volume(the_mv()), expected)
+
+tests = []
+
+def test(label=None):
+    """Decorator to register test functions with optional label."""
+    def decorator(fn):
+        tests.append((fn.__code__.co_firstlineno, label, fn))
+        return fn
+    if callable(label):  # bare @test
+        fn = label
+        tests.append((fn.__code__.co_firstlineno, None, fn))
+        return fn
+    return decorator
+
+def parse_selection(arg):
+    if not arg or arg == "all":
+        return None
+    sel = set()
+    for part in arg.split(","):
+        if "-" in part:
+            a, b = map(int, part.split("-", 1))
+            sel.update(range(a, b + 1))
+        else:
+            sel.add(int(part))
+    return sel
+
+async def run(selected):
+    total = passed = 0
+    for line, label, fn in sorted(tests):
+        if selected and line not in selected:
+            continue
+        total += 1
+        heading = f"L{line}:" + (f" {label}" if label else "") + " ..."
+        __builtins__.print(heading, end="", flush=True)
+        start = time.perf_counter()
+        try:
+            await fn()
+            elapsed = time.perf_counter() - start
+            print(f" {elapsed:.1f}s")
+            passed += 1
+        except Exception as e:
+            elapsed = time.perf_counter() - start
+            print(f"  FAILED ({elapsed:.1f}s)")
+            traceback.print_exc()
+    print(f"{passed}/{total} passed")
+
+# ---------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------
+
+@test("Test")
+async def _():
+    await tv_do("Test")
+
+@test("Reset")
+async def _():
+    await tv_do("Reset")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+
+@test("Play_pause toggles border")
+async def _():
+    await tv_do("Reset; Play_pause")
+    await tv_is("QUAD(2) A1 H1 H2 H3 H4")
+
+@test("Toggle_fullscreen")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen")
+    await tv_is("FULL A1 H1")
+    await tv_do("Toggle_fullscreen")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+
+@test("Toggle_fullscreen preserves submode")
+async def _():
+    await tv_do("Reset; Toggle_submode; Toggle_fullscreen; Toggle_fullscreen")
+    await tv_is("QUAD(1) A1 [H1]G H2 H3 H4")
+
+@test("Toggle_fullscreen preserves audio")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; E; Toggle_fullscreen")
+    await tv_is("QUAD(2) A2 H1 [H2]G H3 H4")
+
+@test("NEWS in QUAD(2)")
+async def _():
+    await tv_do("Reset")
+    await tv_do("N")
+    await tv_is("QUAD(2) A2 H1 [H2]G H3 H4")
+    await tv_do("W")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_do("E")
+    await tv_is("QUAD(2) A3 H1 H2 [H3]G H4")
+    await tv_do("S")
+    await tv_is("QUAD(2) A4 H1 H2 H3 [H4]G")
+
+@test("NEWS in QUAD(1)")
+async def _():
+    await tv_do("Reset; Toggle_submode; E")
+    await tv_is("QUAD(1) A2 H1 [H2]G H3 H4")
+    await tv_do("W; S")
+    await tv_is("QUAD(1) A3 H1 H2 [H3]G H4")
+    await tv_do("E")
+    await tv_is("QUAD(1) A4 H1 H2 H3 [H4]G")
+    await tv_do("W; N")
+    await tv_is("QUAD(1) A1 [H1]G H2 H3 H4")
+
+@test("NEWS in FULL")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen")
+    await tv_is("FULL A1 H1")
+    await tv_do("E")
+    await tv_is("FULL A2 H2")
+    await tv_do("E")
+    await tv_is("FULL A3 H3")
+    await tv_do("E")
+    await tv_is("FULL A4 H4")
+    await tv_do("E")
+    await tv_is("FULL A1 H1")
+    await tv_do("W")
+    await tv_is("FULL A4 H4")
+    await tv_do("W")
+    await tv_is("FULL A3 H3")
+    await tv_do("W")
+    await tv_is("FULL A2 H2")
+    await tv_do("W")
+    await tv_is("FULL A1 H1")
+
+@test("PIP")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; Toggle_submode")
+    await tv_is("PIP A1 H1 H2")
+    await tv_do("E")
+    await tv_is("PIP A2 H2 H3")
+    await tv_do("E")
+    await tv_is("PIP A3 H3 H4")
+    await tv_do("E")
+    await tv_is("PIP A4 H4 H1")
+    await tv_do("E")
+    await tv_is("PIP A1 H1 H2")
+
+@test("PIP + Add_window")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; Toggle_submode; E")
+    await tv_is("PIP A2 H2 H3")
+    await tv_do("Add_window")
+    await tv_is("PBP(2) A2 [H2]G H3")
+
+@test("PBB + PIP + Add_window")
+async def _():
+    await tv_do("Reset; Remove_window; Remove_window; Toggle_fullscreen; Toggle_submode")
+    await tv_is("PIP A1 H1 H2")
+    await tv_do("N; Add_window")
+    await tv_is("PBP(2) A2 [H2]G H1")
+
+@test("PIP N")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; Toggle_submode")
+    await tv_is("PIP A1 H1 H2")
+    await tv_do("N")
+    await tv_is("PIP A2 H2 H1")
+    await tv_do("Toggle_submode")
+    await tv_is("FULL A2 H2")
+    await tv_do("Toggle_fullscreen")
+    await tv_is("QUAD(2) A2 [H2]G H1 H3 H4")
+
+@test("PIP S")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; Toggle_submode")
+    await tv_is("PIP A1 H1 H2")
+    await tv_do("S")
+    await tv_is("PIP A1 H1 H3")
+    await tv_do("S")
+    await tv_is("PIP A1 H1 H4")
+    await tv_do("S")
+    await tv_is("PIP A1 H1 H2")
+
+@test("Remove_window")
+async def _():
+    await tv_do("Reset; Remove_window")
+    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+    await tv_do("Remove_window")
+    await tv_is("PBP(2) A1 [H1]G H2")
+    await tv_do("Remove_window")
+    await tv_is("FULL A1 H1")
+
+@test("Remove_window preserves submode")
+async def _():
+    await tv_do("Reset; Toggle_submode; Remove_window")
+    await tv_is("TRIPLE(1) A1 [H1]G H2 H3")
+
+@test("Remove_window switches audio to visible window")
+async def _():
+    await tv_do("Reset; S; Remove_window")
+    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+
+@test("Add_window")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; Add_window")
+    await tv_is("PBP(2) A1 [H1]G H2")
+    await tv_do("Add_window")
+    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+    await tv_do("Add_window")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+
+@test("Add_window and Remove_window preserve submode")
+async def _():
+    await tv_do("Reset; Toggle_submode; Remove_window")
+    await tv_is("TRIPLE(1) A1 [H1]G H2 H3")
+    await tv_do("Toggle_submode; Add_window")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+
+@test("Demote_window")
+async def _():
+    await tv_do("Reset; Demote_window")
+    await tv_is("QUAD(2) A2 [H2]G H3 H4 H1")
+
+@test("Home")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
+
+@test("Home Right Down Left Up")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3")
+    await tv_do("Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; Up; Wait 1")
+
+@test("Play_pause")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
+
+@test("Screensaver")
+async def _():
+    await tv_do("Reset; Screensaver")
+    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+
+@test("Volume")
+async def _():
+    await tv_do("Reset")
+    await vol_is("V+0")
+    await tv_do("Volume_up")
+    await vol_is("V+1")
+    await tv_do("Volume_down")
+    await vol_is("V+0")
+    await tv_do("Volume_down")
+    await vol_is("V-1")
+
+@test("Mute")
+async def _():
+    await tv_do("Reset; Mute")
+    await vol_is("M")
+    await tv_do("Mute")
+    await vol_is("V+0")
+
+@test("Mute + Volume_up")
+async def _():
+    await tv_do("Reset; Volume_up; Mute; Volume_up")
+    await vol_is("V+2")
+
+@test("Volume is adjusted when switching TVs")
+async def _():
+    await tv_do("Reset; Volume_up; N")
+    await vol_is("V+0")
+    await tv_do("W")
+    await vol_is("V+1")
+
+@test("Volume is adjusted when switching TVs")
+async def _():
+    await tv_do("Reset; Toggle_submode; Volume_up; E; Volume_down")
+    await vol_is("V-1")
+
+@test("Mute is preserved when switching TVs")
+async def _():
+    await tv_do("Reset; Volume_up; Mute; N")
+    await vol_is("M")
+    await tv_do("Mute")
+    await vol_is("V+0")
+    await tv_do("W")
+    await vol_is("V+1")
+
+@test("Remote double tap")
+async def _():
+    await tv_do("Reset; Remote; Remote", "1")
+    await tv_do("Toggle_submode; E; Remote; Remote", "2")
+
+@test("Info")
+async def _():
+    await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G H2 H3 H4 V+0"')
+
+@test("Power")
+async def _():
+    # We do a state change before turning off to make sure it is preserved.
+    # We do a state change after turning on to make sure that we can.
+    await tv_do("Reset; E; Power; Wait 10; Power; S")
+    await tv_is("QUAD(2) A4 H1 H2 H3 [H4]G")
+
+async def main():
+    global _the_mv
+    arg = sys.argv[1] if len(sys.argv) > 1 else "all"
+    the_mv = await mv.create()
+    #mv.save(mv, Path("TEST_MV.json").resolve())
+    the_mv.jtech.should_send_commands_to_device = False
+    if mv.power(the_mv) == mv.Power.OFF:
+        await mv.power_on(the_mv)
+    _the_mv = the_mv
+    await run(parse_selection(arg))
+    await mv.shutdown(the_mv)
+
+aio.run_event_loop(main())

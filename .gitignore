@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# Python
+.env
+.venv/
+
+# setuptools
+*.egg-info/
+build/
+
+# VSCode
+*.code-workspace
+.vscode/
+
+# runtime artifacts
+var/*
+!var/.gitkeep
+
+# My cruft
+cruft/
