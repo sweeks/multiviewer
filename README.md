@@ -12,8 +12,8 @@ Here is an example multiviewer layout:
 # Architecture
 
 The remote control is an iPhone 13 Mini, which has a home screen with buttons that send
-simple HTTP requests to a daemon written in Python and running on a MacBook. The daemon in
-turn controls the J-Tech, the Apple TVs, and soundbar volume. 
+HTTP requests to a daemon written in Python and running on a MacBook. The daemon in turn
+controls the J-Tech, the Apple TVs, and soundbar volume. 
 
 # Hardware
 
@@ -34,10 +34,10 @@ Here is the remote-control home screen:
 
 <img src="remote-control/home-screen.jpg" width="300">
 
-The remote control buttons are iOS shortcuts.  Each button is a simple shortcut that
-invokes a shared [main shortcut](remote-control/MV-Do-Command.shortcut) with the button's
-name ("Home", "Up", "Play_pause", etc).  The main shortcut sends a simple HTTP request to
-the daemon with the button name -- all of the multiviewer logic happens in the daemon. For
+The remote control buttons are iOS shortcuts.  Each button is a shortcut that invokes a
+shared [main shortcut](remote-control/MV-Do-Command.shortcut) with the button's name
+("Home", "Up", "Play_pause", etc).  The main shortcut sends a simple HTTP request to the
+daemon with the button name -- all of the multiviewer logic happens in the daemon. For
 each button, the [remote-control/](remote-control) directory has a `.shortcut` file and a
 `.png` file with its icon. From the Shortcuts app, `Add to Home Screen`, and choose the
 icon as its image.
