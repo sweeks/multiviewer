@@ -38,14 +38,14 @@ The remote control buttons are iOS shortcuts.  Each button is a simple shortcut 
 invokes a shared [main shortcut](remote-control/MV-Do-Command.shortcut) with the button's
 name ("Home", "Up", "Play_pause", etc).  The main shortcut sends a simple HTTP request to
 the daemon with the button name -- all of the multiviewer logic happens in the daemon. For
-each button, the [remote-control](remote-control) directory has a `.shortcut` file and a
+each button, the [remote-control/](remote-control) directory has a `.shortcut` file and a
 `.png` file with its icon. From the Shortcuts app, `Add to Home Screen`, and choose the
 icon as its image.
 
 # Daemon
 
 The daemon is a few thousand lines of Python, and uses the `asyncio` and `pyatv`
-libraries. The [src/multiviewer](src/multiviewer) directory has all of the code except for
+libraries. The [src/multiviewer/](src/multiviewer) directory has all of the code except for
 tests. The daemon runs an HTTP server that receives commands from the remote-control
 shortcuts, updates its virtual multiviewer state and responds to the request, and then in
 the background sends commands to the J-Tech, Apple TVs, and soundbar.
