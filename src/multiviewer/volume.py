@@ -24,14 +24,7 @@ class Volume:
         return dataclasses.field(default_factory=Volume)
 
     def __post_init__(self) -> None:
-        self.worker_task = Task.create(type(self).__name__, self.worker())
-
-    def is_synced(self) -> bool:
-        if self.current_mute != self.desired_mute:
-            return False
-        if self.current_mute:
-            return True
-        return self.current_volume_delta == self.desired_volume_delta
+        self.worker_task = Task.create(type(self).__name__, self.sync_forever())
 
     def describe_volume(self) -> str:
         if self.current_mute:
@@ -59,34 +52,42 @@ class Volume:
     def unmute(self) -> None:
         self.desired_mute = False
         self.wake_worker()
-        
-    async def worker(self):
+
+    def is_synced(self) -> bool:
+        return (self.current_mute == self.desired_mute
+            and (self.current_mute
+                or self.desired_volume_delta == self.current_volume_delta))
+    
+    async def sync(self) -> None:
+        if self.current_mute != self.desired_mute:
+            self.current_mute = self.desired_mute
+            await wf2ir.mute()
+            return
+        if self.current_mute:
+            return
+        diff = self.desired_volume_delta - self.current_volume_delta
+        if diff == 0:
+            return
+        if diff > 0:
+            self.current_volume_delta += 1
+            await wf2ir.volume_up()
+            return
+        else:
+            self.current_volume_delta -= 1
+            await wf2ir.volume_down()
+            return
+
+    async def sync_forever(self):
         while True:
-            # We loop, breaking out iff we are synced, and at each iteration making one
-            # (async) wf2ir call and then immediately looping, so that we reconsider
-            # the latest desired state, which may have changed during the wf2ir call.
-            while True: 
-                if self.current_mute != self.desired_mute:
-                    self.current_mute = self.desired_mute
-                    await wf2ir.mute()
-                    continue
-                if self.current_mute:
-                    break
-                diff = self.desired_volume_delta - self.current_volume_delta
-                if diff == 0:
-                    break
-                if diff > 0:
-                    self.current_volume_delta += 1
-                    await wf2ir.volume_up()
-                    continue
-                else:
-                    self.current_volume_delta -= 1
-                    await wf2ir.volume_down()
-                    continue
-            assert(self.is_synced())
-            self.synced_event.set()
-            await self.wake_event.wait()
-            self.wake_event.clear()
+            if self.is_synced():
+                self.synced_event.set()
+                self.wake_event.clear()
+                await self.wake_event.wait()
+                continue
+            try:
+                await self.sync()
+            except Exception as e:
+                log_exc(e)
 
     def reset(self):
         self.current_mute = False
