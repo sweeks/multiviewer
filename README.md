@@ -45,8 +45,8 @@ icon as its image.
 # Daemon
 
 The daemon is a few thousand lines of Python, and uses the `asyncio` and `pyatv`
-libraries. The [src/multiviewer/](src/multiviewer) directory has all of the code except for
-tests. The daemon runs an HTTP server that receives commands from the remote-control
+libraries. The [src/multiviewer/](src/multiviewer) directory has all of the code except
+for tests. The daemon runs an HTTP server that receives commands from the remote-control
 shortcuts, updates its virtual multiviewer state and responds to the request, and then in
 the background sends commands to the J-Tech, Apple TVs, and soundbar.
 
