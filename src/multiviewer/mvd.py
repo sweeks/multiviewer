@@ -14,18 +14,22 @@ from . import aio
 from . import http_server
 from . import mv
 
-async def main():
-    RunMode.set(RunMode.Daemon)
-    log("daemon starting")
+async def stop_running_daemon() -> None:
     try:
         out = subprocess.check_output(["lsof", "-ti", f"tcp:{http_server.HTTP_PORT}"]).decode().split()
         for pid in out:
-            if pid and int(pid) != os.getpid():
+            if pid:
                 log(f"stopping mvd {pid}")
                 os.kill(int(pid), signal.SIGTERM)
                 await aio.sleep(1) # Give the old mvd a second to shutdown
     except subprocess.CalledProcessError:
         pass  # no process using that port
+
+async def become_daemon():
+    RunMode.set(RunMode.Daemon)
+    log("daemon starting")
+    try:
+        await stop_running_daemon() 
     except Exception as e:
         log_exc(e)
     mvd_state_path = Path("state.json").resolve()
@@ -54,5 +58,3 @@ async def main():
     mv.save(the_mv, mvd_state_path)
     await mv.shutdown(the_mv)
     log("daemon stopped")
-
-aio.run_event_loop(main())

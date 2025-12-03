@@ -1,1 +1,5 @@
-"""Multiviewer Daemon.  No exports."""
+"""Multiviewer Daemon"""
+
+async def stop_running_daemon() -> None: ...
+
+async def become_daemon() -> None: ...
