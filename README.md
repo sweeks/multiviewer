@@ -39,9 +39,9 @@ The screensaver button takes the selected TV to screensaver.
 The power button toggles on/off the power of all the hardware in the system, including
 Apple TVs, Jtech, soundbar, and TV.
 
-The Sports and Apple TV app are the ordinary iOS apps, and are handy for choosing what to
-watch.  From the Apple TV app, you can share a show to start it playing on the selected TV
--- unfortunately, this only works reliably for shows, and not for most sports streams, so
+The Sports and TV app are the ordinary iOS apps, and are handy for choosing what to watch.
+From the TV app, you can share a show to start it playing on the selected TV --
+unfortunately, this only works reliably for shows, and not for most sports streams, so
 far.
 
 # Implementation
