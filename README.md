@@ -50,7 +50,7 @@ tests. The daemon runs an HTTP server that receives commands from the remote-con
 shortcuts, updates its virtual multiviewer state and responds to the request, and then in
 the background sends commands to the J-Tech, Apple TVs, and soundbar.
 
-[mvd-start.sh](bin/mvd-start.sh) starts the daemon.  At startup, the new daemon first
+[start-mvd.sh](bin/start-mvd.sh) starts the daemon.  At startup, the new daemon first
 kills the prior daemon and then starts a new HTTP server.
 
 # Configuration
