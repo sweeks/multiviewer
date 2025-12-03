@@ -264,9 +264,9 @@ S = Arrow.S
 _arrow_points_to = {
     PBP: { W1:{ E:W2 }, W2:{ W:W1 } },
     TRIPLE: { 
-        W1:{ N: W2, E: W2,        S: W3 }, 
-        W2:{        E: W3,  W: W1, S: W3 }, 
-        W3:{ N: W2, E: W1,  W: W1,       }},
+        W1:{ N: W2,                S: W3 }, 
+        W2:{                W: W1, S: W3 }, 
+        W3:{ N: W2,         W: W1,       }},
     (QUAD, WINDOWS_SAME): { 
         W1:{        E: W2, W: W4, S: W3 },
         W2:{        E: W3, W: W1, S: W4 },
@@ -274,9 +274,9 @@ _arrow_points_to = {
         W4:{ N: W2, E: W1, W: W3,       }},
     (QUAD, W1_PROMINENT): {
         W1:{ N: W2, E: W3,        S: W4 },
-        W2:{               W: W1, S: W3 },
+        W2:{ N: W4,        W: W1, S: W3 },
         W3:{ N: W2,        W: W1, S: W4 },
-        W4:{ N: W3,        W: W1        }}}
+        W4:{ N: W3,        W: W1, S: W2 }}}
 
 def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
     if False: debug_print(arrow)
@@ -302,11 +302,12 @@ def add_window(mv: Multiviewer) -> None:
             case Multimode.TRIPLE: mv.multimode = QUAD
 
 def demote_window(mv: Multiviewer, w1: Window) -> None:
-    last = last_window(mv)
-    while w1 != last:
-        w2 = next_window(mv, w1)
-        swap_window_inputs(mv, w1, w2)
-        w1 = w2
+    if not mv.is_fullscreen:
+        last = last_window(mv)
+        while w1 != last:
+            w2 = next_window(mv, w1)
+            swap_window_inputs(mv, w1, w2)
+            w1 = w2
 
 def remove_window(mv: Multiviewer) -> None:
     if not mv.is_fullscreen:
