@@ -44,7 +44,7 @@ tv_ips = {
 
 @dataclass
 class _ATV:
-    tv: TV = field(repr=False)
+    tv: TV
     appleTV: AppleTV | None = None
 
     async def connect(self) -> AppleTV:
@@ -134,8 +134,9 @@ class ATV:
             try:
                 await job
             except Exception as e:
-                await self.close()
                 log_exc(e)
+                debug_print(self)
+                await self.close()
             finally:
                 self.queue.task_done()
 
