@@ -732,8 +732,8 @@ class Jtech:
             except Exception:
                 pass
 
-    # This is the only code that sends commands to the device.  That ensures sequential
-    # communication.
+    # The call to self.sync in sync_forever is the only code that sends commands to the
+    # device.  That ensures sequential communication.
     async def sync_forever(self):
         while True: # Loop forever
             try:
