@@ -679,64 +679,49 @@ class Jtech:
             self.desired_screen = desired_screen
             self.wake_task()
 
-    def is_synced(self) -> bool:
+    # sync returns True iff it finished successfully.
+    async def sync(self) -> bool:
         if False: debug_print(self)
-        return (
-            self.device.power is not None
-            and self.device.audio_mute == UNMUTED
-            and (
-                self.desired_power is None
-                or (self.desired_power == self.device.power
-                    and (self.desired_power == OFF
-                        or self.desired_screen is None
-                        or self.desired_screen == self.device_screen))))
-
-    async def sync(self):
+        def should_abort() -> bool:
+            return self.wake_event.is_set()
         device = self.device
+        if self.desired_power is None:
+            return True
+        if self.desired_power != device.power:
+            await device.set_power(self.desired_power)
+        if device.power == OFF:
+            return True
         if device.audio_mute != UNMUTED:
             await device.set_audio_mute(UNMUTED)
-        if self.desired_power is not None and self.desired_power != device.power:
-            await device.set_power(self.desired_power)
-        if device.power is None:
-            await device.read_power()
+        if should_abort():
+            return False
         desired_screen = self.desired_screen
-        if device.power == OFF or desired_screen is None:
-            return
-        self.wake_event.clear()
-        def should_abort() -> bool:
-            return (
-                self.wake_event.is_set()
-                and self.desired_screen != desired_screen)
+        if desired_screen is None:
+            return True
         log(f"setting screen: {desired_screen}")
         set_screen_finished = await device.set_screen(desired_screen, should_abort)
         if set_screen_finished:
             log("set screen finished")
         else:
             log("set screen aborted")
-        if should_abort():
-            return
+            return False
         # We'd like to check whether device.set_screen worked, so we device.read_screen
         # and compare. But first, we wait a bit, because if we don't, the jtech sometimes
-        # lies.  We clear wake_event so that we can use it to wake up immediately if the
-        # desired screen changes.
+        # lies.
         await aio.wait_for(self.wake_event.wait(), timeout=1)
         if should_abort():
-            return
+            return False
         log("reading screen")
         self.device_screen = await self.device.read_screen(should_abort)
         if self.device_screen is None:
             log("read screen aborted")
+            return False
         else:
             log(f"read screen: {self.device_screen}")
-        if self.device_screen is not None and self.device_screen != desired_screen:
-            log(f"screen mismatch")
-    
-    async def sync_with_timeout(self) -> None:
-        async def f() -> bool:
-            await self.sync()
-            return True
-        if await aio.wait_for(f(), timeout=10) is None:
-            fail("sync timeout")
+            is_synced = self.device_screen == desired_screen
+            if not is_synced:
+                log(f"screen mismatch")
+            return is_synced
 
     async def reset(self) -> None:
         self.device = Device()
@@ -751,13 +736,17 @@ class Jtech:
     # communication.
     async def sync_forever(self):
         while True: # Loop forever
-            if self.is_synced() or not self.should_send_commands_to_device:
-                self.synced_event.set()
-                self.wake_event.clear()
-                await self.wake_event.wait()
-                continue
             try:
-                await self.sync_with_timeout()
+                self.wake_event.clear()
+                if not self.should_send_commands_to_device:
+                    is_synced = True
+                else:
+                    is_synced = await aio.wait_for(self.sync(), timeout=10)
+                    if is_synced is None:
+                        fail("sync timeout")
+                if is_synced and not self.wake_event.is_set():
+                    self.synced_event.set()
+                    await self.wake_event.wait()
             except Exception as e:
                 log_exc(e)
                 if RunMode.get() == RunMode.Daemon:
