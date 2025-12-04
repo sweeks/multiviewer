@@ -274,9 +274,9 @@ _arrow_points_to = {
         W4:{ N: W2, E: W1, W: W3,       }},
     (QUAD, W1_PROMINENT): {
         W1:{ N: W2, E: W3,        S: W4 },
-        W2:{ N: W4,        W: W1, S: W3 },
+        W2:{               W: W1, S: W3 },
         W3:{ N: W2,        W: W1, S: W4 },
-        W4:{ N: W3,        W: W1, S: W2 }}}
+        W4:{ N: W3,        W: W1        }}}
 
 def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
     if False: debug_print(arrow)
