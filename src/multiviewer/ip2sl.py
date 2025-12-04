@@ -11,7 +11,6 @@ TERM = b"\r"
 class Connection:
     reader: aio.StreamReader
     writer: aio.StreamWriter
-    read_line_timeout: float = 1
 
     def __repr__(self):
         return "<connection>"
@@ -22,9 +21,7 @@ class Connection:
         return Connection(reader=reader, writer=writer)
 
     async def read_line(self) -> str | None:
-        line = await aio.wait_for(
-            self.reader.readuntil(b"\n"), 
-            timeout=self.read_line_timeout)
+        line = await self.reader.readuntil(b"\n")
         if line is None:
             return None
         response = line.decode("ascii", errors="strict").strip()

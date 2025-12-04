@@ -716,7 +716,7 @@ class Jtech:
                         or self.desired_screen is None
                         or self.desired_screen == self.device_screen))))
 
-    async def sync(self) -> None:
+    async def sync(self):
         desired_screen = self.desired_screen
         log(f"setting screen: {desired_screen}")
         set_screen_finished = await self.set_device_screen()
@@ -744,6 +744,13 @@ class Jtech:
             log(f"read screen: {self.device_screen}")
         if self.device_screen is not None and self.device_screen != desired_screen:
             log(f"screen mismatch")
+    
+    async def sync_with_timeout(self) -> None:
+        async def f() -> bool:
+            await self.sync()
+            return True
+        if await aio.wait_for(f(), timeout=10) is None:
+            fail("sync timeout")
 
     async def reset(self) -> None:
         self.device = Device()
@@ -764,7 +771,7 @@ class Jtech:
                 await self.wake_event.wait()
                 continue
             try:
-                await self.sync()
+                await self.sync_with_timeout()
             except Exception as e:
                 log_exc(e)
                 if RunMode.get() == RunMode.Daemon:
