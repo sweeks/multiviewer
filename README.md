@@ -98,6 +98,9 @@ The daemon Python code uses a virtual environment to install dependencies and th
 multiviewer package (used by tests).  To set up `.venv`, run
 [setup-venv.sh](bin/setup-venv.sh).
 
+[start-mvd.sh](bin/start-mvd.sh) starts the daemon.  At startup, the new daemon first
+kills the prior daemon and then starts a new HTTP server.
+
 # Testing
 
 The [tests/](tests) directory has end-to-end tests that run the multiviewer through its
@@ -108,8 +111,3 @@ To run all tests:
 ```sh
 python tests/tests.py all
 ```
-
-# Starting the daemon
-
-[start-mvd.sh](bin/start-mvd.sh) starts the daemon.  At startup, the new daemon first
-kills the prior daemon and then starts a new HTTP server.
