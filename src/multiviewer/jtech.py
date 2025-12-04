@@ -679,36 +679,11 @@ class Jtech:
             self.desired_screen = desired_screen
             self.wake_task()
 
-    async def set_device_screen(self) -> bool:
-        device = self.device
-        self.device_screen = None
-        if self.desired_power is not None and self.desired_power != device.power:
-            await device.set_power(self.desired_power)
-        if device.power is None:
-            await device.read_power()
-        desired_screen = self.desired_screen
-        if device.power == OFF or desired_screen is None:
-            return True
-        def should_abort() -> bool:
-            if self.wake_event.is_set():
-                return self.desired_screen != desired_screen
-            else:
-                return False
-        return await device.set_screen(desired_screen, should_abort)
-
-    async def read_device_screen(self) -> None:
-        desired_screen = self.desired_screen
-        def should_abort() -> bool:
-            if self.wake_event.is_set():
-                return self.desired_screen != desired_screen
-            else:
-                return False
-        self.device_screen = await self.device.read_screen(should_abort)
-
     def is_synced(self) -> bool:
         if False: debug_print(self)
         return (
             self.device.power is not None
+            and self.device.audio_mute == UNMUTED
             and (
                 self.desired_power is None
                 or (self.desired_power == self.device.power
@@ -717,27 +692,38 @@ class Jtech:
                         or self.desired_screen == self.device_screen))))
 
     async def sync(self):
+        device = self.device
+        if device.audio_mute != UNMUTED:
+            await device.set_audio_mute(UNMUTED)
+        if self.desired_power is not None and self.desired_power != device.power:
+            await device.set_power(self.desired_power)
+        if device.power is None:
+            await device.read_power()
         desired_screen = self.desired_screen
+        if device.power == OFF or desired_screen is None:
+            return
+        self.wake_event.clear()
+        def should_abort() -> bool:
+            return (
+                self.wake_event.is_set()
+                and self.desired_screen != desired_screen)
         log(f"setting screen: {desired_screen}")
-        set_screen_finished = await self.set_device_screen()
+        set_screen_finished = await device.set_screen(desired_screen, should_abort)
         if set_screen_finished:
             log("set screen finished")
         else:
             log("set screen aborted")
-        # If self.desired_screen changed while we were syncing, then start over.
-        if (self.desired_screen != desired_screen
-            or self.device.power == OFF or desired_screen is None):
+        if should_abort():
             return
-        # We'd like to check whether set_device_screen worked, so we read_device_screen
+        # We'd like to check whether device.set_screen worked, so we device.read_screen
         # and compare. But first, we wait a bit, because if we don't, the jtech sometimes
         # lies.  We clear wake_event so that we can use it to wake up immediately if the
         # desired screen changes.
-        self.wake_event.clear()
         await aio.wait_for(self.wake_event.wait(), timeout=1)
-        if self.desired_screen != desired_screen:
+        if should_abort():
             return
         log("reading screen")
-        await self.read_device_screen()
+        self.device_screen = await self.device.read_screen(should_abort)
         if self.device_screen is None:
             log("read screen aborted")
         else:
