@@ -28,6 +28,12 @@ class Connection:
         if False: log(f"jtech--> {response}")
         return response
 
+    async def read_until_line(self, desired_line: str) -> None:
+        while True:
+            line = await self.read_line()
+            if line == desired_line:
+                break
+
     async def write_line(self, line: str) -> None:
         if False: log(f"jtech<-- {line}")
         self.writer.write(line.encode("ascii") + TERM)

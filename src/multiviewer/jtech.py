@@ -5,9 +5,6 @@ import dataclasses
 import re
 
 # Local package
-from . import aio
-from . import json_field
-from .aio import Event, Task
 from .base import *
 from .ip2sl import Connection
 from .json_field import json_dict
@@ -287,6 +284,14 @@ class Device:
     def init_mode_screens(self):
         self.mode_screens = {
             mode: Mode_screen(mode=mode, submode=None) for mode in Mode.all() }
+        
+    async def reset(self) -> None:
+        self.power = None
+        self.mode = None
+        self.audio_from = None
+        self.audio_mute = None
+        self.init_mode_screens()
+        await self.disconnect()
 
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screens[mode].submode
@@ -338,31 +343,24 @@ class Device:
             connection = await Connection.create()
             log("connected to jtech")
             self.connection = connection
+            await self.sync_connection(connection)
+            log("synced jtech connection")
         else:
             connection = self.connection
         return connection
 
-    async def read_until(self, desired_line: str) -> None:
-        connection = await self.get_connection()
-        while True:
-            line = await connection.read_line()
-            if line == desired_line:
-                break
-
-    async def sync_connection(self) -> None:
+    async def sync_connection(self, connection) -> None:
         # To sync the connection, we send "r power!" to request the power state, to which
         # the jtech will respond "power on". We use read_until to ignore any existing
         # unconsumed output.
-        connection = await self.get_connection()
         await connection.write_line("r power!")
-        await self.read_until("power on")
+        await connection.read_until_line("power on")
 
-    async def reconnect(self) -> None:
+    async def disconnect(self) -> None:
         if self.connection is not None:
             await self.connection.close()
             log("disconnected from jtech")
             self.connection = None
-        await self.sync_connection()
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
         connection = await self.get_connection()
@@ -382,7 +380,6 @@ class Device:
         elif response == "power off": 
             power = OFF
         else: 
-            if False: debug_print()
             self.unexpected_response(command, response)
         self.power = power
         return power
@@ -400,8 +397,10 @@ class Device:
             # "Initialization Finished!".  Some of those reads timeout while the jtech is
             # silent, but we keep trying.  Then we sync the connection, which ignores the
             # cruft that the jtech outputs after "Initialization Finished!".
-            await self.read_until("Initialization Finished!")
-            await self.sync_connection()
+            connection = self.connection
+            assert connection is not None
+            await connection.read_until_line("Initialization Finished!")
+            await self.sync_connection(connection)
         await self.read_power()
         assert_equal(self.power, power)
 
@@ -632,124 +631,3 @@ class Device:
             await self.set_audio_from(desired.audio_from)
             if should_mute: await self.unmute()
         return True
-
-@dataclass
-class Jtech:
-    should_send_commands_to_device: bool = True
-    desired_power: Power | None = None
-    desired_screen: Screen | None = None
-    device: Device = Device.field()
-    device_screen: Screen | None = None
-    wake_event: Event = Event.field()
-    synced_event: Event = Event.field()
-    # A background task that is constantly trying to make the jtech match desired_power
-    # and desired_screen.
-    task: Task = Task.field()
-    
-    @classmethod
-    def field(cls):
-        return dataclasses.field(default_factory=Jtech, metadata=json_field.omit)
-        
-    def __post_init__(self) -> None:
-        self.task = aio.Task.create(type(self).__name__, self.sync_forever())
-
-    async def synced(self) -> None:
-        await self.synced_event.wait()
-
-    def wake_task(self):
-        self.wake_event.set()
-        self.synced_event.clear()
-
-    async def current_power(self) -> Power:
-        await self.synced()
-        assert self.device.power is not None
-        return self.device.power
-
-    def set_power(self, p: Power) -> None:
-        if False: debug_print(f"set_to={p} was={self.desired_power}")
-        self.desired_power = p
-        self.wake_task()
-
-    async def current_screen(self) -> Screen:
-        await self.synced()
-        assert self.desired_screen is not None
-        return self.desired_screen
-
-    def set_screen(self, desired_screen: Screen) -> None:
-        if desired_screen != self.desired_screen:
-            self.desired_screen = desired_screen
-            self.wake_task()
-
-    # sync returns True iff it finished successfully.
-    async def sync(self) -> bool:
-        if False: debug_print(self)
-        def should_abort() -> bool:
-            return self.wake_event.is_set()
-        device = self.device
-        if self.desired_power is None:
-            return True
-        if self.desired_power != device.power:
-            await device.set_power(self.desired_power)
-        if device.power == OFF:
-            return True
-        if device.audio_mute != UNMUTED:
-            await device.set_audio_mute(UNMUTED)
-        if should_abort():
-            return False
-        desired_screen = self.desired_screen
-        if desired_screen is None:
-            return True
-        log(f"setting screen: {desired_screen}")
-        set_screen_finished = await device.set_screen(desired_screen, should_abort)
-        if set_screen_finished:
-            log("set screen finished")
-        else:
-            log("set screen aborted")
-            return False
-        # We'd like to check whether device.set_screen worked, so we device.read_screen
-        # and compare. But first, we wait a bit, because if we don't, the jtech sometimes
-        # lies.
-        await aio.wait_for(self.wake_event.wait(), timeout=1)
-        if should_abort():
-            return False
-        log("reading screen")
-        self.device_screen = await self.device.read_screen(should_abort)
-        if self.device_screen is None:
-            log("read screen aborted")
-            return False
-        else:
-            log(f"read screen: {self.device_screen}")
-            is_synced = self.device_screen == desired_screen
-            if not is_synced:
-                log(f"screen mismatch")
-            return is_synced
-
-    async def reset(self) -> None:
-        self.device = Device()
-        await self.device.reconnect()
-        if self.device.power == ON:
-            try:
-                await self.device.unmute()
-            except Exception:
-                pass
-
-    # The call to self.sync in sync_forever is the only code that sends commands to the
-    # device.  That ensures sequential communication.
-    async def sync_forever(self):
-        while True: # Loop forever
-            try:
-                self.wake_event.clear()
-                if not self.should_send_commands_to_device:
-                    is_synced = True
-                else:
-                    is_synced = await aio.wait_for(self.sync(), timeout=10)
-                    if is_synced is None:
-                        fail("sync timeout")
-                if is_synced and not self.wake_event.is_set():
-                    self.synced_event.set()
-                    await self.wake_event.wait()
-            except Exception as e:
-                log_exc(e)
-                if RunMode.get() == RunMode.Daemon:
-                    debug_print(self)
-                await self.reset()

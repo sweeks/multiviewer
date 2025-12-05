@@ -3,7 +3,7 @@ from pathlib import Path
 
 # Local package
 from .base import *
-from .jtech import Jtech
+from .jtech_manager import Jtech
 
 class Power:
     ON: Power

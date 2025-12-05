@@ -1,9 +1,14 @@
 # Local package
+from . import aio
 from .base import *
 
 class Power:
     ON: Power
     OFF: Power
+
+class Mute:
+    MUTED: Mute
+    UNMUTED: Mute
 
 class Color:
     BLACK: Color
@@ -61,21 +66,20 @@ class Screen:
 
     def one_line_description(self) -> str: ...
 
-class Jtech:
-    @classmethod 
-    def field(cls) -> Jtech: ...
+class Device:
+    power: Power | None
+    audio_mute: bool
 
-    should_send_commands_to_device: bool
-    # This determines whether we send commands and read responses from the physical jtech
-    # device.  That is what we want in mvd, and sometimes in tests. But sometimes in
-    # tests, we just want to test our multiviewer logic, in which case, we set
-    # should_send_commands_to_device=False. In that case, the below functions don't do
-    # anything, and current_power and current_screen just return the last set value.
+    @classmethod
+    def field(cls): ...
 
-    async def current_power(self) -> Power: ...
-    def set_power(self, p: Power) -> None: ...
+    async def reset(self) -> None: ...
+    
+    async def set_power(self, p: Power) -> None: ...
 
-    async def current_screen(self) -> Screen: ...
-    def set_screen(self, s: Screen) -> None: ...
+    async def unmute(self) -> None: ...
 
-    def synced(self) -> Awaitable[None]: ...
+    async def set_screen(self, desired: Screen, should_abort: Callable[[], bool]) -> bool:
+        ...
+
+    async def read_screen(self, should_abort: Callable[[], bool]) -> Screen | None: ...

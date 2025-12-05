@@ -14,7 +14,8 @@ from .aio import Task
 from .atv import ATVs, TV
 from .base import *
 from .json_field import json_dict
-from .jtech import Color, Hdmi, Jtech, Mode, Power, Screen, Submode, Window
+from .jtech import Color, Hdmi, Mode, Power, Screen, Submode, Window
+from .jtech_manager import Jtech
 from .jtech import Window_contents
 from .volume import Volume
 
