@@ -203,17 +203,18 @@ def set_power(mv: Multiviewer, p: Power) -> None:
 
 async def power_off(mv: Multiviewer) -> None:
     if False: debug_print(mv)
-    log("power off")
+    log("turning off power")
     for tv in TV.all():
         mv.atvs.atv(tv).sleep()
     await mv.atvs.synced()
     set_power(mv, Power.OFF)
+    log("power is off")
 
 async def power_on(mv: Multiviewer) -> None:
     if False: debug_print(mv)
     if mv.power == Power.ON:
         return
-    log("power on")
+    log("turning on power")
     set_power(mv, Power.ON)
     reset_volume(mv)
     mv.control_apple_tv = False
@@ -221,6 +222,7 @@ async def power_on(mv: Multiviewer) -> None:
     for tv in TV.all():
         mv.atvs.atv(tv).wake()
     await mv.atvs.synced()
+    log("power is on")
  
 async def toggle_power(mv: Multiviewer) -> None:
     match mv.power:

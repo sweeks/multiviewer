@@ -666,6 +666,7 @@ class Jtech:
         return self.device.power
 
     def set_power(self, p: Power) -> None:
+        if False: debug_print(f"set_to={p} was={self.desired_power}")
         self.desired_power = p
         self.wake_task()
 
