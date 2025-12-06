@@ -1,3 +1,5 @@
+"""For controlling Apple TVs, using the pyatv library."""
+
 # Local package
 from .base import *
 
@@ -8,6 +10,8 @@ class TV(MyStrEnum):
     TV4: TV
 
 class ATV:
+    """"A controller for a single Apple TV."""
+
     # Navigation
     def home(self) -> None: ...
     def menu(self) -> None: ...
@@ -35,6 +39,8 @@ class ATV:
 
 @dataclass
 class ATVs:
+    """Controllers for all Apple TVs."""
+    
     @classmethod 
     def field(cls) -> ATVs: ...
 

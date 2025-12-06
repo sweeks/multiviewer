@@ -1,4 +1,5 @@
-"""Used to specify json serialization in fields of class declarations that look like:
+"""
+Used to specify json serialization in fields of class declarations that look like:
 
     @dataclass_json 
     @dataclass
@@ -14,5 +15,7 @@ Metadata = dict[str, dict]
 omit: Metadata # Elide the field from json
 
 def json_dict(domain: type, range: type) -> Metadata:
-    """Usage: 
-    some_field: dict[X, Y] = field(metadata=json_dict(X, Y))"""
+    """
+    Usage:
+        some_field: dict[X, Y] = field(metadata=json_dict(X, Y))
+    """

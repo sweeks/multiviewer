@@ -1,4 +1,6 @@
-"""Stuff used throughout the project.  Most other code does:
+"""
+Stuff used throughout the project.  Most other code does:
+
     from .base import *
 """
 

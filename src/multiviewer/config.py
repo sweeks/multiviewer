@@ -1,3 +1,5 @@
+"""Hosts, ports, and IP addresses for devices used by multiviewer."""
+
 ITACH_HOST  = "iTach0741E6"
 ITACH_PORT = 4999
 

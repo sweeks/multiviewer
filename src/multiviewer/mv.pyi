@@ -1,3 +1,16 @@
+"""
+Multiviewer main interface.  This module maintains all the state of the multiviewer and
+the objects for controlling the J-Tech, Apple TVs, and Soundbar.  The state includes
+
+
+  window layouts,
+  audio
+
+and
+has functions to load and save it from disk, update the screen based on changes to
+inputs, and do commands from the user.
+"""
+
 # Standard library
 from pathlib import Path
 
@@ -10,7 +23,7 @@ class Power:
     OFF: Power
 
 class Multiviewer:
-    def __init__(self) -> NoReturn: ...
+    def __init__(self) -> NoReturn: """Undefined. Use create()"""
     
     jtech: Jtech
 
