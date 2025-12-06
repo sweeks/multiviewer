@@ -335,8 +335,12 @@ class Device:
     def window_input(self, m: Mode, w: Window) -> Hdmi | None:
         return self.device_window(m, w).hdmi
 
-    def unexpected_response(self, command, response) -> NoReturn:
-        fail(f"command '{command}' got unexpected response '{response}'")
+    def unexpected_response(self, command, response, expected_response=None) -> NoReturn:
+        message = f"jtech gave unexpected response '{response}' to command '{command}'"
+        if expected_response is not None:
+            message=f"{message}, expected '{expected_response}'"
+        log(message)
+        fail(message)
 
     async def get_connection(self) -> Connection:
         if self.connection is None:
@@ -363,16 +367,15 @@ class Device:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
-        if False: log(f"jtech<<< {command}")
+        if True: log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
         if response is None:
             log(f"jtech did not respond to: {command}")
             fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
-            log(f"jtech gave unexpected response '{response}' to command '{command}', expected '{expected_response}'")
-            self.unexpected_response(command, response)
-        if False: log(f"jtech>>> {response}")       
+            self.unexpected_response(command, response, expected_response)
+        if True: log(f"jtech>>> {response}")       
         return response
 
     async def read_power(self) -> Power:
