@@ -363,8 +363,10 @@ class Device:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
+        if False: debug_print(f"send_command '{command}' expecting '{expected_response}'")
         connection = await self.get_connection()
         response = await connection.send_command(command)
+        if False: debug_print(f"response: {response}")
         if response is None:
             log(f"jtech did not respond to: {command}")
             fail("jtech is nonresponsive")
