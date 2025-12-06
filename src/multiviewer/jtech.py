@@ -375,7 +375,7 @@ class Device:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
-        if True: log(f"jtech<<< {command}")
+        if False: log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
         if response is None:
@@ -383,7 +383,7 @@ class Device:
             fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
             self.unexpected_response(command, response, expected_response)
-        if True: log(f"jtech>>> {response}")       
+        if False: log(f"jtech>>> {response}")       
         return response
 
     async def read_power(self) -> Power:
@@ -499,6 +499,9 @@ class Device:
         return mute
 
     async def set_audio_mute(self, mute: Mute) -> None:
+        if self.audio_mute == mute:
+            return
+        if False: debug_print(mute)
         match mute:
             case Mute.MUTED:
                 z = "on"
@@ -527,6 +530,8 @@ class Device:
         return hdmi
 
     async def set_audio_from(self, hdmi: Hdmi) -> None:
+        if self.audio_from == hdmi:
+            return
         hi = hdmi.to_int()
         self.record_audio_from(None)
         await self.send_command(
@@ -599,9 +604,7 @@ class Device:
     async def set_screen(self, desired: Screen, should_abort: Callable[[], bool]) -> bool:
         if False: debug_print(desired, self)
         mode_changed = desired.mode != self.mode
-        should_mute = False
         if mode_changed:
-            should_mute = True
             await self.set_mode(desired.mode)
             if should_abort(): return False
         if (desired.submode is not None
@@ -612,23 +615,19 @@ class Device:
         for w, d in desired.windows.items():
             current = self.device_window(desired.mode, w)
             if d.hdmi != current.hdmi:
-                if desired.mode != FULL:
+                if desired.mode != FULL and d.hdmi == desired.audio_from:
                     # In multiview modes, there can be audio blips if windows holding
-                    # audio_from_hdmi change.  Doesn't seem to happen in FULL.
-                    should_mute = True
+                    # audio_from_hdmi change. Doesn't seem to happen in FULL.
+                     await self.mute()
                 await self.set_window_input(desired.mode, w, d.hdmi)
                 if should_abort(): return False
             if d.border is not None:
-                if current.border == Border.On:
-                    if d.border != current.border_color:
-                        await self.set_border_color(desired.mode, w, d.border)
-                        if should_abort(): return False
-                else:
+                if current.border != Border.On:
                     await self.set_border(desired.mode, w, Border.On)
                     if should_abort(): return False
-                    if d.border != current.border_color:
-                        await self.set_border_color(desired.mode, w, d.border)
-                        if should_abort(): return False
+                if current.border_color != d.border:
+                    await self.set_border_color(desired.mode, w, d.border)
+                    if should_abort(): return False
         # Turn off borders.  We do this after turning on borders, because the visual
         # effect is nicer. The user sees the new border 100ms sooner.
         for w, d in desired.windows.items():
@@ -639,9 +638,6 @@ class Device:
                 await self.set_border(desired.mode, w, Border.Off)
                 if should_abort(): return False
         # We do audio last, after visual effects.
-        if desired.audio_from != self.audio_from:
-            # We mute/unmute around the audio change to reduce audio blips.
-            if should_mute: await self.mute()
-            await self.set_audio_from(desired.audio_from)
-            if should_mute: await self.unmute()
+        await self.set_audio_from(desired.audio_from)
+        await self.unmute()
         return True
