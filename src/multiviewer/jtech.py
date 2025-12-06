@@ -214,45 +214,36 @@ class Border(MyStrEnum):
 
 @dataclass_json
 @dataclass
-class Device_window:
+class Window_input:
     hdmi: Hdmi | None = None
+
+@dataclass_json
+@dataclass
+class Window_border:
     border: Border | None = None
     border_color: Color | None = None
-
-    def __repr__(self) -> str:
-        if self.hdmi is None:
-            s = "H?"
-        else:
-            s = f"{self.hdmi!r}"
-        if self.border == None:
-            s = f"?{s}]"
-        elif self.border == Border.On:
-            s = f"[{s}]"    
-        if self.border_color is None:
-            c = "?"
-        elif self.border_color == BLACK:
-            c = ""
-        else:
-            c = color_letter(self.border_color)
-        return f"{s}{c}"
     
 @dataclass 
 class Mode_screen:
     mode: Mode
     submode: Submode | None = None
-    windows: dict[Window, Device_window] = field(
+    window_inputs: dict[Window, Window_input] = field(
         init=False,
-        metadata=json_dict(Window, Device_window))
+        metadata=json_dict(Window, Window_input))
+    window_borders: dict[Window, Window_border] = field(
+        init=False,
+        metadata=json_dict(Window, Window_border))
 
     def __post_init__(self):
         mode = self.mode
-        def device_window(window):
-            d = Device_window()
+        self.window_inputs = { w: Window_input() for w in mode.windows() }
+        def window_border(window):
+            d = Window_border()
             if not mode.window_has_border(window):
                 d.border = Border.Off
                 d.border_color = Color.BLACK
             return d
-        self.windows = { w: device_window(w) for w in mode.windows() }
+        self.window_borders = { w: window_border(w) for w in mode.windows() }
 
     def __repr__(self) -> str:
         if not self.mode.has_submode():
@@ -261,7 +252,22 @@ class Mode_screen:
             submode = "(?)"
         else:
             submode = f"({self.submode.to_int()})"
-        windows = " ".join([ w.__repr__() for w in self.windows.values() ])
+        def window_repr(w: Window) -> str:
+            hdmi = self.window_inputs[w].hdmi
+            b = self.window_borders[w]
+            s = f"{hdmi}"
+            if b.border is None:
+                s = f"?{s}]"
+            elif b.border == Border.On:
+                s = f"[{s}]"
+            if b.border_color is None:
+                c = "?"
+            elif b.border_color == BLACK:
+                c = ""
+            else:
+                c = color_letter(b.border_color)
+            return f"{s}{c}"
+        windows = " ".join([ window_repr(w) for w in self.mode.windows() ])
         return f"{self.mode.name}{submode} {windows}"
 
 @dataclass
@@ -284,10 +290,12 @@ class Device:
         self.init_mode_screens()
 
     def init_mode_screens(self):
-        self.mode_screens = {
+        mode_screens = {
             mode: Mode_screen(mode=mode, submode=None) 
-            for mode in [ FULL, PBP, TRIPLE, QUAD ] }
-        self.mode_screens[PIP] = self.mode_screens[PBP]
+            for mode in Mode.all() }
+        # In the J-Tech, PIP W2 shares border state with PBP W2.
+        mode_screens[PIP].window_borders[W2] = mode_screens[PBP].window_borders[W2]
+        self.mode_screens = mode_screens
         
     async def reset(self) -> None:
         self.power = None
@@ -300,8 +308,11 @@ class Device:
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screens[mode].submode
     
-    def device_window(self, mode: Mode, w: Window) -> Device_window:
-        return self.mode_screens[mode].windows[w]
+    def window_border(self, mode: Mode, w: Window) -> Window_border:
+        return self.mode_screens[mode].window_borders[w]
+
+    def window_input(self, mode: Mode, w: Window) -> Window_input:
+        return self.mode_screens[mode].window_inputs[w]
 
     def check_expectation(self, description, x, y) -> None:
         if x is not None and y is not None and x != y:
@@ -322,22 +333,21 @@ class Device:
     def record_audio_mute(self, m: Mute | None) -> None:
         self.check_expectation("audio mute", self.audio_mute, m)
         self.audio_mute = m
-
+    
     def record_border(self, m: Mode, w : Window, b: Border | None) -> None:
-        self.check_expectation(f"{w} border", self.device_window(m, w).border, b)
-        self.device_window(m, w).border = b
+        wb = self.window_border(m, w)
+        self.check_expectation(f"{w} border", wb.border, b)
+        wb.border = b
             
     def record_border_color(self, m: Mode, w: Window, c) -> None:
-        self.check_expectation(f"{w} color", 
-                               self.device_window(m, w).border_color, c)
-        self.device_window(m, w).border_color = c
+        wb = self.window_border(m, w)
+        self.check_expectation(f"{w} color", wb.border_color, c)
+        wb.border_color = c
     
     def record_window_input(self, m: Mode, w: Window, h: Hdmi | None) -> None:
-        self.check_expectation(f"{w} input", self.device_window(m, w).hdmi, h)
-        self.device_window(m, w).hdmi = h
-
-    def window_input(self, m: Mode, w: Window) -> Hdmi | None:
-        return self.device_window(m, w).hdmi
+        wi = self.window_input(m, w)
+        self.check_expectation(f"{w} input", wi.hdmi, h)
+        wi.hdmi = h
 
     def unexpected_response(self, command, response, expected_response=None) -> NoReturn:
         message = f"jtech gave unexpected response '{response}' to command '{command}'"
@@ -613,7 +623,7 @@ class Device:
             if should_abort(): return False
         # Set window inputs and turn on borders.
         for w, d in desired.windows.items():
-            current = self.device_window(desired.mode, w)
+            current = self.window_input(desired.mode, w)
             if d.hdmi != current.hdmi:
                 if desired.mode != FULL and d.hdmi == desired.audio_from:
                     # In multiview modes, there can be audio blips if windows holding
@@ -621,6 +631,7 @@ class Device:
                      await self.mute()
                 await self.set_window_input(desired.mode, w, d.hdmi)
                 if should_abort(): return False
+            current = self.window_border(desired.mode, w)
             if d.border is not None:
                 if current.border != Border.On:
                     await self.set_border(desired.mode, w, Border.On)
@@ -631,7 +642,7 @@ class Device:
         # Turn off borders.  We do this after turning on borders, because the visual
         # effect is nicer. The user sees the new border 100ms sooner.
         for w, d in desired.windows.items():
-            current = self.device_window(desired.mode, w)
+            current = self.window_border(desired.mode, w)
             if (d.border is None
                 and current.border != Border.Off
                 and desired.mode.window_has_border(w)):
