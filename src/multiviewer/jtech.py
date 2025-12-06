@@ -354,11 +354,14 @@ class Device:
         return connection
 
     async def sync_connection(self, connection) -> None:
-        # To sync the connection, we send "r power!" to request the power state, to which
-        # the jtech will respond "power on". We use read_until to ignore any existing
-        # unconsumed output.
+        # To sync the connection, we send "r power!" to request the power state.  We
+        # ignore any existing unconsumed output by reading unti we see the jtech's
+        # response: "power on" or "power off".
         await connection.write_line("r power!")
-        await connection.read_until_line("power on")
+        while True:
+            line = await connection.read_line()
+            if line == "power on" or line == "power off":
+                break
 
     async def disconnect(self) -> None:
         if self.connection is not None:
