@@ -272,6 +272,8 @@ class Device:
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
     mode_screens: Dict[Mode,Mode_screen] = field(init=False)
+    """mode_screens[mode] is our belief about the jtech's state for that mode. The
+    entries for PIP and PBP are shared, because that's what the J-Tech does."""
     connection: Connection | None = None
 
     @classmethod
@@ -283,7 +285,9 @@ class Device:
 
     def init_mode_screens(self):
         self.mode_screens = {
-            mode: Mode_screen(mode=mode, submode=None) for mode in Mode.all() }
+            mode: Mode_screen(mode=mode, submode=None) 
+            for mode in [ FULL, PBP, TRIPLE, QUAD ] }
+        self.mode_screens[PIP] = self.mode_screens[PBP]
         
     async def reset(self) -> None:
         self.power = None
@@ -371,7 +375,7 @@ class Device:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
-        if False: log(f"jtech<<< {command}")
+        if True: log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
         if response is None:
@@ -379,7 +383,7 @@ class Device:
             fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
             self.unexpected_response(command, response, expected_response)
-        if False: log(f"jtech>>> {response}")       
+        if True: log(f"jtech>>> {response}")       
         return response
 
     async def read_power(self) -> Power:
