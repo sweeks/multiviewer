@@ -68,7 +68,7 @@ class Screen:
 
 class Device:
     power: Power | None
-    audio_mute: bool
+    audio_mute: Mute
 
     @classmethod
     def field(cls): ...
