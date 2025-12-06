@@ -367,7 +367,7 @@ class Device:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
-        if True: log(f"jtech<<< {command}")
+        if False: log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
         if response is None:
@@ -375,7 +375,7 @@ class Device:
             fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
             self.unexpected_response(command, response, expected_response)
-        if True: log(f"jtech>>> {response}")       
+        if False: log(f"jtech>>> {response}")       
         return response
 
     async def read_power(self) -> Power:
