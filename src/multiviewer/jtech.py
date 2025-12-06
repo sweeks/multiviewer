@@ -348,7 +348,6 @@ class Device:
             log("connected to jtech")
             self.connection = connection
             await self.sync_connection(connection)
-            log("synced jtech connection")
         else:
             connection = self.connection
         return connection
@@ -357,11 +356,13 @@ class Device:
         # To sync the connection, we send "r power!" to request the power state.  We
         # ignore any existing unconsumed output by reading unti we see the jtech's
         # response: "power on" or "power off".
+        log("syncing jtech connection")
         await connection.write_line("r power!")
         while True:
             line = await connection.read_line()
             if line == "power on" or line == "power off":
                 break
+        log("synced jtech connection")
 
     async def disconnect(self) -> None:
         if self.connection is not None:
