@@ -64,6 +64,12 @@ class Submode:
 
     def flip(self) -> Submode: ...
 
+class PipLocation(MyStrEnum):
+    NW: PipLocation
+    NE: PipLocation
+    SW: PipLocation
+    SE: PipLocation
+
 @dataclass
 class Window_contents:
     """Describes one window on the TV screen"""
@@ -78,6 +84,7 @@ class Screen:
     """
     mode: Mode
     submode: Submode | None
+    pip_location: PipLocation | None
     audio_from: Hdmi
     windows: dict[Window, Window_contents]
 

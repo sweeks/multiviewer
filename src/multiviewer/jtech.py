@@ -116,6 +116,12 @@ W1_PROMINENT = Submode.W1_PROMINENT
 
 attach_int(Submode, {WINDOWS_SAME: 1, W1_PROMINENT: 2})
 
+class PipLocation(MyStrEnum):
+    NW = auto()
+    NE = auto()
+    SW = auto()
+    SE = auto()
+
 class Color(MyStrEnum):
     BLACK   = auto()
     RED     = auto()
@@ -189,13 +195,19 @@ class Window_contents:
 class Screen:
     mode: Mode
     submode: Submode | None
+    pip_location: PipLocation | None
     audio_from: Hdmi
     windows: dict[Window, Window_contents] = field(
         metadata=json_dict(Window, Window_contents))
 
     def one_line_description(self) -> str:
         s = self
-        sub_str = f"({s.submode.to_int()})" if s.submode is not None else ""
+        if s.submode is not None:
+            sub_str = f"({s.submode.to_int()})"
+        elif s.pip_location is not None:
+            sub_str = f"({s.pip_location})"
+        else:
+            sub_str = ""
         parts = []
         for w, c in sorted(s.windows.items()):
             h = f"{c.hdmi.value}"
@@ -275,6 +287,7 @@ class Device:
     # These fields represent our belief about the jtech's current state.
     power: Power | None = None
     mode: Mode | None = None
+    pip_location: PipLocation | None = None
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
     mode_screens: Dict[Mode,Mode_screen] = field(init=False)
@@ -586,12 +599,36 @@ class Device:
         self.record_submode(mode, None)
         await self.send_command(command, expected_response=f"{n} mode {si}")
         self.record_submode(mode, submode)
+        
+    async def set_pip(self, pip_location: PipLocation) -> None:
+        if self.pip_location == pip_location:
+            return
+        hsize = 15
+        vsize = 15
+        match pip_location:
+            case PipLocation.NW:
+                hstart, vstart = 1, 1
+            case PipLocation.NE:
+                hstart, vstart = 101 - hsize, 1
+            case PipLocation.SW:
+                hstart, vstart = 1, 101 - vsize
+            case PipLocation.SE:
+                hstart, vstart = 101 - hsize, 101 - vsize
+        command = f"s PIP {hstart} {vstart} {hsize} {vsize}!"
+        expected_response = f"PIP {hstart} {vstart} {hsize} {vsize}"
+        self.pip_location = None
+        await self.send_command(command, expected_response=expected_response)   
+        self.pip_location = pip_location
 
     async def read_screen(self, should_abort) -> Screen | None:
         mode = await self.read_mode()
         if should_abort(): return
         submode = await self.read_submode(mode)
         if should_abort(): return
+        if mode == PIP:
+            pip_location = self.pip_location
+        else:
+            pip_location = None
         audio_from = await self.read_audio_from()
         if should_abort(): return
         windows = {}
@@ -609,13 +646,20 @@ class Device:
                     border = await self.read_border_color(mode, window) 
                     if should_abort(): return
             windows[window] = Window_contents(hdmi, border)
-        return Screen(mode, submode, audio_from, windows)
+        return Screen(mode, submode, pip_location, audio_from, windows)
 
     async def set_screen(self, desired: Screen, should_abort: Callable[[], bool]) -> bool:
         if False: debug_print(desired, self)
         mode_changed = desired.mode != self.mode
         if mode_changed:
             await self.set_mode(desired.mode)
+            if should_abort(): return False
+        if desired.mode == PIP:
+            if desired.pip_location is None:
+                pip_location = PipLocation.NE
+            else:
+                pip_location = desired.pip_location
+            await self.set_pip(pip_location)
             if should_abort(): return False
         if (desired.submode is not None
             and (desired.submode != self.get_submode(desired.mode))):

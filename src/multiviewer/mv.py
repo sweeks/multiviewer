@@ -14,7 +14,7 @@ from .aio import Task
 from .atv import ATVs, TV
 from .base import *
 from .json_field import json_dict
-from .jtech import Color, Hdmi, Mode, Power, Screen, Submode, Window
+from .jtech import Color, Hdmi, Mode, PipLocation, Power, Screen, Submode, Window
 from .jtech_manager import Jtech
 from .jtech import Window_contents
 from .volume import Volume
@@ -83,7 +83,10 @@ class Multiviewer(Jsonable):
     submode: Submode = W1_PROMINENT
     is_fullscreen: bool = False
     fullscreen_shows_pip: bool = False
+    pip_location: PipLocation = PipLocation.NE
     selected_window: Window = W1
+    full_window: Window = W1
+    pip_window: Window = W2
     selected_window_border_is_on: bool = True
     control_apple_tv: bool = False
     most_recent_command_at: datetime = field(
@@ -247,6 +250,7 @@ def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
     assert False
 
 def swap_window_inputs(mv: Multiviewer, w1: Window, w2: Window) -> None:
+    if False: debug_print(f"{w1} <-> {w2}")
     window_input = mv.window_input
     h1 = window_input[w1]
     h2 = window_input[w2]    
@@ -292,13 +296,15 @@ def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
 
 def add_window(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
-        swap_window_inputs(mv, W1, mv.selected_window)
-        pip = pip_window(mv)
-        if pip != W1:
-            swap_window_inputs(mv, W2, pip)
-        mv.is_fullscreen = False
         mv.multimode = PBP
+        mv.is_fullscreen = False
+        swap_window_inputs(mv, W1, mv.full_window)
         mv.selected_window = W1
+        if mv.fullscreen_shows_pip:
+            if mv.pip_window == W1:
+                swap_window_inputs(mv, W2, mv.full_window)
+            else:
+                swap_window_inputs(mv, W2, mv.pip_window)
     else:
         match mv.multimode:
             case Multimode.PBP: mv.multimode = TRIPLE
@@ -324,7 +330,10 @@ def remove_window(mv: Multiviewer) -> None:
 
 def toggle_fullscreen(mv: Multiviewer) -> None:
     mv.is_fullscreen = not mv.is_fullscreen
-    if not mv.is_fullscreen:
+    if mv.is_fullscreen:
+        mv.full_window = mv.selected_window
+        mv.pip_window = next_window(mv, mv.full_window)
+    else:
         mv.selected_window_border_is_on = True
         if not is_visible(mv, mv.selected_window):
             swap_window_inputs(mv, W1, mv.selected_window)
@@ -336,30 +345,56 @@ def toggle_submode(mv: Multiviewer) -> None:
     else:
         mv.submode = mv.submode.flip()
 
-def pip_window(mv: Multiviewer) -> Window:
-    return next_window(mv, mv.selected_window)
+def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
+    assert mv.is_fullscreen and mv.fullscreen_shows_pip
+    match (mv.pip_location, arrow):
+        case (PipLocation.NW, Arrow.E): return PipLocation.NE
+        case (PipLocation.NW, Arrow.S): return PipLocation.SW
+        case (PipLocation.NE, Arrow.W): return PipLocation.NW
+        case (PipLocation.NE, Arrow.S): return PipLocation.SE
+        case (PipLocation.SW, Arrow.N): return PipLocation.NW
+        case (PipLocation.SW, Arrow.E): return PipLocation.SE
+        case (PipLocation.SE, Arrow.N): return PipLocation.NE
+        case (PipLocation.SE, Arrow.W): return PipLocation.SW
+    return None
 
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if False: debug_print(arrow)
     if mv.is_fullscreen:
-        match arrow:
-            case Arrow.N: 
-                if mv.fullscreen_shows_pip:
-                    swap_window_inputs(mv, mv.selected_window, pip_window(mv))
-            case Arrow.S:
-                if mv.fullscreen_shows_pip:
-                    # Shift the PIP window's contents "down", effectively rotating
-                    # the contents of the non-fullscreen windows through the PIP with
-                    # each press of S.
-                    w = pip_window(mv)
-                    while True:
-                        n = next_window(mv, w)
-                        if n == mv.selected_window: break
-                        swap_window_inputs(mv, w, n)
-                        w = n
-            case Arrow.E: mv.selected_window = next_window(mv, mv.selected_window)
-            case Arrow.W: mv.selected_window = prev_window(mv, mv.selected_window)
+        if mv.fullscreen_shows_pip:
+            if mv.pip_window == mv.selected_window:
+                # Move the PIP on screen
+                pip_location = from_pip_arrow_points_to(mv, arrow)
+                if pip_location is not None:
+                    mv.pip_location = pip_location
+            else: 
+                # Rotate PIP (E, W) or select PIP (N, S)
+                match (arrow, mv.pip_location):
+                    case (Arrow.E, _): 
+                        w = next_window(mv, mv.pip_window)  
+                        if w == mv.full_window:
+                            w = next_window(mv, w)
+                        mv.pip_window = w
+                    case (Arrow.W, _): 
+                        w = prev_window(mv, mv.pip_window)
+                        if w == mv.full_window:
+                            w = prev_window(mv, w)
+                        mv.pip_window = w
+                    case ((Arrow.N, PipLocation.NE | PipLocation.NW)
+                        | (Arrow.S, PipLocation.SE | PipLocation.SW)):
+                        mv.selected_window = mv.pip_window
+        else: # FULL
+            match arrow:
+                case Arrow.N | Arrow.S: 
+                    pass
+                case Arrow.E: 
+                    mv.selected_window = next_window(mv, mv.selected_window)
+                case Arrow.W: 
+                    mv.selected_window = prev_window(mv, mv.selected_window)
+
     else:
+        # If single tap, change the selected window to the pointed-to window. If double
+        # tap, swap the previously selected window with the previously pointed-to window.
         mv.selected_window_border_is_on = True
         last_press = mv.last_arrow_press
         at = datetime.now()
@@ -404,35 +439,13 @@ async def info(mv: Multiviewer) -> str:
     volume = describe_volume(mv)
     return f"{screen} {volume}"
 
-def render(mv: Multiviewer) -> Screen:
-    if False: debug_print()
-    window_input = mv.window_input
-    mode: Mode
-    submode: Submode | None
-    windows = {}
-    if mv.is_fullscreen:
-        windows[W1] = Window_contents(hdmi=window_input[mv.selected_window], border=None)
-        mode = Mode.FULL
-        submode = None
-        if mv.fullscreen_shows_pip:
-            mode = Mode.PIP
-            windows[W2] = Window_contents(hdmi=window_input[pip_window(mv)], border=None)                    
+def border_color(mv: Multiviewer) -> Color | None:
+    if mv.control_apple_tv:
+        return Color.RED
+    elif mv.selected_window_border_is_on:
+        return Color.GREEN
     else:
-        mode = mv.multimode.to_mode()
-        submode = mv.submode
-        for w in mode.windows():
-            border = None
-            if w == mv.selected_window:
-                if mv.control_apple_tv:
-                    border = Color.RED
-                elif mv.selected_window_border_is_on:
-                    border = Color.GREEN
-            windows[w] = Window_contents(window_input[w], border)
-    return Screen(mode, submode, window_input[mv.selected_window], windows)
-
-def update_screen(mv: Multiviewer) -> None:
-    mv.jtech.set_screen(render(mv))
-    mv.volume.set_volume_delta(mv.volume_delta_by_tv[selected_tv(mv)])
+        return None
 
 def log_double_tap_duration(d: timedelta) -> None:
     ms = int(d.total_seconds() * 1000)
@@ -454,6 +467,12 @@ def remote(mv: Multiviewer, tv: TV) -> JSON:
         mv.control_apple_tv = not mv.control_apple_tv
         return {}
 
+def swap_full_and_pip_windows(mv: Multiviewer) -> None:    
+    old_full = mv.full_window
+    mv.full_window = mv.pip_window
+    mv.pip_window = old_full
+    mv.selected_window = mv.full_window
+
 async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     if False: debug_print(args)
     mv.most_recent_command_at = datetime.now()
@@ -470,7 +489,11 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.control_apple_tv:
                 atv.menu()
             elif mv.is_fullscreen:
-                toggle_fullscreen(mv)
+                if (mv.fullscreen_shows_pip
+                    and mv.selected_window == mv.pip_window):
+                        mv.selected_window = mv.full_window
+                else:
+                    toggle_fullscreen(mv)
         case "Demote_window":
             demote_window(mv, mv.selected_window)
         case "Down" | "S":
@@ -512,7 +535,12 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Select":
             if mv.control_apple_tv:
                 atv.select()
-            elif not mv.is_fullscreen:
+            elif mv.is_fullscreen:
+                if mv.fullscreen_shows_pip:
+                    swap_full_and_pip_windows(mv)
+                else:
+                    pass
+            else:
                 toggle_fullscreen(mv)
         case "Sleep": atv.sleep()
         case "Test": pass
@@ -529,6 +557,42 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Wake": atv.wake()
         case _: fail("invalid command", command)
     return {}
+
+def render(mv: Multiviewer) -> Screen:
+    if False: debug_print()
+    window_input = mv.window_input
+    mode: Mode
+    submode: Submode | None
+    windows = {}
+    pip_location = None
+    if mv.is_fullscreen:
+        if not mv.fullscreen_shows_pip:
+            mode = Mode.FULL
+            submode = None
+            windows[W1] = Window_contents(hdmi=window_input[mv.selected_window], border=None)
+        else:
+            mode = Mode.PIP
+            submode = None
+            pip_location = mv.pip_location
+            if mv.selected_window == mv.pip_window:
+                w2_border = border_color(mv)
+            else:
+                w2_border = None
+            windows[W1] = Window_contents(hdmi=window_input[mv.full_window], border=None)
+            windows[W2] = Window_contents(hdmi=window_input[mv.pip_window], border=w2_border)                    
+    else:
+        mode = mv.multimode.to_mode()
+        submode = mv.submode
+        for w in mode.windows():
+            border = None
+            if w == mv.selected_window:
+                border = border_color(mv)
+            windows[w] = Window_contents(window_input[w], border)
+    return Screen(mode, submode, pip_location, window_input[mv.selected_window], windows)
+
+def update_screen(mv: Multiviewer) -> None:
+    mv.jtech.set_screen(render(mv))
+    mv.volume.set_volume_delta(mv.volume_delta_by_tv[selected_tv(mv)])
 
 async def do_command_and_update_screen(mv: Multiviewer, args: list[str]) -> JSON:
     if False: debug_print(args, mv)
