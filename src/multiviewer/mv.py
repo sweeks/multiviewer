@@ -144,10 +144,6 @@ def validate(mv : Multiviewer) -> None:
     if not mv.is_fullscreen:
         assert_(mv.selected_window in v)
 
-def reset_volume(mv: Multiviewer) -> None:
-    mv.volume.set_volume_delta(0)
-    mv.volume_delta_by_tv = volume_deltas_zero()
-
 async def shutdown(mv: Multiviewer) -> None:
     await mv.atvs.shutdown()
 
@@ -220,7 +216,11 @@ async def power_on(mv: Multiviewer) -> None:
         return
     log("turning on power")
     set_power(mv, Power.ON)
-    reset_volume(mv)
+    # We reset all the volume deltas to zero, because this is a new TV session for the
+    # user.  This causes the initial update_screen to set the desired volume_delta
+    # to zero, which in turn causes the Volume manager to set the actual volume_delta
+    # to zero.
+    mv.volume_delta_by_tv = volume_deltas_zero()
     mv.control_apple_tv = False
     # Waking TV1 turns on the LG via CEC.
     for tv in TV.all():
@@ -328,11 +328,15 @@ def remove_window(mv: Multiviewer) -> None:
             mv.selected_window_border_is_on = True
             mv.selected_window = W1
 
+def maybe_entered_pip(mv: Multiviewer) -> None:
+    if mv.fullscreen_shows_pip:
+        mv.pip_window = next_window(mv, mv.full_window)
+
 def toggle_fullscreen(mv: Multiviewer) -> None:
     mv.is_fullscreen = not mv.is_fullscreen
     if mv.is_fullscreen:
         mv.full_window = mv.selected_window
-        mv.pip_window = next_window(mv, mv.full_window)
+        maybe_entered_pip(mv)
     else:
         mv.selected_window_border_is_on = True
         if not is_visible(mv, mv.selected_window):
@@ -342,6 +346,7 @@ def toggle_fullscreen(mv: Multiviewer) -> None:
 def toggle_submode(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
         mv.fullscreen_shows_pip = not mv.fullscreen_shows_pip
+        maybe_entered_pip(mv)
     else:
         mv.submode = mv.submode.flip()
 
@@ -383,14 +388,18 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
                     case ((Arrow.N, PipLocation.NE | PipLocation.NW)
                         | (Arrow.S, PipLocation.SE | PipLocation.SW)):
                         mv.selected_window = mv.pip_window
+                    case _:
+                        pass
         else: # FULL
             match arrow:
                 case Arrow.N | Arrow.S: 
                     pass
                 case Arrow.E: 
-                    mv.selected_window = next_window(mv, mv.selected_window)
+                    mv.full_window = next_window(mv, mv.selected_window)
+                    mv.selected_window = mv.full_window
                 case Arrow.W: 
-                    mv.selected_window = prev_window(mv, mv.selected_window)
+                    mv.full_window = prev_window(mv, mv.selected_window)
+                    mv.selected_window = mv.full_window
 
     else:
         # If single tap, change the selected window to the pointed-to window. If double
@@ -445,7 +454,7 @@ def border_color(mv: Multiviewer) -> Color | None:
     elif mv.selected_window_border_is_on:
         return Color.GREEN
     else:
-        return None
+        return Color.GRAY
 
 def log_double_tap_duration(d: timedelta) -> None:
     ms = int(d.total_seconds() * 1000)
@@ -577,7 +586,7 @@ def render(mv: Multiviewer) -> Screen:
             if mv.selected_window == mv.pip_window:
                 w2_border = border_color(mv)
             else:
-                w2_border = None
+                w2_border = Color.GRAY
             windows[W1] = Window_contents(hdmi=window_input[mv.full_window], border=None)
             windows[W2] = Window_contents(hdmi=window_input[mv.pip_window], border=w2_border)                    
     else:
@@ -587,6 +596,8 @@ def render(mv: Multiviewer) -> Screen:
             border = None
             if w == mv.selected_window:
                 border = border_color(mv)
+            else:
+                border = Color.GRAY
             windows[w] = Window_contents(window_input[w], border)
     return Screen(mode, submode, pip_location, window_input[mv.selected_window], windows)
 

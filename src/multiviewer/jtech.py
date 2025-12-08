@@ -307,7 +307,11 @@ class Device:
             mode: Mode_screen(mode=mode, submode=None) 
             for mode in Mode.all() }
         # In the J-Tech, PIP W2 shares border state with PBP W2.
-        mode_screens[PIP].window_borders[W2] = mode_screens[PBP].window_borders[W2]
+#        mode_screens[PIP].window_borders[W2] = mode_screens[PBP].window_borders[W2]
+        for mode in [ PIP, PBP, TRIPLE ]: 
+            for window in mode.windows():
+                mode_screens[mode].window_borders[window] = \
+                    mode_screens[QUAD].window_borders[window]
         self.mode_screens = mode_screens
         
     async def reset(self) -> None:
@@ -603,17 +607,20 @@ class Device:
     async def set_pip(self, pip_location: PipLocation) -> None:
         if self.pip_location == pip_location:
             return
-        hsize = 15
-        vsize = 15
+        hsize = vsize = 19
+        left = 3
+        top = 3
+        right = 100 - hsize
+        bottom = 100 - vsize
         match pip_location:
             case PipLocation.NW:
-                hstart, vstart = 1, 1
+                hstart, vstart = left, top
             case PipLocation.NE:
-                hstart, vstart = 101 - hsize, 1
+                hstart, vstart = right, top
             case PipLocation.SW:
-                hstart, vstart = 1, 101 - vsize
+                hstart, vstart = left, bottom
             case PipLocation.SE:
-                hstart, vstart = 101 - hsize, 101 - vsize
+                hstart, vstart = right, bottom
         command = f"s PIP {hstart} {vstart} {hsize} {vsize}!"
         expected_response = f"PIP {hstart} {vstart} {hsize} {vsize}"
         self.pip_location = None

@@ -105,52 +105,52 @@ async def _():
 @test("Reset")
 async def _():
     await tv_do("Reset")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Play_pause toggles border")
 async def _():
     await tv_do("Reset; Play_pause")
-    await tv_is("QUAD(2) A1 H1 H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]A [H2]A [H3]A [H4]A")
 
 @test("Toggle_fullscreen")
 async def _():
     await tv_do("Reset; Toggle_fullscreen")
     await tv_is("FULL A1 H1")
     await tv_do("Toggle_fullscreen")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Toggle_fullscreen preserves submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Toggle_fullscreen; Toggle_fullscreen")
-    await tv_is("QUAD(1) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(1) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Toggle_fullscreen preserves audio")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; E; Toggle_fullscreen")
-    await tv_is("QUAD(2) A2 H1 [H2]G H3 H4")
+    await tv_is("QUAD(2) A2 [H1]A [H2]G [H3]A [H4]A")
 
 @test("NEWS in QUAD(2)")
 async def _():
     await tv_do("Reset")
     await tv_do("N")
-    await tv_is("QUAD(2) A2 H1 [H2]G H3 H4")
+    await tv_is("QUAD(2) A2 [H1]A [H2]G [H3]A [H4]A")
     await tv_do("W")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
     await tv_do("E")
-    await tv_is("QUAD(2) A3 H1 H2 [H3]G H4")
+    await tv_is("QUAD(2) A3 [H1]A [H2]A [H3]G [H4]A")
     await tv_do("S")
-    await tv_is("QUAD(2) A4 H1 H2 H3 [H4]G")
+    await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
 @test("NEWS in QUAD(1)")
 async def _():
     await tv_do("Reset; Toggle_submode; E")
-    await tv_is("QUAD(1) A2 H1 [H2]G H3 H4")
+    await tv_is("QUAD(1) A2 [H1]A [H2]G [H3]A [H4]A")
     await tv_do("W; S")
-    await tv_is("QUAD(1) A3 H1 H2 [H3]G H4")
+    await tv_is("QUAD(1) A3 [H1]A [H2]A [H3]G [H4]A")
     await tv_do("E")
-    await tv_is("QUAD(1) A4 H1 H2 H3 [H4]G")
+    await tv_is("QUAD(1) A4 [H1]A [H2]A [H3]A [H4]G")
     await tv_do("W; N")
-    await tv_is("QUAD(1) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(1) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("NEWS in FULL")
 async def _():
@@ -176,35 +176,40 @@ async def _():
 @test("PIP and Back from W1")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode")
-    await tv_is("PIP(NE) A1 H1 H2")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
     await tv_do("Back")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("PIP and Back from W3")
 async def _():
     await tv_do("Reset; E; Toggle_fullscreen; Toggle_submode")
-    await tv_is("PIP(NE) A3 H3 H4")
+    await tv_is("PIP(NE) A3 H3 [H4]A")
     await tv_do("Back")
-    await tv_is("QUAD(2) A3 H1 H2 [H3]G H4")
+    await tv_is("QUAD(2) A3 [H1]A [H2]A [H3]G [H4]A")
+
+@test("PIP from FULL after rotating")
+async def _():
+    await tv_do("Reset; Toggle_fullscreen; E; Toggle_submode")
+    await tv_is("PIP(NE) A2 H2 [H3]A")
 
 @test("Select PIP window and go Back")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; N")
     await tv_is("PIP(NE) A2 H1 [H2]G")
     await tv_do("Back")
-    await tv_is("PIP(NE) A1 H1 H2")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
 
 @test("Swap full and PIP windows")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; Select")
-    await tv_is("PIP(NE) A2 H2 H1")
+    await tv_is("PIP(NE) A2 H2 [H1]A")
     await tv_do("Select")
-    await tv_is("PIP(NE) A1 H1 H2")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
 
 @test("Swap full and PIP windows from PIP window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; N; Select")
-    await tv_is("PIP(NE) A2 H2 H1")
+    await tv_is("PIP(NE) A2 H2 [H1]A")
 
 @test("Change PIP location")
 async def _():
@@ -229,67 +234,67 @@ async def _():
 @test("Rotate PIP window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; E")
-    await tv_is("PIP(NE) A1 H1 H3")
+    await tv_is("PIP(NE) A1 H1 [H3]A")
     await tv_do("E")
-    await tv_is("PIP(NE) A1 H1 H4")
+    await tv_is("PIP(NE) A1 H1 [H4]A")
     await tv_do("E")
-    await tv_is("PIP(NE) A1 H1 H2")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
     await tv_do("W")
-    await tv_is("PIP(NE) A1 H1 H4")
+    await tv_is("PIP(NE) A1 H1 [H4]A")
     await tv_do("W")
-    await tv_is("PIP(NE) A1 H1 H3")
+    await tv_is("PIP(NE) A1 H1 [H3]A")
     await tv_do("W")
-    await tv_is("PIP(NE) A1 H1 H2")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
   
 @test("PIP + Add_window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; Add_window")
-    await tv_is("PBP(2) A1 [H1]G H2")
+    await tv_is("PBP(2) A1 [H1]G [H2]A")
 
 @test("PIP + Add_window")
 async def _():
     await tv_do("Reset; E; Toggle_fullscreen; Toggle_submode; Add_window")
-    await tv_is("PBP(2) A3 [H3]G H4")
+    await tv_is("PBP(2) A3 [H3]G [H4]A")
 
 @test("Remove_window")
 async def _():
     await tv_do("Reset; Remove_window")
-    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+    await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
     await tv_do("Remove_window")
-    await tv_is("PBP(2) A1 [H1]G H2")
+    await tv_is("PBP(2) A1 [H1]G [H2]A")
     await tv_do("Remove_window")
     await tv_is("FULL A1 H1")
 
 @test("Remove_window preserves submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Remove_window")
-    await tv_is("TRIPLE(1) A1 [H1]G H2 H3")
+    await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H3]A")
 
 @test("Remove_window switches audio to visible window")
 async def _():
     await tv_do("Reset; S; Remove_window")
-    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+    await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 @test("Add_window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Add_window")
-    await tv_is("PBP(2) A1 [H1]G H2")
+    await tv_is("PBP(2) A1 [H1]G [H2]A")
     await tv_do("Add_window")
-    await tv_is("TRIPLE(2) A1 [H1]G H2 H3")
+    await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
     await tv_do("Add_window")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Add_window and Remove_window preserve submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Remove_window")
-    await tv_is("TRIPLE(1) A1 [H1]G H2 H3")
+    await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H3]A")
     await tv_do("Toggle_submode; Add_window")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Demote_window")
 async def _():
     await tv_do("Reset; Demote_window")
-    await tv_is("QUAD(2) A2 [H2]G H3 H4 H1")
+    await tv_is("QUAD(2) A2 [H2]G [H3]A [H4]A [H1]A")
 
 @test("Home")
 async def _():
@@ -307,7 +312,7 @@ async def _():
 @test("Screensaver")
 async def _():
     await tv_do("Reset; Screensaver")
-    await tv_is("QUAD(2) A1 [H1]G H2 H3 H4")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 @test("Volume")
 async def _():
@@ -360,14 +365,14 @@ async def _():
 
 @test("Info")
 async def _():
-    await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G H2 H3 H4 V+0"')
+    await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A V+0"')
 
 @test("Power")
 async def _():
     # We do a state change before turning off to make sure it is preserved.
     # We do a state change after turning on to make sure that we can.
     await tv_do("Reset; E; Power; Wait 10; Power; S")
-    await tv_is("QUAD(2) A4 H1 H2 H3 [H4]G")
+    await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
 async def main():
     global _the_mv
