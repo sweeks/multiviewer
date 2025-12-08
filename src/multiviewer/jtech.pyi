@@ -114,6 +114,8 @@ class Device:
     async def set_power(self, desired_power: Power) -> None:
         """Send a command to the J-Tech to make its power match desired_power."""
 
+    async def test_aliasing(self) -> None: ...
+
     async def set_screen(self, 
                         desired_screen: Screen, 
                         should_abort: Callable[[], bool]) -> bool:

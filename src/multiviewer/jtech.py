@@ -3,8 +3,10 @@ from __future__ import annotations
 # Standard library
 import dataclasses
 import re
+from unittest import result
 
 # Local package
+from . import aio
 from .base import *
 from .ip2sl import Connection
 from .json_field import json_dict
@@ -178,7 +180,7 @@ UNMUTED = Mute.UNMUTED
 attach_int(Mute, {UNMUTED: 0, MUTED: 1})
 
 @dataclass_json
-@dataclass()
+@dataclass(slots=True)
 class Window_contents:
     hdmi: Hdmi
     border: Color | None
@@ -191,7 +193,7 @@ class Window_contents:
         return s
 
 @dataclass_json
-@dataclass
+@dataclass(slots=True)
 class Screen:
     mode: Mode
     submode: Submode | None
@@ -225,26 +227,29 @@ class Border(MyStrEnum):
     Off = auto()
 
 @dataclass_json
-@dataclass
+@dataclass(slots=True)  
 class Window_input:
     hdmi: Hdmi | None = None
 
+    def __repr__(self) -> str:
+        if self.hdmi is None:
+            return "?"
+        else:
+            return f"{self.hdmi!r}"
+
 @dataclass_json
-@dataclass
+@dataclass(slots=True)
 class Window_border:
     border: Border | None = None
     border_color: Color | None = None
     
-@dataclass 
+@dataclass(slots=True)
 class Mode_screen:
     mode: Mode
     submode: Submode | None = None
     window_inputs: dict[Window, Window_input] = field(
         init=False,
         metadata=json_dict(Window, Window_input))
-    window_borders: dict[Window, Window_border] = field(
-        init=False,
-        metadata=json_dict(Window, Window_border))
 
     def __post_init__(self):
         mode = self.mode
@@ -255,7 +260,6 @@ class Mode_screen:
                 d.border = Border.Off
                 d.border_color = Color.BLACK
             return d
-        self.window_borders = { w: window_border(w) for w in mode.windows() }
 
     def __repr__(self) -> str:
         if not self.mode.has_submode():
@@ -264,25 +268,10 @@ class Mode_screen:
             submode = "(?)"
         else:
             submode = f"({self.submode.to_int()})"
-        def window_repr(w: Window) -> str:
-            hdmi = self.window_inputs[w].hdmi
-            b = self.window_borders[w]
-            s = f"{hdmi}"
-            if b.border is None:
-                s = f"?{s}]"
-            elif b.border == Border.On:
-                s = f"[{s}]"
-            if b.border_color is None:
-                c = "?"
-            elif b.border_color == BLACK:
-                c = ""
-            else:
-                c = color_letter(b.border_color)
-            return f"{s}{c}"
-        windows = " ".join([ window_repr(w) for w in self.mode.windows() ])
+        windows = " ".join([ self.window_inputs[w].__repr__() for w in self.mode.windows() ])
         return f"{self.mode.name}{submode} {windows}"
 
-@dataclass
+@dataclass(slots=True)
 class Device:
     # These fields represent our belief about the jtech's current state.
     power: Power | None = None
@@ -291,8 +280,9 @@ class Device:
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
     mode_screens: Dict[Mode,Mode_screen] = field(init=False)
-    """mode_screens[mode] is our belief about the jtech's state for that mode. The
-    entries for PIP and PBP are shared, because that's what the J-Tech does."""
+    window_borders: dict[Window, Window_border] = field(
+        init=False,
+        metadata=json_dict(Window, Window_border))
     connection: Connection | None = None
 
     @classmethod
@@ -301,18 +291,12 @@ class Device:
 
     def __post_init__(self) -> None:
         self.init_mode_screens()
+        self.window_borders = { w: Window_border() for w in Window.all() }
 
     def init_mode_screens(self):
-        mode_screens = {
+        self.mode_screens = {
             mode: Mode_screen(mode=mode, submode=None) 
             for mode in Mode.all() }
-        # In the J-Tech, PIP W2 shares border state with PBP W2.
-#        mode_screens[PIP].window_borders[W2] = mode_screens[PBP].window_borders[W2]
-        for mode in [ PIP, PBP, TRIPLE ]: 
-            for window in mode.windows():
-                mode_screens[mode].window_borders[window] = \
-                    mode_screens[QUAD].window_borders[window]
-        self.mode_screens = mode_screens
         
     async def reset(self) -> None:
         self.power = None
@@ -326,7 +310,7 @@ class Device:
         return self.mode_screens[mode].submode
     
     def window_border(self, mode: Mode, w: Window) -> Window_border:
-        return self.mode_screens[mode].window_borders[w]
+        return self.window_borders[w]
 
     def window_input(self, mode: Mode, w: Window) -> Window_input:
         return self.mode_screens[mode].window_inputs[w]
@@ -627,6 +611,55 @@ class Device:
         await self.send_command(command, expected_response=expected_response)   
         self.pip_location = pip_location
 
+    async def test_aliasing_of_window_input(self, mode1: Mode, mode2: Mode, window: Window) -> None:
+        if not window in mode1.windows() or not window in mode2.windows():
+            return
+        await self.set_mode(mode1)
+        await aio.sleep(1)
+        await self.set_window_input(mode1, window, H1)
+        await aio.sleep(1)
+        await self.set_mode(mode2)
+        await aio.sleep(1)
+        await self.set_window_input(mode2, window, H2)
+        await aio.sleep(1)
+        await self.set_mode(mode1)
+        await aio.sleep(1)
+        h = await self.read_window_input(mode1, window)
+        if h == H1:
+            pass
+        elif h == H2:
+            print(f"{mode1} {mode2} {window}")
+        else:
+            fail(f"{mode1} {mode2} {window} {h}")
+
+    async def test_aliasing_of_border(self, mode1: Mode, mode2: Mode, window: Window) -> None:
+        if not window in mode1.windows() or not window in mode2.windows():
+            return
+        await self.set_mode(mode1)
+        await aio.sleep(1)
+        await self.set_border(mode1, window, Border.On)
+        await aio.sleep(1)
+        await self.set_mode(mode2)
+        await aio.sleep(1)
+        await self.set_border(mode2, window, Border.Off)
+        await aio.sleep(1)
+        await self.set_mode(mode1)
+        await aio.sleep(1)
+        b = await self.read_border(mode1, window)
+        if b == Border.Off:
+            print(f"{mode1} {mode2} {window}")
+
+    async def test_aliasing(self) -> None:
+        print()
+        for mode1 in Mode.all():
+            for mode2 in Mode.all():
+                if mode1 == mode2:
+                    continue
+                for window in mode1.windows():
+                    if window in mode2.windows():
+                        #await self.test_aliasing_of_window_input(mode1, mode2, window)
+                        await self.test_aliasing_of_border(mode1, mode2, window)
+            
     async def read_screen(self, should_abort) -> Screen | None:
         mode = await self.read_mode()
         if should_abort(): return
