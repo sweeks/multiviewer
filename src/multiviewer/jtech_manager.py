@@ -6,15 +6,16 @@ from . import aio
 from . import json_field
 from .aio import Event, Task
 from .base import *
-from .jtech import Device, Mute, Power, Screen
+from .jtech import Jtech, Mute, Power
+from .jtech_screen import Screen
 
 @dataclass(slots=True)
-class Jtech:
+class Jtech_manager:
     should_send_commands_to_device: bool = True
     desired_power: Power | None = None
     desired_screen: Screen | None = None
-    device: Device = Device.field()
-    device_screen: Screen | None = None
+    jtech: Jtech = Jtech.field()
+    jtech_screen: Screen | None = None
     desynced_event: Event = Event.field()
     synced_event: Event = Event.field()
     # A background task that is constantly trying to make the jtech match desired_power
@@ -23,7 +24,7 @@ class Jtech:
     
     @classmethod
     def field(cls):
-        return dataclasses.field(default_factory=Jtech, metadata=json_field.omit)
+        return dataclasses.field(default_factory=Jtech_manager, metadata=json_field.omit)
         
     def __post_init__(self) -> None:
         self.task = aio.Task.create(type(self).__name__, self.sync_forever())
@@ -37,8 +38,8 @@ class Jtech:
 
     async def current_power(self) -> Power:
         await self.synced()
-        assert self.device.power is not None
-        return self.device.power
+        assert self.jtech.power is not None
+        return self.jtech.power
 
     async def current_screen(self) -> Screen:
         await self.synced()
@@ -62,22 +63,22 @@ class Jtech:
         if False: debug_print(self)
         def should_abort() -> bool:
             return self.desynced_event.is_set()
-        device = self.device
+        jtech = self.jtech
         if self.desired_power is None:
             return True
-        if self.desired_power != device.power:
-            await device.set_power(self.desired_power)
-        if device.power == Power.OFF:
+        if self.desired_power != jtech.power:
+            await jtech.set_power(self.desired_power)
+        if jtech.power == Power.OFF:
             return True
-        if device.audio_mute != Mute.UNMUTED:
-            await device.unmute()
+        if jtech.audio_mute != Mute.UNMUTED:
+            await jtech.unmute()
         if should_abort():
             return False
         desired_screen = self.desired_screen
         if desired_screen is None:
             return True
         log(f"setting screen: {desired_screen}")
-        set_screen_finished = await device.set_screen(desired_screen, should_abort)
+        set_screen_finished = await desired_screen.set_jtech(jtech, should_abort)
         if set_screen_finished:
             log("set screen finished")
         else:
@@ -90,13 +91,13 @@ class Jtech:
         if should_abort():
             return False
         log("reading screen")
-        self.device_screen = await self.device.read_screen(should_abort)
-        if self.device_screen is None:
+        self.jtech_screen = await Screen.read_jtech(jtech, should_abort)
+        if self.jtech_screen is None:
             log("read screen aborted")
             return False
         else:
-            log(f"read screen: {self.device_screen}")
-            is_synced = self.device_screen == desired_screen
+            log(f"read screen: {self.jtech_screen}")
+            is_synced = self.jtech_screen == desired_screen
             if not is_synced:
                 log(f"screen mismatch")
             return is_synced
@@ -120,4 +121,4 @@ class Jtech:
                 log_exc(e)
                 if RunMode.get() == RunMode.Daemon:
                     debug_print(self)
-                await self.device.reset()
+                await self.jtech.reset()

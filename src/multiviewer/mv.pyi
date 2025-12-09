@@ -16,7 +16,7 @@ from pathlib import Path
 
 # Local package
 from .base import *
-from .jtech_manager import Jtech
+from .jtech_manager import Jtech_manager
 
 class Power:
     ON: Power
@@ -25,7 +25,7 @@ class Power:
 class Multiviewer:
     def __init__(self) -> NoReturn: """Undefined. Use create()"""
     
-    jtech: Jtech
+    jtech_manager: Jtech_manager
 
 async def create() -> Multiviewer: ...
 

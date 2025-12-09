@@ -1,15 +1,15 @@
 """
-Manage the jtech device, by continually syncing the desired power and screen, via the
-jtech.Device set_power and set_screen functions.
+Manage the jtech device, by continually syncing the desired power and screen.
 """
 
 # Local package
 from .base import *
-from .jtech import Power, Screen
+from .jtech import Jtech as DeviceJtech, Power
+from .jtech_screen import Screen
 
-class Jtech:
+class Jtech_manager:
     @classmethod 
-    def field(cls) -> Jtech: ...
+    def field(cls) -> Jtech_manager: ...
 
     should_send_commands_to_device: bool
     """This determines whether we send commands and read responses from the physical jtech

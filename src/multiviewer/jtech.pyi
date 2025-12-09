@@ -1,22 +1,21 @@
 """
-This module has all the classes for describing and controlling the J-Tech device. The
-Screen class describes the screen layout, and the Device class has functions to read and
-set the screen.
+This module has all the classes for describing and controlling the J-Tech device.
 """
 
 # Local package
 from . import aio
 from .base import *
+from .jtech_screen import Screen, Window_contents
 
-class Power:
+class Power(MyStrEnum):
     ON: Power
     OFF: Power
 
-class Mute:
+class Mute(MyStrEnum):
     MUTED: Mute
     UNMUTED: Mute
 
-class Color:
+class Color(MyStrEnum):
     """The names of the border colors."""
     BLACK: Color
     RED: Color
@@ -28,14 +27,18 @@ class Color:
     WHITE: Color
     GRAY: Color
 
-class Hdmi:
+class Border:
+    On: Border
+    Off: Border
+
+class Hdmi(MyStrEnum):
     """The names of the HDMI inputs to the J-Tech."""
     H1: Hdmi
     H2: Hdmi
     H3: Hdmi
     H4: Hdmi
 
-class Mode:
+class Mode(MyStrEnum):
     """The layout of the on-screen windows."""
     FULL: Mode
     PIP: Mode
@@ -49,7 +52,6 @@ class Mode:
 
     def window_has_border(self, w: Window) -> bool: ...
 
-
 class Window(MyStrEnum):
     """The names of the on-screen windwows."""
     W1: Window
@@ -57,7 +59,7 @@ class Window(MyStrEnum):
     W3: Window
     W4: Window
 
-class Submode:
+class Submode(MyStrEnum):
     """
     For QUAD, TRIPLE, and PBP, the submode says whether all windows are the same size,
     or W1 is prominent.
@@ -74,26 +76,15 @@ class PipLocation(MyStrEnum):
     SE: PipLocation
 
 @dataclass(slots=True)
-class Window_contents:
-    """Describes one window on the TV screen"""
-    hdmi: Hdmi
-    border: Color | None
+class Window_input:
+    hdmi: Hdmi | None = None
 
 @dataclass(slots=True)
-class Screen:
-    """
-    A complete description of the jtech's output observable on the TV, including the
-    window layout, borders, and audio.
-    """
-    mode: Mode
-    submode: Submode | None
-    pip_location: PipLocation | None
-    audio_from: Hdmi
-    windows: dict[Window, Window_contents]
+class Window_border:
+    border: Border | None = None
+    border_color: Color | None = None
 
-    def one_line_description(self) -> str: ...
-
-class Device:
+class Jtech:
     """
     For controlling the Jtech. It uses an ip2sl.Connnection to send commands, one at a
     time.  It maintains a representation of the internal state of the J-Tech, to avoid
@@ -106,31 +97,43 @@ class Device:
     power: Power | None
     """The J-Tech's power state, as last read from the device."""
 
+    mode: Mode | None
+    pip_location: PipLocation | None
+    audio_from: Hdmi | None
     audio_mute: Mute
     """The J-Tech's audio mute state, as last read from the device."""
 
     async def reset(self) -> None:
         """Reset the internal state and reconnect to the J-Tech."""
     
+    def get_submode(self, mode: Mode) -> Submode | None: ...
+    def window_border(self, mode: Mode, w: Window) -> Window_border: ...
+    def window_input(self, mode: Mode, w: Window) -> Window_input: ...
+
+    async def read_mode(self) -> Mode: ...
+    async def set_mode(self, mode: Mode) -> None: ...
+
+    async def read_submode(self, mode: Mode) -> Submode | None: ...
+    async def set_submode(self, mode: Mode, submode: Submode) -> None: ...
+
+    async def set_pip(self, pip_location: PipLocation) -> None: ...
+
+    async def read_audio_from(self) -> Hdmi: ...
+    async def set_audio_from(self, hdmi: Hdmi) -> None: ...
+
+    async def read_window_input(self, mode: Mode, window: Window) -> Hdmi: ...
+    async def set_window_input(self, mode: Mode, window: Window, hdmi: Hdmi) -> None: ...
+
+    async def read_border(self, mode: Mode, window: Window) -> Border: ...
+    async def set_border(self, mode: Mode, window: Window, border: Border) -> None: ...
+
+    async def read_border_color(self, mode: Mode, window: Window) -> Color: ...
+    async def set_border_color(self, mode: Mode, window: Window, color: Color) -> None: ...
+
+    async def mute(self) -> None: ...
     async def unmute(self) -> None: ...
 
     async def set_power(self, desired_power: Power) -> None:
         """Send a command to the J-Tech to make its power match desired_power."""
 
     async def test_aliasing(self) -> None: ...
-
-    async def set_screen(self, 
-                        desired_screen: Screen, 
-                        should_abort: Callable[[], bool]) -> bool:
-        """
-        Send commands to the J-Tech to make its displayed screen match desired_screen.
-        After sending each command, check should_abort(); if it returns True, abort early
-        and return False.  Return True if the entire desired_screen was set.
-        """
-
-    async def read_screen(self, should_abort: Callable[[], bool]) -> Screen | None: 
-        """
-        Send commands to the J-Tech to read its currently displayed screen. After sending
-        each command, check should_abort(); if it returns True, abort early and return
-        None. Otherwise, return the read Screen.
-        """

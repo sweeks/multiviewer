@@ -1,3 +1,9 @@
+# remove Jtech.window_border and window_input, and move the redundancy checks from 
+jtech_screen into jtech
+# add docs/user-guide.md
+# add docs/developer-guide.md
+# update blank lines to follow PEP 8
+# other PEP 8 conventions?
 # pylance: turn on strict type checking
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set

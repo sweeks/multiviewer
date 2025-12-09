@@ -14,9 +14,9 @@ from .aio import Task
 from .atv import ATVs, TV
 from .base import *
 from .json_field import json_dict
-from .jtech import Color, Hdmi, Mode, PipLocation, Power, Screen, Submode, Window
-from .jtech_manager import Jtech
-from .jtech import Window_contents
+from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
+from .jtech_manager import Jtech_manager
+from .jtech_screen import Screen, Window_contents
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
@@ -98,7 +98,7 @@ class Multiviewer(Jsonable):
     last_remote_press: RemotePress | None = field(
         default=None, 
         metadata=json_field.omit)
-    jtech: Jtech = Jtech.field()
+    jtech_manager: Jtech_manager = Jtech_manager.field()
     # We maintain a volume delta for each TV, which we use to automatically adjust
     # volume_delta when unmuting or when the selected TV changes.  
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
@@ -199,7 +199,7 @@ def power(mv: Multiviewer) -> Power:
 def set_power(mv: Multiviewer, p: Power) -> None: 
     if False: debug_print(p)
     mv.power = p
-    mv.jtech.set_power(p)
+    mv.jtech_manager.set_power(p)
 
 async def power_off(mv: Multiviewer) -> None:
     if False: debug_print(mv)
@@ -440,7 +440,7 @@ def describe_volume(mv: Multiviewer) -> str:
     return mv.volume.describe_volume()
 
 async def describe_screen(mv: Multiviewer) -> str:
-    screen = await mv.jtech.current_screen()
+    screen = await mv.jtech_manager.current_screen()
     return screen.one_line_description()
 
 async def info(mv: Multiviewer) -> str:
@@ -594,7 +594,7 @@ def render(mv: Multiviewer) -> Screen:
     return Screen(mode, submode, pip_location, window_input[mv.selected_window], windows)
 
 def update_screen(mv: Multiviewer) -> None:
-    mv.jtech.set_screen(render(mv))
+    mv.jtech_manager.set_screen(render(mv))
     mv.volume.set_volume_delta(mv.volume_delta_by_tv[selected_tv(mv)])
 
 async def do_command_and_update_screen(mv: Multiviewer, args: list[str]) -> JSON:
@@ -607,5 +607,5 @@ async def do_command_and_update_screen(mv: Multiviewer, args: list[str]) -> JSON
 async def synced(mv: Multiviewer) -> None:
     if False: debug_print(mv)
     await mv.atvs.synced()
-    await mv.jtech.synced()
+    await mv.jtech_manager.synced()
     await mv.volume.synced()
