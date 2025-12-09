@@ -47,6 +47,9 @@ class Mode:
 
     def windows(self) -> list[Window]: ...
 
+    def window_has_border(self, w: Window) -> bool: ...
+
+
 class Window(MyStrEnum):
     """The names of the on-screen windwows."""
     W1: Window

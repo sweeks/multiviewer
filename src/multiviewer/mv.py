@@ -448,14 +448,6 @@ async def info(mv: Multiviewer) -> str:
     volume = describe_volume(mv)
     return f"{screen} {volume}"
 
-def border_color(mv: Multiviewer) -> Color | None:
-    if mv.control_apple_tv:
-        return Color.RED
-    elif mv.selected_window_border_is_on:
-        return Color.GREEN
-    else:
-        return Color.GRAY
-
 def log_double_tap_duration(d: timedelta) -> None:
     ms = int(d.total_seconds() * 1000)
     log(f"double-tap duration: {ms}ms")
@@ -573,32 +565,32 @@ def render(mv: Multiviewer) -> Screen:
     mode: Mode
     submode: Submode | None
     windows = {}
+    def set_window(mode: Mode, screen_window: Window, mv_window: Window) -> None:
+        if not mode.window_has_border(screen_window):
+            border = None
+        elif mv.control_apple_tv and mv_window == mv.selected_window:
+            border = Color.RED
+        elif mv.selected_window_border_is_on and mv_window == mv.selected_window:
+            border = Color.GREEN
+        else:
+            border = Color.GRAY
+        windows[screen_window] = \
+            Window_contents(hdmi=window_input[mv_window], border=border)
     pip_location = None
     if mv.is_fullscreen:
+        submode = None
+        set_window(Mode.FULL, W1, mv.full_window)
         if not mv.fullscreen_shows_pip:
             mode = Mode.FULL
-            submode = None
-            windows[W1] = Window_contents(hdmi=window_input[mv.selected_window], border=None)
         else:
             mode = Mode.PIP
-            submode = None
             pip_location = mv.pip_location
-            if mv.selected_window == mv.pip_window:
-                w2_border = border_color(mv)
-            else:
-                w2_border = Color.GRAY
-            windows[W1] = Window_contents(hdmi=window_input[mv.full_window], border=None)
-            windows[W2] = Window_contents(hdmi=window_input[mv.pip_window], border=w2_border)                    
+            set_window(Mode.PIP, W2, mv.pip_window)
     else:
         mode = mv.multimode.to_mode()
         submode = mv.submode
         for w in mode.windows():
-            border = None
-            if w == mv.selected_window:
-                border = border_color(mv)
-            else:
-                border = Color.GRAY
-            windows[w] = Window_contents(window_input[w], border)
+            set_window(mode, w, w)
     return Screen(mode, submode, pip_location, window_input[mv.selected_window], windows)
 
 def update_screen(mv: Multiviewer) -> None:
