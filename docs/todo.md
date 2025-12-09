@@ -1,4 +1,5 @@
 # project wide: add slots to all dataclasses
+# check out the jtech windows app and see if I can adjust w1_prominent window sizes
 # pylance: turn on strict type checking
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
 OMG.  a function to validate device belief
