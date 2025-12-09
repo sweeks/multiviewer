@@ -406,6 +406,8 @@ class Jtech:
         return power
 
     async def set_power(self, power: Power) -> None:
+        if self.power == power:
+            return
         if False:
             debug_print(f"set_to={power} was={self.power}")
         self.power = None

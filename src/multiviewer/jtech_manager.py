@@ -41,8 +41,7 @@ class Jtech_manager:
 
     async def current_power(self) -> Power:
         await self.synced()
-        assert self.jtech.power is not None
-        return self.jtech.power
+        return await self.jtech.read_power()
 
     async def current_screen(self) -> Screen:
         await self.synced()
@@ -74,9 +73,8 @@ class Jtech_manager:
         jtech = self.jtech
         if self.desired_power is None:
             return True
-        if self.desired_power != jtech.power:
-            await jtech.set_power(self.desired_power)
-        if jtech.power == Power.OFF:
+        await jtech.set_power(self.desired_power)
+        if self.desired_power == Power.OFF:
             return True
         await jtech.unmute()
         if should_abort():
