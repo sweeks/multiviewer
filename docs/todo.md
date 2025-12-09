@@ -1,5 +1,4 @@
-# remove Jtech.window_border and window_input, and move the redundancy checks from 
-jtech_screen into jtech
+# jtech.pyi: remove power: and pipLocation:
 # add docs/user-guide.md
 # add docs/developer-guide.md
 # update blank lines to follow PEP 8

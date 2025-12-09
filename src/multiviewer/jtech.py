@@ -301,7 +301,7 @@ class Jtech:
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screens[mode].submode
 
-    def window_border(self, mode: Mode, w: Window) -> Window_border:
+    def window_border(self, w: Window) -> Window_border:
         return self.window_borders[w]
 
     def window_input(self, mode: Mode, w: Window) -> Window_input:
@@ -327,13 +327,13 @@ class Jtech:
         self.check_expectation("audio mute", self.audio_mute, m)
         self.audio_mute = m
 
-    def record_border(self, m: Mode, w: Window, b: Border | None) -> None:
-        wb = self.window_border(m, w)
+    def record_border(self, w: Window, b: Border | None) -> None:
+        wb = self.window_border(w)
         self.check_expectation(f"{w} border", wb.border, b)
         wb.border = b
 
-    def record_border_color(self, m: Mode, w: Window, c) -> None:
-        wb = self.window_border(m, w)
+    def record_border_color(self, w: Window, c) -> None:
+        wb = self.window_border(w)
         self.check_expectation(f"{w} color", wb.border_color, c)
         wb.border_color = c
 
@@ -438,6 +438,13 @@ class Jtech:
         return hdmi
 
     async def set_window_input(self, mode: Mode, window: Window, hdmi: Hdmi) -> None:
+        current = self.window_input(mode, window).hdmi
+        if current == hdmi:
+            return
+        if mode != Mode.FULL and hdmi == self.audio_from:
+            # In multiview modes, there can be audio blips if windows holding
+            # audio_from_hdmi change. Doesn't seem to happen in FULL.
+            await self.mute()
         wi = window.to_int()
         hi = hdmi.to_int()
         self.record_window_input(mode, window, None)
@@ -456,10 +463,12 @@ class Jtech:
             border = Border.Off
         else:
             self.unexpected_response(command, response)
-        self.record_border(mode, window, border)
+        self.record_border(window, border)
         return border
 
     async def set_border(self, mode: Mode, window: Window, border: Border) -> None:
+        if border == self.window_border(window).border:
+            return
         wi = window.to_int()
         if border == Border.On:
             command_b = "1"
@@ -470,11 +479,11 @@ class Jtech:
         else:
             fail("invalid border")
         command = f"s window {wi} border {command_b}!"
-        self.record_border(mode, window, None)
+        self.record_border(window, None)
         await self.send_command(
             command, expected_response=f"window {wi} border {response_b}"
         )
-        self.record_border(mode, window, border)
+        self.record_border(window, border)
 
     async def read_border_color(self, mode: Mode, window: Window) -> Color:
         wi = window.to_int()
@@ -486,17 +495,19 @@ class Jtech:
         if not match:
             self.unexpected_response(command, response)
         color = Color[match.group("c")]
-        self.record_border_color(mode, window, color)
+        self.record_border_color(window, color)
         return color
 
     async def set_border_color(self, mode: Mode, window: Window, color: Color) -> None:
+        if color == self.window_border(window).border_color:
+            return
         wi = window.to_int()
-        self.record_border_color(mode, window, None)
+        self.record_border_color(window, None)
         await self.send_command(
             f"s window {wi} border color {color.to_int()}!",
             expected_response=f"window {wi} border color:{color.value}",
         )
-        self.record_border_color(mode, window, color)
+        self.record_border_color(window, color)
 
     async def read_audio_mute(self) -> Mute:
         command = "r output audio mute!"
@@ -563,6 +574,8 @@ class Jtech:
         return mode
 
     async def set_mode(self, mode: Mode) -> None:
+        if mode == self.mode:
+            return
         self.record_mode(None)
         await self.send_command(
             f"s multiview {mode.to_int()}!",
@@ -588,6 +601,8 @@ class Jtech:
     async def set_submode(self, mode: Mode, submode: Submode) -> None:
         if False:
             debug_print(self)
+        if submode == self.get_submode(mode):
+            return
         n = mode.name_for_submode_command()
         si = submode.to_int()
         command = f"s {n} mode {si}!"

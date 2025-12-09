@@ -78,8 +78,7 @@ class Jtech_manager:
             await jtech.set_power(self.desired_power)
         if jtech.power == Power.OFF:
             return True
-        if jtech.audio_mute != Mute.UNMUTED:
-            await jtech.unmute()
+        await jtech.unmute()
         if should_abort():
             return False
         desired_screen = self.desired_screen

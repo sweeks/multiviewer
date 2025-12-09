@@ -86,41 +86,41 @@ class Screen:
 
     @classmethod
     async def read_jtech(
-        cls, device: Jtech, should_abort: Callable[[], bool]
+        cls, jtech: Jtech, should_abort: Callable[[], bool]
     ) -> Screen | None:
         """
         Send commands to the J-Tech to read its currently displayed screen. After sending
         each command, check should_abort(); if it returns True, abort early and return
         None. Otherwise, return the read Screen.
         """
-        mode = await device.read_mode()
+        mode = await jtech.read_mode()
         if should_abort():
             return None
-        submode = await device.read_submode(mode)
+        submode = await jtech.read_submode(mode)
         if should_abort():
             return None
         if mode == Mode.PIP:
-            pip_location = device.pip_location
+            pip_location = jtech.pip_location
         else:
             pip_location = None
-        audio_from = await device.read_audio_from()
+        audio_from = await jtech.read_audio_from()
         if should_abort():
             return None
         windows = {}
         for window in mode.windows():
-            hdmi = await device.read_window_input(mode, window)
+            hdmi = await jtech.read_window_input(mode, window)
             if should_abort():
                 return None
             if not mode.window_has_border(window):
                 border = None
             else:
-                border = await device.read_border(mode, window)
+                border = await jtech.read_border(mode, window)
                 if should_abort():
                     return None
                 if border == Border.Off:
                     border = None
                 else:
-                    border = await device.read_border_color(mode, window)
+                    border = await jtech.read_border_color(mode, window)
                     if should_abort():
                         return None
             windows[window] = Window_contents(hdmi, border)
@@ -135,11 +135,9 @@ class Screen:
         desired = self
         if False:
             debug_print(desired, device)
-        mode_changed = desired.mode != device.mode
-        if mode_changed:
-            await device.set_mode(desired.mode)
-            if should_abort():
-                return False
+        await device.set_mode(desired.mode)
+        if should_abort():
+            return False
         if desired.mode == Mode.PIP:
             if desired.pip_location is None:
                 pip_location = PipLocation.NE
@@ -148,42 +146,26 @@ class Screen:
             await device.set_pip(pip_location)
             if should_abort():
                 return False
-        if desired.submode is not None and (
-            desired.submode != device.get_submode(desired.mode)
-        ):
+        if desired.submode is not None:
             await device.set_submode(desired.mode, desired.submode)
             if should_abort():
                 return False
         # Set window inputs and turn on borders.
         for w, d in desired.windows.items():
-            current = device.window_input(desired.mode, w)
-            if d.hdmi != current.hdmi:
-                if desired.mode != Mode.FULL and d.hdmi == desired.audio_from:
-                    # In multiview modes, there can be audio blips if windows holding
-                    # audio_from_hdmi change. Doesn't seem to happen in FULL.
-                    await device.mute()
-                await device.set_window_input(desired.mode, w, d.hdmi)
+            await device.set_window_input(desired.mode, w, d.hdmi)
+            if should_abort():
+                return False
+            if d.border is not None:
+                await device.set_border(desired.mode, w, Border.On)
                 if should_abort():
                     return False
-            current = device.window_border(desired.mode, w)
-            if d.border is not None:
-                if current.border != Border.On:
-                    await device.set_border(desired.mode, w, Border.On)
-                    if should_abort():
-                        return False
-                if current.border_color != d.border:
-                    await device.set_border_color(desired.mode, w, d.border)
-                    if should_abort():
-                        return False
+                await device.set_border_color(desired.mode, w, d.border)
+                if should_abort():
+                    return False
         # Turn off borders.  We do this after turning on borders, because the visual
         # effect is nicer. The user sees the new border 100ms sooner.
         for w, d in desired.windows.items():
-            current = device.window_border(desired.mode, w)
-            if (
-                d.border is None
-                and current.border != Border.Off
-                and desired.mode.window_has_border(w)
-            ):
+            if d.border is None and desired.mode.window_has_border(w):
                 await device.set_border(desired.mode, w, Border.Off)
                 if should_abort():
                     return False
