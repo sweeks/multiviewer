@@ -8,7 +8,7 @@ from .aio import Event, Task
 from .base import *
 from .jtech import Device, Mute, Power, Screen
 
-@dataclass
+@dataclass(slots=True)
 class Jtech:
     should_send_commands_to_device: bool = True
     desired_power: Power | None = None

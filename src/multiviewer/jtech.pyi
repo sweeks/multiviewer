@@ -70,13 +70,13 @@ class PipLocation(MyStrEnum):
     SW: PipLocation
     SE: PipLocation
 
-@dataclass
+@dataclass(slots=True)
 class Window_contents:
     """Describes one window on the TV screen"""
     hdmi: Hdmi
     border: Color | None
 
-@dataclass
+@dataclass(slots=True)
 class Screen:
     """
     A complete description of the jtech's output observable on the TV, including the

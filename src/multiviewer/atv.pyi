@@ -37,7 +37,7 @@ class ATV:
     def sleep(self) -> None: ...
     def wake(self) -> None: ...
 
-@dataclass
+@dataclass(slots=True)
 class ATVs:
     """Controllers for all Apple TVs."""
     

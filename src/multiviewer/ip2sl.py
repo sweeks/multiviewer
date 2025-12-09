@@ -7,7 +7,7 @@ from . import config
 
 TERM = b"\r"
 
-@dataclass
+@dataclass(slots=True)
 class Connection:
     reader: aio.StreamReader
     writer: aio.StreamWriter

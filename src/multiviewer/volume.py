@@ -9,7 +9,7 @@ from .aio import Event, Task
 from .base import *
 
 @dataclass_json
-@dataclass
+@dataclass(slots=True)
 class Volume:
     current_mute: bool = False
     desired_mute: bool = False

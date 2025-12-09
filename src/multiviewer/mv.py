@@ -63,20 +63,20 @@ PBP = Multimode.PBP
 TRIPLE = Multimode.TRIPLE
 QUAD = Multimode.QUAD
 
-@dataclass
+@dataclass(slots=True)
 class ArrowPress:
     at: datetime
     arrow: Arrow
     points_to: Window
     selected_window: Window
 
-@dataclass
+@dataclass(slots=True)
 class RemotePress:
     at: datetime
     selected_window: Window
 
 @dataclass_json
-@dataclass
+@dataclass(slots=True)
 class Multiviewer(Jsonable):
     power: Power = Power.ON
     multimode: Multimode = Multimode.QUAD

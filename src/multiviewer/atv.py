@@ -42,7 +42,7 @@ tv_ips = {
     TV4: config.TV4_IP,
 }
 
-@dataclass
+@dataclass(slots=True)
 class _ATV:
     tv: TV
     appleTV: AppleTV | None = None
@@ -118,7 +118,7 @@ class _ATV:
         await appleTV.remote_control.select()
         await appleTV.remote_control.select()
 
-@dataclass
+@dataclass(slots=True)
 class ATV:
     atv: _ATV
     queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
@@ -169,7 +169,7 @@ class ATV:
     def volume_up(self): self.enqueue(self.atv.volume_up())
     def wake(self): self.enqueue(self.atv.wake())
 
-@dataclass
+@dataclass(slots=True)
 class ATVs:
     by_tv: Dict[TV, ATV] = field(
         default_factory=lambda: {tv: ATV(_ATV(tv)) for tv in TV.all()})
