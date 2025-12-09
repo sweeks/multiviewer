@@ -109,5 +109,5 @@ commands and check that the J-Tech's screen matches what is expected.
 To run all tests:
 
 ```sh
-python tests/tests.py all
+bin/test-all.sh
 ```
