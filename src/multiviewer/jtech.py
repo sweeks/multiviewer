@@ -575,6 +575,9 @@ class Jtech:
         self.record_mode(mode)
         return mode
 
+    async def read_pip_location(self) -> PipLocation | None:
+        return self.pip_location
+
     async def set_mode(self, mode: Mode) -> None:
         if mode == self.mode:
             return
@@ -612,7 +615,7 @@ class Jtech:
         await self.send_command(command, expected_response=f"{n} mode {si}")
         self.record_submode(mode, submode)
 
-    async def set_pip(self, pip_location: PipLocation) -> None:
+    async def set_pip_location(self, pip_location: PipLocation) -> None:
         if self.pip_location == pip_location:
             return
         hsize = vsize = 19

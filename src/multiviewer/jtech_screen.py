@@ -100,7 +100,7 @@ class Screen:
         if should_abort():
             return None
         if mode == Mode.PIP:
-            pip_location = jtech.pip_location
+            pip_location = await jtech.read_pip_location()
         else:
             pip_location = None
         audio_from = await jtech.read_audio_from()
@@ -143,7 +143,7 @@ class Screen:
                 pip_location = PipLocation.NE
             else:
                 pip_location = desired.pip_location
-            await device.set_pip(pip_location)
+            await device.set_pip_location(pip_location)
             if should_abort():
                 return False
         if desired.submode is not None:
