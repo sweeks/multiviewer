@@ -3,6 +3,7 @@ from __future__ import annotations
 # Standard library
 import json
 import threading
+from typing import cast
 
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
@@ -29,9 +30,7 @@ class Server(ThreadingHTTPServer):
         self.timeout = 0.1
 
 class RequestHandler(SimpleHTTPRequestHandler):
-    server: Server
-
-    def log_message(self, fmt, *args): return
+    def log_message(self, format, *args): return
 
     def respond(self, code: int, j: JSON):
         body = (json.dumps(j) + "\n").encode()
@@ -47,14 +46,17 @@ class RequestHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         try:
             raw = self.rfile.read(int(self.headers.get("Content-Length", "0")))
-            command = json.loads(raw.decode())["command"]
+            command_json = json.loads(raw.decode())["command"]
+            if not isinstance(command_json, str):
+                raise TypeError("command must be a string")
+            command = command_json
         except Exception as e:
             log_exc(e)
             self.respond(400, f"bad request")
             return
         try:
             response = aio.run_coroutine_threadsafe(
-                self.server.run_command(command.split()))
+                cast(Server, self.server).run_command(command.split()))
             self.respond(200, response)
         except Exception as e:
             log_exc(e)
