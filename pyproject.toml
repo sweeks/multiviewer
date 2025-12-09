@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 dependencies = [
     "dataclasses-json",
     "pyatv",
+    "pyright[nodejs]",
 ]
 
 [tool.setuptools]
