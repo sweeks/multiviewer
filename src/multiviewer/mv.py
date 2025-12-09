@@ -178,7 +178,11 @@ def reset(mv: Multiviewer) -> None:
     mv.submode = W1_PROMINENT
     mv.is_fullscreen = False
     mv.fullscreen_shows_pip = False
+    mv.full_window = W1
+    mv.pip_window = W2
+    mv.pip_location = PipLocation.NE
     mv.selected_window = W1
+    mv.selected_window_border_is_on = True
     mv.control_apple_tv = False
     mv.last_arrow_press = None
     mv.last_remote_press = None
@@ -389,6 +393,8 @@ def remove_window(mv: Multiviewer) -> None:
         match mv.multimode:
             case Multimode.PBP:
                 mv.is_fullscreen = True
+                mv.full_window = mv.selected_window
+                mv.fullscreen_shows_pip = False
             case Multimode.TRIPLE:
                 mv.multimode = PBP
             case Multimode.QUAD:
