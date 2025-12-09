@@ -4,7 +4,7 @@ Manage the jtech device, by continually syncing the desired power and screen.
 
 # Local package
 from .base import *
-from .jtech import Jtech as DeviceJtech, Power
+from .jtech import Power
 from .jtech_screen import Screen
 
 class Jtech_manager:
@@ -20,8 +20,9 @@ class Jtech_manager:
 
     def set_power(self, desired_power: Power) -> None: ...
     def set_screen(self, desired_screen: Screen) -> None: ...
-    def synced(self) -> Awaitable[None]:
-        """Wait until the jtech is synced to desired power and screen."""
 
     async def current_power(self) -> Power: ...
     async def current_screen(self) -> Screen: ...
+
+    def synced(self) -> Awaitable[None]:
+        """Wait until the jtech is synced to desired power and screen."""
