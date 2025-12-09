@@ -1,5 +1,4 @@
 # pylance: turn on strict type checking
-# move relevant VSCode settings from my personal settings.json to the workspace settings.json
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
 OMG.  a function to validate device belief
