@@ -1,7 +1,7 @@
 """
 Used to specify json serialization in fields of class declarations that look like:
 
-    @dataclass_json 
+    @dataclass_json
     @dataclass
     class SomeClass:
         some_field: dict[X, Y] = field(metadata=...)
@@ -12,7 +12,7 @@ from .base import *
 
 Metadata = dict[str, dict]
 
-omit: Metadata # Elide the field from json
+omit: Metadata  # Elide the field from json
 
 def json_dict(domain: type, range: type) -> Metadata:
     """

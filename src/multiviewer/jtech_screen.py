@@ -14,6 +14,7 @@ from .jtech import (
     Window,
 )
 
+
 def color_letter(c: Color) -> str:
     match c:
         case Color.BLACK:
@@ -60,7 +61,8 @@ class Screen:
     pip_location: PipLocation | None
     audio_from: Hdmi
     windows: dict[Window, Window_contents] = field(
-        metadata=json_dict(Window, Window_contents))
+        metadata=json_dict(Window, Window_contents)
+    )
 
     def one_line_description(self) -> str:
         s = self
@@ -82,12 +84,10 @@ class Screen:
     def __repr__(self) -> str:
         return self.one_line_description()
 
-
     @classmethod
     async def read_jtech(
-            cls,
-            device: Jtech,
-            should_abort: Callable[[], bool]) -> Screen | None:
+        cls, device: Jtech, should_abort: Callable[[], bool]
+    ) -> Screen | None:
         """
         Send commands to the J-Tech to read its currently displayed screen. After sending
         each command, check should_abort(); if it returns True, abort early and return
@@ -126,10 +126,7 @@ class Screen:
             windows[window] = Window_contents(hdmi, border)
         return cls(mode, submode, pip_location, audio_from, windows)
 
-    async def set_jtech(
-            self,
-            device: Jtech,
-            should_abort: Callable[[], bool]) -> bool:
+    async def set_jtech(self, device: Jtech, should_abort: Callable[[], bool]) -> bool:
         """
         Send commands to the J-Tech to make its displayed screen match this Screen.
         After sending each command, check should_abort(); if it returns True, abort early
@@ -151,8 +148,9 @@ class Screen:
             await device.set_pip(pip_location)
             if should_abort():
                 return False
-        if (desired.submode is not None
-            and (desired.submode != device.get_submode(desired.mode))):
+        if desired.submode is not None and (
+            desired.submode != device.get_submode(desired.mode)
+        ):
             await device.set_submode(desired.mode, desired.submode)
             if should_abort():
                 return False
@@ -181,9 +179,11 @@ class Screen:
         # effect is nicer. The user sees the new border 100ms sooner.
         for w, d in desired.windows.items():
             current = device.window_border(desired.mode, w)
-            if (d.border is None
+            if (
+                d.border is None
                 and current.border != Border.Off
-                and desired.mode.window_has_border(w)):
+                and desired.mode.window_has_border(w)
+            ):
                 await device.set_border(desired.mode, w, Border.Off)
                 if should_abort():
                     return False

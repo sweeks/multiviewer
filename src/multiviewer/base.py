@@ -20,11 +20,14 @@ from dataclasses_json import dataclass_json
 
 JSON: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
+
 class Jsonable:
     pass
 
+
 from dataclasses import dataclass
 from typing import ClassVar
+
 
 class RunMode(_StrEnum):
     Daemon = auto()
@@ -43,10 +46,12 @@ class RunMode(_StrEnum):
             fail("Must call RunMode.set before RunMode.get")
         return mode
 
+
 RunMode.current = None
 
 SELF_BASENAME = os.path.basename(__file__)
 SELF_MODNAME = __name__
+
 
 def file_and_line(max_steps: int = 50) -> str:
     f = inspect.currentframe()
@@ -69,6 +74,7 @@ def file_and_line(max_steps: int = 50) -> str:
         # avoid reference cycles
         del f
 
+
 def log(event: str, **fields) -> None:
     if RunMode.get() != RunMode.Daemon:
         return
@@ -80,19 +86,22 @@ def log(event: str, **fields) -> None:
         parts.append(f"{k}={v}")
     print(" ".join(parts))
 
+
 def log_exc(e: Exception) -> None:
     if RunMode.get() != RunMode.Daemon:
         return
     fl = file_and_line()
     log(f"{fl} exception")
-    traceback.print_exc()            
+    traceback.print_exc()
     debug_print(e)
+
 
 indent = 2
 width = 80
 depth = None
 
 last_ts = time.monotonic()
+
 
 def debug_print(*args):
     global last_ts
@@ -102,21 +111,30 @@ def debug_print(*args):
     pid = os.getpid()
     fl = file_and_line()
     pprint.pprint(
-        (f"[mvd {pid}] ({dt}ms) {fl}" , *args),
-        indent=indent, width=width, depth=depth, sort_dicts=False)
+        (f"[mvd {pid}] ({dt}ms) {fl}", *args),
+        indent=indent,
+        width=width,
+        depth=depth,
+        sort_dicts=False,
+    )
     sys.stdout.flush()
+
 
 def fail(*args) -> NoReturn:
     raise RuntimeError((file_and_line(), *args))
 
+
 def assert_(condition, *args):
     if not condition:
         fail(*args)
-    
+
+
 def assert_equal(a, b):
     assert_(a == b, "unexpectedly unequal", a, b)
 
+
 T = TypeVar("T", bound="MyStrEnum")
+
 
 class MyStrEnum(_StrEnum):
     @staticmethod
@@ -141,6 +159,7 @@ class MyStrEnum(_StrEnum):
     def to_int(self) -> int:
         type(self).missing_attach_int()
 
+
 def attach_int(cls, table):
     # 1) Validate bijection
     members = tuple(cls)
@@ -157,16 +176,21 @@ def attach_int(cls, table):
     # 2) Freeze maps
     fwd = {m: int(table[m]) for m in members}
     rev = {v: m for m, v in fwd.items()}
+
     # 3) Rebind methods with named callables
     def all(_cls):
         return members
+
     def of_int(_cls, i):
         return rev[i]
+
     def to_int(self):
         return fwd[self]
+
     cls.all = classmethod(all)
     cls.of_int = classmethod(of_int)
     cls.to_int = to_int
+
 
 # __all__ is necessary in base.py because other code uses "from .base import *",
 # and the meaning of that is determined solely by base.py's __all__.

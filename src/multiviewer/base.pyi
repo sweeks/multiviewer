@@ -18,8 +18,7 @@ class RunMode:
     Testing: RunMode
 
     @classmethod
-    def set(cls, mode: RunMode) -> None:...
-
+    def set(cls, mode: RunMode) -> None: ...
     @classmethod
     def get(cls) -> RunMode: ...
 
@@ -36,7 +35,7 @@ class MyStrEnum(StrEnum):
     """String-valued enum with an integer bijection, supplied via a subsequent
     call to attach_int.  Attributes:
         all: ordered tuple of all enum members
-        to_int: 
+        to_int:
         of_int:
 
     Usage looks like:
@@ -57,7 +56,7 @@ class MyStrEnum(StrEnum):
 
     def to_int(self: Self) -> int:
         """returns the int corresponding to the class member"""
- 
+
 def auto() -> Any:
     """The same as enum.auto.  Use this to initialize MyStrEnum members."""
 
@@ -67,13 +66,13 @@ def attach_int(cls: Type[T], table: Mapping[T, int]) -> None:
 def fail(*args: object) -> NoReturn:
     """raises an exception containing the supplied arguments"""
 
-def assert_(cond: bool, *args: object) -> None: 
+def assert_(cond: bool, *args: object) -> None:
     """raises via fail if not cond."""
 
-def assert_equal(a: Any, b: Any, *args: object) -> None: 
+def assert_equal(a: Any, b: Any, *args: object) -> None:
     """raises via fail if a != b."""
 
-def debug_print(*args: Any) -> None: 
+def debug_print(*args: Any) -> None:
     """pretty prints the supplied arguments"""
 
 def log(event: str, **fields) -> None:

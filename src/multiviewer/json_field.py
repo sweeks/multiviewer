@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 # Standard library
@@ -15,12 +14,12 @@ V = TypeVar("V")
 
 Codec = Tuple[Callable[[Any], Any], Callable[[Any], Any]]
 
-omit = config(
-    encoder=lambda _: None,
-    exclude=lambda _: True)
+omit = config(encoder=lambda _: None, exclude=lambda _: True)
+
 
 def _identity_codec() -> Codec:
     return (lambda x: x, lambda x: x)
+
 
 def _resolve_codec(t_or_codec: Any) -> Codec:
     """
@@ -51,6 +50,7 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
 
     # Fallback: numbers, strings, bools, None, plain dict/list, etc.
     return _identity_codec()
+
 
 def json_dict(key_t_or_codec: Any, val_t_or_codec: Any):
     """

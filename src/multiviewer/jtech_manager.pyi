@@ -8,7 +8,7 @@ from .jtech import Jtech as DeviceJtech, Power
 from .jtech_screen import Screen
 
 class Jtech_manager:
-    @classmethod 
+    @classmethod
     def field(cls) -> Jtech_manager: ...
 
     should_send_commands_to_device: bool
@@ -20,7 +20,6 @@ class Jtech_manager:
 
     def set_power(self, desired_power: Power) -> None: ...
     def set_screen(self, desired_screen: Screen) -> None: ...
-
     def synced(self) -> Awaitable[None]:
         """Wait until the jtech is synced to desired power and screen."""
 

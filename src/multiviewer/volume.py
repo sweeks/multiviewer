@@ -8,12 +8,13 @@ from . import wf2ir
 from .aio import Event, Task
 from .base import *
 
+
 @dataclass_json
 @dataclass(slots=True)
 class Volume:
     current_mute: bool = False
     desired_mute: bool = False
-    current_volume_delta: int = 0 
+    current_volume_delta: int = 0
     desired_volume_delta: int = 0
     synced_event: Event = Event.field()
     wake_event: Event = Event.field()
@@ -54,10 +55,10 @@ class Volume:
         self.wake_worker()
 
     def is_synced(self) -> bool:
-        return (self.current_mute == self.desired_mute
-            and (self.current_mute
-                or self.desired_volume_delta == self.current_volume_delta))
-    
+        return self.current_mute == self.desired_mute and (
+            self.current_mute or self.desired_volume_delta == self.current_volume_delta
+        )
+
     async def sync(self) -> None:
         if self.current_mute != self.desired_mute:
             self.current_mute = self.desired_mute

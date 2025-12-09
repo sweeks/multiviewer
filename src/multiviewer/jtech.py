@@ -11,18 +11,23 @@ from .base import *
 from .ip2sl import Connection
 from .json_field import json_dict
 
+
 class Power(MyStrEnum):
     OFF = auto()
     ON = auto()
 
     def flip(self):
         match self:
-            case Power.ON: return OFF
-            case Power.OFF: return ON
+            case Power.ON:
+                return OFF
+            case Power.OFF:
+                return ON
+
 
 OFF, ON = Power.OFF, Power.ON
 
-attach_int(Power, { OFF: 0, ON: 1 })
+attach_int(Power, {OFF: 0, ON: 1})
+
 
 class Hdmi(MyStrEnum):
     H1 = auto()
@@ -30,12 +35,14 @@ class Hdmi(MyStrEnum):
     H3 = auto()
     H4 = auto()
 
+
 H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3
 H4 = Hdmi.H4
 
-attach_int(Hdmi, { H1: 1, H2: 2, H3: 3, H4: 4})
+attach_int(Hdmi, {H1: 1, H2: 2, H3: 3, H4: 4})
+
 
 class Window(MyStrEnum):
     W1 = auto()
@@ -43,50 +50,68 @@ class Window(MyStrEnum):
     W3 = auto()
     W4 = auto()
 
+
 W1 = Window.W1
 W2 = Window.W2
 W3 = Window.W3
 W4 = Window.W4
 
+
 def window_dict(f):
     return {w: f(w) for w in Window.all()}
-    
+
+
 attach_int(Window, {W1: 1, W2: 2, W3: 3, W4: 4})
 
+
 class Mode(MyStrEnum):
-    FULL   = auto()
-    PIP    = auto()
-    PBP    = auto()
+    FULL = auto()
+    PIP = auto()
+    PBP = auto()
     TRIPLE = auto()
-    QUAD   = auto()
-    
+    QUAD = auto()
+
     def has_submode(self) -> bool:
         match self:
-            case Mode.FULL | Mode.PIP: return False
-            case Mode.PBP | Mode.TRIPLE | Mode.QUAD: return True
+            case Mode.FULL | Mode.PIP:
+                return False
+            case Mode.PBP | Mode.TRIPLE | Mode.QUAD:
+                return True
 
     def num_windows(self) -> int:
         match self:
-            case Mode.FULL: return 1
-            case Mode.PIP | Mode.PBP: return 2
-            case Mode.TRIPLE: return 3
-            case Mode.QUAD: return 4
-                
+            case Mode.FULL:
+                return 1
+            case Mode.PIP | Mode.PBP:
+                return 2
+            case Mode.TRIPLE:
+                return 3
+            case Mode.QUAD:
+                return 4
+
     def windows(self) -> list[Window]:
         return [Window.of_int(i) for i in range(1, 1 + self.num_windows())]
 
     def name_for_submode_command(self) -> str:
         match self:
-            case Mode.PBP: return "PBP"
-            case Mode.TRIPLE: return "triple"
-            case Mode.QUAD: return "quad"
-            case _: fail(f"mode {self} has no submode")
+            case Mode.PBP:
+                return "PBP"
+            case Mode.TRIPLE:
+                return "triple"
+            case Mode.QUAD:
+                return "quad"
+            case _:
+                fail(f"mode {self} has no submode")
 
     def window_has_border(self, w: Window) -> bool:
         match self:
-            case Mode.FULL: return False
-            case Mode.PIP: return (w == W2)
-            case Mode.PBP | Mode.TRIPLE | Mode.QUAD: return True
+            case Mode.FULL:
+                return False
+            case Mode.PIP:
+                return w == W2
+            case Mode.PBP | Mode.TRIPLE | Mode.QUAD:
+                return True
+
 
 FULL, PIP, PBP, TRIPLE, QUAD = Mode.FULL, Mode.PIP, Mode.PBP, Mode.TRIPLE, Mode.QUAD
 
@@ -97,26 +122,34 @@ multiview_name_by_mode = {
     PIP: "PIP",
     PBP: "PBP",
     TRIPLE: "triple screen",
-    QUAD: "quad screen" }
+    QUAD: "quad screen",
+}
+
 
 def invert_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}
 
+
 multiview_mode_by_name = invert_dict(multiview_name_by_mode)
- 
+
+
 class Submode(MyStrEnum):
     WINDOWS_SAME = auto()
     W1_PROMINENT = auto()
 
     def flip(self: Submode) -> Submode:
         match self:
-            case Submode.WINDOWS_SAME: return W1_PROMINENT
-            case Submode.W1_PROMINENT: return WINDOWS_SAME
+            case Submode.WINDOWS_SAME:
+                return W1_PROMINENT
+            case Submode.W1_PROMINENT:
+                return WINDOWS_SAME
+
 
 WINDOWS_SAME = Submode.WINDOWS_SAME
 W1_PROMINENT = Submode.W1_PROMINENT
 
 attach_int(Submode, {WINDOWS_SAME: 1, W1_PROMINENT: 2})
+
 
 class PipLocation(MyStrEnum):
     NW = auto()
@@ -124,16 +157,18 @@ class PipLocation(MyStrEnum):
     SW = auto()
     SE = auto()
 
+
 class Color(MyStrEnum):
-    BLACK   = auto()
-    RED     = auto()
-    GREEN   = auto()
-    BLUE    = auto()
-    YELLOW  = auto()
+    BLACK = auto()
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
+    YELLOW = auto()
     MAGENTA = auto()
-    CYAN    = auto()
-    WHITE   = auto()
-    GRAY    = auto()
+    CYAN = auto()
+    WHITE = auto()
+    GRAY = auto()
+
 
 BLACK = Color.BLACK
 RED = Color.RED
@@ -143,9 +178,11 @@ YELLOW = Color.YELLOW
 MAGENTA = Color.MAGENTA
 CYAN = Color.CYAN
 WHITE = Color.WHITE
-GRAY = Color.GRAY    
+GRAY = Color.GRAY
 
-attach_int(Color, {
+attach_int(
+    Color,
+    {
         BLACK: 1,
         RED: 2,
         GREEN: 3,
@@ -155,23 +192,28 @@ attach_int(Color, {
         CYAN: 7,
         WHITE: 8,
         GRAY: 9,
-    })
+    },
+)
+
 
 class Mute(MyStrEnum):
     UNMUTED = auto()
-    MUTED   = auto()
-    
+    MUTED = auto()
+
+
 MUTED = Mute.MUTED
 UNMUTED = Mute.UNMUTED
 
 attach_int(Mute, {UNMUTED: 0, MUTED: 1})
 
+
 class Border(MyStrEnum):
     On = auto()
     Off = auto()
 
+
 @dataclass_json
-@dataclass(slots=True)  
+@dataclass(slots=True)
 class Window_input:
     hdmi: Hdmi | None = None
 
@@ -181,23 +223,26 @@ class Window_input:
         else:
             return f"{self.hdmi!r}"
 
+
 @dataclass_json
 @dataclass(slots=True)
 class Window_border:
     border: Border | None = None
     border_color: Color | None = None
-    
+
+
 @dataclass(slots=True)
 class Mode_screen:
     mode: Mode
     submode: Submode | None = None
     window_inputs: dict[Window, Window_input] = field(
-        init=False,
-        metadata=json_dict(Window, Window_input))
+        init=False, metadata=json_dict(Window, Window_input)
+    )
 
     def __post_init__(self):
         mode = self.mode
-        self.window_inputs = { w: Window_input() for w in mode.windows() }
+        self.window_inputs = {w: Window_input() for w in mode.windows()}
+
         def window_border(window):
             d = Window_border()
             if not mode.window_has_border(window):
@@ -212,8 +257,11 @@ class Mode_screen:
             submode = "(?)"
         else:
             submode = f"({self.submode.to_int()})"
-        windows = " ".join([ self.window_inputs[w].__repr__() for w in self.mode.windows() ])
+        windows = " ".join(
+            [self.window_inputs[w].__repr__() for w in self.mode.windows()]
+        )
         return f"{self.mode.name}{submode} {windows}"
+
 
 @dataclass(slots=True)
 class Jtech:
@@ -223,10 +271,10 @@ class Jtech:
     pip_location: PipLocation | None = None
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
-    mode_screens: Dict[Mode,Mode_screen] = field(init=False)
+    mode_screens: Dict[Mode, Mode_screen] = field(init=False)
     window_borders: dict[Window, Window_border] = field(
-        init=False,
-        metadata=json_dict(Window, Window_border))
+        init=False, metadata=json_dict(Window, Window_border)
+    )
     connection: Connection | None = None
 
     @classmethod
@@ -235,13 +283,13 @@ class Jtech:
 
     def __post_init__(self) -> None:
         self.init_mode_screens()
-        self.window_borders = { w: Window_border() for w in Window.all() }
+        self.window_borders = {w: Window_border() for w in Window.all()}
 
     def init_mode_screens(self):
         self.mode_screens = {
-            mode: Mode_screen(mode=mode, submode=None) 
-            for mode in Mode.all() }
-        
+            mode: Mode_screen(mode=mode, submode=None) for mode in Mode.all()
+        }
+
     async def reset(self) -> None:
         self.power = None
         self.mode = None
@@ -252,7 +300,7 @@ class Jtech:
 
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screens[mode].submode
-    
+
     def window_border(self, mode: Mode, w: Window) -> Window_border:
         return self.window_borders[w]
 
@@ -278,26 +326,28 @@ class Jtech:
     def record_audio_mute(self, m: Mute | None) -> None:
         self.check_expectation("audio mute", self.audio_mute, m)
         self.audio_mute = m
-    
-    def record_border(self, m: Mode, w : Window, b: Border | None) -> None:
+
+    def record_border(self, m: Mode, w: Window, b: Border | None) -> None:
         wb = self.window_border(m, w)
         self.check_expectation(f"{w} border", wb.border, b)
         wb.border = b
-            
+
     def record_border_color(self, m: Mode, w: Window, c) -> None:
         wb = self.window_border(m, w)
         self.check_expectation(f"{w} color", wb.border_color, c)
         wb.border_color = c
-    
+
     def record_window_input(self, m: Mode, w: Window, h: Hdmi | None) -> None:
         wi = self.window_input(m, w)
         self.check_expectation(f"{w} input", wi.hdmi, h)
         wi.hdmi = h
 
-    def unexpected_response(self, command, response, expected_response=None) -> NoReturn:
+    def unexpected_response(
+        self, command, response, expected_response=None
+    ) -> NoReturn:
         message = f"jtech gave unexpected response '{response}' to command '{command}'"
         if expected_response is not None:
-            message=f"{message}, expected '{expected_response}'"
+            message = f"{message}, expected '{expected_response}'"
         log(message)
         fail(message)
 
@@ -330,7 +380,8 @@ class Jtech:
             self.connection = None
 
     async def send_command(self, command: str, *, expected_response=None) -> str:
-        if False: log(f"jtech<<< {command}")
+        if False:
+            log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
         if response is None:
@@ -338,23 +389,25 @@ class Jtech:
             fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
             self.unexpected_response(command, response, expected_response)
-        if False: log(f"jtech>>> {response}")       
+        if False:
+            log(f"jtech>>> {response}")
         return response
 
     async def read_power(self) -> Power:
         command = "r power!"
         response = await self.send_command(command)
-        if response == "power on": 
+        if response == "power on":
             power = ON
-        elif response == "power off": 
+        elif response == "power off":
             power = OFF
-        else: 
+        else:
             self.unexpected_response(command, response)
         self.power = power
         return power
 
     async def set_power(self, power: Power) -> None:
-        if False: debug_print(f"set_to={power} was={self.power}")
+        if False:
+            debug_print(f"set_to={power} was={self.power}")
         self.power = None
         await self.read_power()
         if self.power == power:
@@ -383,13 +436,14 @@ class Jtech:
         hdmi = Hdmi.of_int(int(match.group("h")))
         self.record_window_input(mode, window, hdmi)
         return hdmi
-                
+
     async def set_window_input(self, mode: Mode, window: Window, hdmi: Hdmi) -> None:
         wi = window.to_int()
         hi = hdmi.to_int()
         self.record_window_input(mode, window, None)
-        await self.send_command( f"s window {wi} in {hi}!", 
-            expected_response=f"window {wi} select HDMI {hi}")
+        await self.send_command(
+            f"s window {wi} in {hi}!", expected_response=f"window {wi} select HDMI {hi}"
+        )
         self.record_window_input(mode, window, hdmi)
 
     async def read_border(self, mode: Mode, window: Window) -> Border:
@@ -417,16 +471,18 @@ class Jtech:
             fail("invalid border")
         command = f"s window {wi} border {command_b}!"
         self.record_border(mode, window, None)
-        await self.send_command( command,
-            expected_response=f"window {wi} border {response_b}")
+        await self.send_command(
+            command, expected_response=f"window {wi} border {response_b}"
+        )
         self.record_border(mode, window, border)
 
     async def read_border_color(self, mode: Mode, window: Window) -> Color:
         wi = window.to_int()
         command = f"r window {wi} border color!"
         response = await self.send_command(command)
-        match = re.fullmatch(rf"window {wi} border color:(?P<c>[A-Za-z_]+)", 
-                             response.strip())
+        match = re.fullmatch(
+            rf"window {wi} border color:(?P<c>[A-Za-z_]+)", response.strip()
+        )
         if not match:
             self.unexpected_response(command, response)
         color = Color[match.group("c")]
@@ -438,7 +494,8 @@ class Jtech:
         self.record_border_color(mode, window, None)
         await self.send_command(
             f"s window {wi} border color {color.to_int()}!",
-            expected_response=f"window {wi} border color:{color.value}")
+            expected_response=f"window {wi} border color:{color.value}",
+        )
         self.record_border_color(mode, window, color)
 
     async def read_audio_mute(self) -> Mute:
@@ -456,7 +513,8 @@ class Jtech:
     async def set_audio_mute(self, mute: Mute) -> None:
         if self.audio_mute == mute:
             return
-        if False: debug_print(mute)
+        if False:
+            debug_print(mute)
         match mute:
             case Mute.MUTED:
                 z = "on"
@@ -465,9 +523,10 @@ class Jtech:
         self.record_audio_mute(None)
         await self.send_command(
             f"s output audio mute {mute.to_int()}!",
-            expected_response=f"output audio mute: {z}")
+            expected_response=f"output audio mute: {z}",
+        )
         self.record_audio_mute(mute)
-        
+
     async def mute(self) -> None:
         return await self.set_audio_mute(MUTED)
 
@@ -491,7 +550,8 @@ class Jtech:
         self.record_audio_from(None)
         await self.send_command(
             f"s output audio {hi}!",
-            expected_response=f"output audio: HDMI {hi} input audio")
+            expected_response=f"output audio: HDMI {hi} input audio",
+        )
         self.record_audio_from(hdmi)
 
     async def read_mode(self) -> Mode:
@@ -501,13 +561,15 @@ class Jtech:
             fail("invalid multiview response", response)
         self.record_mode(mode)
         return mode
-        
+
     async def set_mode(self, mode: Mode) -> None:
         self.record_mode(None)
-        await self.send_command(f"s multiview {mode.to_int()}!",
-            expected_response=multiview_name_by_mode[mode])
+        await self.send_command(
+            f"s multiview {mode.to_int()}!",
+            expected_response=multiview_name_by_mode[mode],
+        )
         self.record_mode(mode)
-                
+
     async def read_submode(self, mode: Mode) -> Submode | None:
         if mode == Mode.FULL or mode == Mode.PIP:
             return None
@@ -522,16 +584,17 @@ class Jtech:
             self.unexpected_response(command, response)
         self.record_submode(mode, submode)
         return submode
-            
+
     async def set_submode(self, mode: Mode, submode: Submode) -> None:
-        if False: debug_print(self)
+        if False:
+            debug_print(self)
         n = mode.name_for_submode_command()
         si = submode.to_int()
         command = f"s {n} mode {si}!"
         self.record_submode(mode, None)
         await self.send_command(command, expected_response=f"{n} mode {si}")
         self.record_submode(mode, submode)
-        
+
     async def set_pip(self, pip_location: PipLocation) -> None:
         if self.pip_location == pip_location:
             return
@@ -552,10 +615,12 @@ class Jtech:
         command = f"s PIP {hstart} {vstart} {hsize} {vsize}!"
         expected_response = f"PIP {hstart} {vstart} {hsize} {vsize}"
         self.pip_location = None
-        await self.send_command(command, expected_response=expected_response)   
+        await self.send_command(command, expected_response=expected_response)
         self.pip_location = pip_location
 
-    async def test_aliasing_of_window_input(self, mode1: Mode, mode2: Mode, window: Window) -> None:
+    async def test_aliasing_of_window_input(
+        self, mode1: Mode, mode2: Mode, window: Window
+    ) -> None:
         if not window in mode1.windows() or not window in mode2.windows():
             return
         await self.set_mode(mode1)
@@ -576,7 +641,9 @@ class Jtech:
         else:
             fail(f"{mode1} {mode2} {window} {h}")
 
-    async def test_aliasing_of_border(self, mode1: Mode, mode2: Mode, window: Window) -> None:
+    async def test_aliasing_of_border(
+        self, mode1: Mode, mode2: Mode, window: Window
+    ) -> None:
         if not window in mode1.windows() or not window in mode2.windows():
             return
         await self.set_mode(mode1)
@@ -601,6 +668,5 @@ class Jtech:
                     continue
                 for window in mode1.windows():
                     if window in mode2.windows():
-                        #await self.test_aliasing_of_window_input(mode1, mode2, window)
+                        # await self.test_aliasing_of_window_input(mode1, mode2, window)
                         await self.test_aliasing_of_border(mode1, mode2, window)
-            

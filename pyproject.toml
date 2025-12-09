@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Multiviewer remote control"
 requires-python = ">=3.11"
 dependencies = [
+    "black",
     "dataclasses-json",
     "pyatv",
     "pyright[nodejs]",

@@ -9,6 +9,7 @@ from .base import *
 from .jtech import Jtech, Mute, Power
 from .jtech_screen import Screen
 
+
 @dataclass(slots=True)
 class Jtech_manager:
     should_send_commands_to_device: bool = True
@@ -21,11 +22,13 @@ class Jtech_manager:
     # A background task that is constantly trying to make the jtech match desired_power
     # and desired_screen.
     task: Task = Task.field()
-    
+
     @classmethod
     def field(cls):
-        return dataclasses.field(default_factory=Jtech_manager, metadata=json_field.omit)
-        
+        return dataclasses.field(
+            default_factory=Jtech_manager, metadata=json_field.omit
+        )
+
     def __post_init__(self) -> None:
         self.task = aio.Task.create(type(self).__name__, self.sync_forever())
 
@@ -48,21 +51,26 @@ class Jtech_manager:
 
     def set_power(self, desired_power: Power) -> None:
         if desired_power != self.desired_power:
-            if False: debug_print(desired_power)
+            if False:
+                debug_print(desired_power)
             self.desired_power = desired_power
             self.desync()
 
     def set_screen(self, desired_screen: Screen) -> None:
         if desired_screen != self.desired_screen:
-            if False: debug_print(desired_screen)
+            if False:
+                debug_print(desired_screen)
             self.desired_screen = desired_screen
             self.desync()
 
     # sync returns True iff it finished successfully.
     async def sync(self) -> bool:
-        if False: debug_print(self)
+        if False:
+            debug_print(self)
+
         def should_abort() -> bool:
             return self.desynced_event.is_set()
+
         jtech = self.jtech
         if self.desired_power is None:
             return True
@@ -105,7 +113,7 @@ class Jtech_manager:
     # The call to self.sync in sync_forever is the only code that sends commands to the
     # device.  That ensures sequential communication.
     async def sync_forever(self):
-        while True: # Loop forever
+        while True:  # Loop forever
             try:
                 self.desynced_event.clear()
                 if not self.should_send_commands_to_device:

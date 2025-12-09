@@ -17,6 +17,7 @@ class Mute(MyStrEnum):
 
 class Color(MyStrEnum):
     """The names of the border colors."""
+
     BLACK: Color
     RED: Color
     GREEN: Color
@@ -33,6 +34,7 @@ class Border:
 
 class Hdmi(MyStrEnum):
     """The names of the HDMI inputs to the J-Tech."""
+
     H1: Hdmi
     H2: Hdmi
     H3: Hdmi
@@ -40,6 +42,7 @@ class Hdmi(MyStrEnum):
 
 class Mode(MyStrEnum):
     """The layout of the on-screen windows."""
+
     FULL: Mode
     PIP: Mode
     PBP: Mode
@@ -47,13 +50,12 @@ class Mode(MyStrEnum):
     QUAD: Mode
 
     def num_windows(self) -> int: ...
-
     def windows(self) -> list[Window]: ...
-
     def window_has_border(self, w: Window) -> bool: ...
 
 class Window(MyStrEnum):
     """The names of the on-screen windwows."""
+
     W1: Window
     W2: Window
     W3: Window
@@ -64,6 +66,7 @@ class Submode(MyStrEnum):
     For QUAD, TRIPLE, and PBP, the submode says whether all windows are the same size,
     or W1 is prominent.
     """
+
     WINDOWS_SAME: Submode
     W1_PROMINENT: Submode
 
@@ -105,34 +108,29 @@ class Jtech:
 
     async def reset(self) -> None:
         """Reset the internal state and reconnect to the J-Tech."""
-    
+
     def get_submode(self, mode: Mode) -> Submode | None: ...
     def window_border(self, mode: Mode, w: Window) -> Window_border: ...
     def window_input(self, mode: Mode, w: Window) -> Window_input: ...
-
     async def read_mode(self) -> Mode: ...
     async def set_mode(self, mode: Mode) -> None: ...
-
     async def read_submode(self, mode: Mode) -> Submode | None: ...
     async def set_submode(self, mode: Mode, submode: Submode) -> None: ...
-
     async def set_pip(self, pip_location: PipLocation) -> None: ...
-
     async def read_audio_from(self) -> Hdmi: ...
     async def set_audio_from(self, hdmi: Hdmi) -> None: ...
-
     async def read_window_input(self, mode: Mode, window: Window) -> Hdmi: ...
-    async def set_window_input(self, mode: Mode, window: Window, hdmi: Hdmi) -> None: ...
-
+    async def set_window_input(
+        self, mode: Mode, window: Window, hdmi: Hdmi
+    ) -> None: ...
     async def read_border(self, mode: Mode, window: Window) -> Border: ...
     async def set_border(self, mode: Mode, window: Window, border: Border) -> None: ...
-
     async def read_border_color(self, mode: Mode, window: Window) -> Color: ...
-    async def set_border_color(self, mode: Mode, window: Window, color: Color) -> None: ...
-
+    async def set_border_color(
+        self, mode: Mode, window: Window, color: Color
+    ) -> None: ...
     async def mute(self) -> None: ...
     async def unmute(self) -> None: ...
-
     async def set_power(self, desired_power: Power) -> None:
         """Send a command to the J-Tech to make its power match desired_power."""
 

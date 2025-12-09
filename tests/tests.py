@@ -19,48 +19,62 @@ RunMode.set(RunMode.Testing)
 
 _the_mv: None | Multiviewer = None
 
+
 def the_mv() -> Multiviewer:
     if _the_mv is None:
         fail("did not set the_mv")
     return _the_mv
 
+
 def expect(actual, expected, frame_index=2):
     if actual != expected:
         frame = inspect.stack()[frame_index]
         lineno = frame.lineno
-        print(f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}")
+        print(
+            f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}"
+        )
+
 
 async def tv_do(s, e=None):
-    if False: debug_print(s)
-    commands = [part.split() for part in s.split(';') if part.strip()]
+    if False:
+        debug_print(s)
+    commands = [part.split() for part in s.split(";") if part.strip()]
     last = None
     for c in commands:
-        if False: debug_print(c)
+        if False:
+            debug_print(c)
         j = await mv.do_command_and_update_screen(the_mv(), c)
         last = json.dumps(j)
     if e is not None:
         expect(last, e)
 
+
 async def tv_is(expected):
     await mv.synced(the_mv())
     expect(await mv.describe_screen(the_mv()), expected)
+
 
 async def vol_is(expected):
     await mv.synced(the_mv())
     expect(mv.describe_volume(the_mv()), expected)
 
+
 tests = []
+
 
 def test(label=None):
     """Decorator to register test functions with optional label."""
+
     def decorator(fn):
         tests.append((fn.__code__.co_firstlineno, label, fn))
         return fn
+
     if callable(label):  # bare @test
         fn = label
         tests.append((fn.__code__.co_firstlineno, None, fn))
         return fn
     return decorator
+
 
 def parse_selection(arg):
     if not arg or arg == "all":
@@ -73,6 +87,7 @@ def parse_selection(arg):
         else:
             sel.add(int(part))
     return sel
+
 
 async def run(selected):
     total = passed = 0
@@ -94,23 +109,28 @@ async def run(selected):
             traceback.print_exc()
     print(f"{passed}/{total} passed")
 
+
 # ---------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------
 
+
 @test("Test")
 async def _():
     await tv_do("Test")
+
 
 @test("Reset")
 async def _():
     await tv_do("Reset")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
+
 @test("Play_pause toggles border")
 async def _():
     await tv_do("Reset; Play_pause")
     await tv_is("QUAD(2) A1 [H1]A [H2]A [H3]A [H4]A")
+
 
 @test("Toggle_fullscreen")
 async def _():
@@ -119,15 +139,18 @@ async def _():
     await tv_do("Toggle_fullscreen")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
+
 @test("Toggle_fullscreen preserves submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Toggle_fullscreen; Toggle_fullscreen")
     await tv_is("QUAD(1) A1 [H1]G [H2]A [H3]A [H4]A")
 
+
 @test("Toggle_fullscreen preserves audio")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; E; Toggle_fullscreen")
     await tv_is("QUAD(2) A2 [H1]A [H2]G [H3]A [H4]A")
+
 
 @test("NEWS in QUAD(2)")
 async def _():
@@ -141,6 +164,7 @@ async def _():
     await tv_do("S")
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
+
 @test("NEWS in QUAD(1)")
 async def _():
     await tv_do("Reset; Toggle_submode; E")
@@ -151,6 +175,7 @@ async def _():
     await tv_is("QUAD(1) A4 [H1]A [H2]A [H3]A [H4]G")
     await tv_do("W; N")
     await tv_is("QUAD(1) A1 [H1]G [H2]A [H3]A [H4]A")
+
 
 @test("NEWS in FULL")
 async def _():
@@ -173,12 +198,14 @@ async def _():
     await tv_do("W")
     await tv_is("FULL A1 H1")
 
+
 @test("PIP and Back from W1")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode")
     await tv_is("PIP(NE) A1 H1 [H2]A")
     await tv_do("Back")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
+
 
 @test("PIP and Back from W3")
 async def _():
@@ -187,10 +214,12 @@ async def _():
     await tv_do("Back")
     await tv_is("QUAD(2) A3 [H1]A [H2]A [H3]G [H4]A")
 
+
 @test("PIP from FULL after rotating")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; E; Toggle_submode")
     await tv_is("PIP(NE) A2 H2 [H3]A")
+
 
 @test("Select PIP window and go Back")
 async def _():
@@ -199,6 +228,7 @@ async def _():
     await tv_do("Back")
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
+
 @test("Swap full and PIP windows")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; Select")
@@ -206,10 +236,12 @@ async def _():
     await tv_do("Select")
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
+
 @test("Swap full and PIP windows from PIP window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; N; Select")
     await tv_is("PIP(NE) A2 H2 [H1]A")
+
 
 @test("Change PIP location")
 async def _():
@@ -231,6 +263,7 @@ async def _():
     await tv_do("E")
     await tv_is("PIP(NE) A2 H1 [H2]G")
 
+
 @test("Rotate PIP window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; E")
@@ -245,16 +278,19 @@ async def _():
     await tv_is("PIP(NE) A1 H1 [H3]A")
     await tv_do("W")
     await tv_is("PIP(NE) A1 H1 [H2]A")
-  
+
+
 @test("PIP + Add_window")
 async def _():
     await tv_do("Reset; Toggle_fullscreen; Toggle_submode; Add_window")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
 
+
 @test("PIP + Add_window")
 async def _():
     await tv_do("Reset; E; Toggle_fullscreen; Toggle_submode; Add_window")
     await tv_is("PBP(2) A3 [H3]G [H4]A")
+
 
 @test("Remove_window")
 async def _():
@@ -265,15 +301,18 @@ async def _():
     await tv_do("Remove_window")
     await tv_is("FULL A1 H1")
 
+
 @test("Remove_window preserves submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Remove_window")
     await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H3]A")
 
+
 @test("Remove_window switches audio to visible window")
 async def _():
     await tv_do("Reset; S; Remove_window")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
+
 
 @test("Add_window")
 async def _():
@@ -284,6 +323,7 @@ async def _():
     await tv_do("Add_window")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
+
 @test("Add_window and Remove_window preserve submode")
 async def _():
     await tv_do("Reset; Toggle_submode; Remove_window")
@@ -291,28 +331,36 @@ async def _():
     await tv_do("Toggle_submode; Add_window")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
+
 @test("Demote_window")
 async def _():
     await tv_do("Reset; Demote_window")
     await tv_is("QUAD(2) A2 [H2]G [H3]A [H4]A [H1]A")
 
+
 @test("Home")
 async def _():
     await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
 
+
 @test("Home Right Down Left Up")
 async def _():
     await tv_do("Reset; Remote; Wait 0.3")
-    await tv_do("Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; Up; Wait 1")
+    await tv_do(
+        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; Up; Wait 1"
+    )
+
 
 @test("Play_pause")
 async def _():
     await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
 
+
 @test("Screensaver")
 async def _():
     await tv_do("Reset; Screensaver")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
+
 
 @test("Volume")
 async def _():
@@ -325,6 +373,7 @@ async def _():
     await tv_do("Volume_down")
     await vol_is("V-1")
 
+
 @test("Mute")
 async def _():
     await tv_do("Reset; Mute")
@@ -332,10 +381,12 @@ async def _():
     await tv_do("Mute")
     await vol_is("V+0")
 
+
 @test("Mute + Volume_up")
 async def _():
     await tv_do("Reset; Volume_up; Mute; Volume_up")
     await vol_is("V+2")
+
 
 @test("Volume is adjusted when switching TVs")
 async def _():
@@ -344,10 +395,12 @@ async def _():
     await tv_do("W")
     await vol_is("V+1")
 
+
 @test("Volume is adjusted when switching TVs")
 async def _():
     await tv_do("Reset; Toggle_submode; Volume_up; E; Volume_down")
     await vol_is("V-1")
+
 
 @test("Mute is preserved when switching TVs")
 async def _():
@@ -358,14 +411,17 @@ async def _():
     await tv_do("W")
     await vol_is("V+1")
 
+
 @test("Remote double tap")
 async def _():
     await tv_do("Reset; Remote; Remote", "1")
     await tv_do("Toggle_submode; E; Remote; Remote", "2")
 
+
 @test("Info")
 async def _():
     await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A V+0"')
+
 
 @test("Power")
 async def _():
@@ -374,16 +430,18 @@ async def _():
     await tv_do("Reset; E; Power; Wait 10; Power; S")
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
+
 async def main():
     global _the_mv
     arg = sys.argv[1] if len(sys.argv) > 1 else "all"
     the_mv = await mv.create()
-    #mv.save(mv, Path("TEST_MV.json").resolve())
+    # mv.save(mv, Path("TEST_MV.json").resolve())
     the_mv.jtech_manager.should_send_commands_to_device = False
     if mv.power(the_mv) == mv.Power.OFF:
         await mv.power_on(the_mv)
     _the_mv = the_mv
     await run(parse_selection(arg))
     await mv.shutdown(the_mv)
+
 
 aio.run_event_loop(main())

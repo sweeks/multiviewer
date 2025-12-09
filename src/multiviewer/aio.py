@@ -14,13 +14,19 @@ open_connection = asyncio.open_connection
 sleep = asyncio.sleep
 
 event_loop = asyncio.new_event_loop()
+
+
 def handler(_, context):
     debug_print("loop exception", context)
+
+
 event_loop.set_exception_handler(handler)
 asyncio.set_event_loop(event_loop)
 
+
 def call_later(seconds, f) -> None:
     event_loop.call_later(seconds, f)
+
 
 async def wait_for(a, *, timeout):
     start = datetime.datetime.now()
@@ -28,8 +34,10 @@ async def wait_for(a, *, timeout):
         return await asyncio.wait_for(a, timeout)
     except asyncio.TimeoutError as e:
         duration = (datetime.datetime.now() - start).total_seconds()
-        if False: log(f"wait_for timeout: timeout={timeout}s duration={duration}s")
+        if False:
+            log(f"wait_for timeout: timeout={timeout}s duration={duration}s")
         return None
+
 
 class Event(asyncio.Event):
     @classmethod
@@ -40,20 +48,23 @@ class Event(asyncio.Event):
         is_set = self.is_set()
         waiters = len(self._waiters)
         return f"{type(self).__name__}(is_set={is_set}, waiters={waiters})"
-    
+
+
 class StreamReader(asyncio.StreamReader):
     def __repr__(self) -> str:
         return f"<StreamReader>"
+
 
 class StreamWriter(asyncio.StreamWriter):
     def __repr__(self) -> str:
         return f"<StreamWriter>"
 
+
 class Task(asyncio.Task):
     @classmethod
     def field(cls):
         return dataclasses.field(init=False, metadata=json_field.omit)
-    
+
     def __repr__(self) -> str:
         name = self.get_name()
         return f"Task(name='{name}')"
@@ -74,8 +85,10 @@ class Task(asyncio.Task):
         task.add_done_callback(lambda task: task.log_done())
         return task
 
+
 def run_coroutine_threadsafe(a):
     return asyncio.run_coroutine_threadsafe(a, event_loop).result()
+
 
 def run_event_loop(main):
     try:

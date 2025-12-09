@@ -7,6 +7,7 @@ from . import config
 
 TERM = b"\r"
 
+
 @dataclass(slots=True)
 class Connection:
     reader: aio.StreamReader
@@ -25,7 +26,8 @@ class Connection:
         if line is None:
             return None
         response = line.decode("ascii", errors="strict").strip()
-        if False: log(f"jtech--> {response}")
+        if False:
+            log(f"jtech--> {response}")
         return response
 
     async def read_until_line(self, desired_line: str) -> None:
@@ -35,7 +37,8 @@ class Connection:
                 break
 
     async def write_line(self, line: str) -> None:
-        if False: log(f"jtech<-- {line}")
+        if False:
+            log(f"jtech<-- {line}")
         self.writer.write(line.encode("ascii") + TERM)
         await self.writer.drain()
 
