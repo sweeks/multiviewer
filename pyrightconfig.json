@@ -1,4 +1,5 @@
 {
+  // Shared Pyright/Pylance settings so CLI and VS Code use the same environment/paths.
   "venvPath": ".",
   "venv": ".venv",
   "extraPaths": ["src"],
