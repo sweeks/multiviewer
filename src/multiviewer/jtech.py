@@ -595,7 +595,7 @@ class Device:
         left = 3
         top = 3
         right = 99 - hsize
-        bottom = 100 - vsize
+        bottom = 99 - vsize
         match pip_location:
             case PipLocation.NW:
                 hstart, vstart = left, top
