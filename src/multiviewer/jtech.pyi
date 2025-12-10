@@ -3,9 +3,7 @@ This module has all the classes for describing and controlling the J-Tech device
 """
 
 # Local package
-from . import aio
 from .base import *
-from .jtech_output import JtechOutput, Window_contents
 
 class Power(MyStrEnum):
     ON: Power
