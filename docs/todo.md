@@ -1,3 +1,4 @@
+# maybe mv.initialize should sync, so that power is correct?
 # add docs/user-guide.md
 # add docs/developer-guide.md
 # other PEP 8 conventions?
