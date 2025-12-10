@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from typing import Callable, TypeAlias
 
 from .base import *
-from .jtech import Color, Hdmi, Jtech, PipLocation, Submode, Window
+from .jtech import Color, Hdmi, Jtech, PipLocation, Submode
 
 
 @dataclass(slots=True)
-class Window_contents:
+class WindowContents:
     """Describes one window on the TV screen."""
 
     hdmi: Hdmi
@@ -17,38 +17,38 @@ class Window_contents:
 
 @dataclass(slots=True)
 class Full:
-    w1: Window_contents
+    w1: WindowContents
 
 
 @dataclass(slots=True)
 class Pip:
     pip_location: PipLocation
-    w1: Window_contents
-    w2: Window_contents
+    w1: WindowContents
+    w2: WindowContents
 
 
 @dataclass(slots=True)
 class Pbp:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
+    w1: WindowContents
+    w2: WindowContents
 
 
 @dataclass(slots=True)
 class Triple:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
-    w3: Window_contents
+    w1: WindowContents
+    w2: WindowContents
+    w3: WindowContents
 
 
 @dataclass(slots=True)
 class Quad:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
-    w3: Window_contents
-    w4: Window_contents
+    w1: WindowContents
+    w2: WindowContents
+    w3: WindowContents
+    w4: WindowContents
 
 
 Layout: TypeAlias = Full | Pip | Pbp | Triple | Quad

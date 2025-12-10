@@ -16,7 +16,7 @@ W4 = Window.W4
 
 @dataclass_json
 @dataclass(slots=True)
-class Window_contents:
+class WindowContents:
     hdmi: Hdmi
     border: Color | None
 
@@ -30,9 +30,9 @@ class Window_contents:
 @dataclass_json
 @dataclass(slots=True)
 class Full:
-    w1: Window_contents
+    w1: WindowContents
 
-    def windows(self) -> dict[Window, Window_contents]:
+    def windows(self) -> dict[Window, WindowContents]:
         return {W1: self.w1}
 
 
@@ -40,10 +40,10 @@ class Full:
 @dataclass(slots=True)
 class Pip:
     pip_location: PipLocation
-    w1: Window_contents
-    w2: Window_contents
+    w1: WindowContents
+    w2: WindowContents
 
-    def windows(self) -> dict[Window, Window_contents]:
+    def windows(self) -> dict[Window, WindowContents]:
         return {W1: self.w1, W2: self.w2}
 
 
@@ -51,10 +51,10 @@ class Pip:
 @dataclass(slots=True)
 class Pbp:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
+    w1: WindowContents
+    w2: WindowContents
 
-    def windows(self) -> dict[Window, Window_contents]:
+    def windows(self) -> dict[Window, WindowContents]:
         return {W1: self.w1, W2: self.w2}
 
 
@@ -62,11 +62,11 @@ class Pbp:
 @dataclass(slots=True)
 class Triple:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
-    w3: Window_contents
+    w1: WindowContents
+    w2: WindowContents
+    w3: WindowContents
 
-    def windows(self) -> dict[Window, Window_contents]:
+    def windows(self) -> dict[Window, WindowContents]:
         return {W1: self.w1, W2: self.w2, W3: self.w3}
 
 
@@ -74,12 +74,12 @@ class Triple:
 @dataclass(slots=True)
 class Quad:
     submode: Submode
-    w1: Window_contents
-    w2: Window_contents
-    w3: Window_contents
-    w4: Window_contents
+    w1: WindowContents
+    w2: WindowContents
+    w3: WindowContents
+    w4: WindowContents
 
-    def windows(self) -> dict[Window, Window_contents]:
+    def windows(self) -> dict[Window, WindowContents]:
         return {
             W1: self.w1,
             W2: self.w2,
@@ -91,7 +91,7 @@ class Quad:
 Layout: TypeAlias = Full | Pip | Pbp | Triple | Quad
 
 
-def layout_windows(layout: Layout) -> dict[Window, Window_contents]:
+def layout_windows(layout: Layout) -> dict[Window, WindowContents]:
     return layout.windows()
 
 
@@ -164,7 +164,7 @@ class JtechOutput:
         audio_from = await jtech.read_audio_from()
         if should_abort():
             return None
-        windows: dict[Window, Window_contents] = {}
+        windows: dict[Window, WindowContents] = {}
         for window in mode.windows():
             hdmi = await jtech.read_window_input(mode, window)
             if should_abort():
@@ -181,7 +181,7 @@ class JtechOutput:
                     border = await jtech.read_border_color(mode, window)
                     if should_abort():
                         return None
-            windows[window] = Window_contents(hdmi, border)
+            windows[window] = WindowContents(hdmi, border)
         layout: Layout
         if mode == Mode.FULL:
             layout = Full(w1=windows[W1])

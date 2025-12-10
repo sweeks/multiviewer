@@ -243,7 +243,7 @@ class Border(MyStrEnum):
 
 @dataclass_json
 @dataclass(slots=True)
-class Window_input:
+class WindowInput:
     hdmi: Hdmi | None = None
 
     def __repr__(self) -> str:
@@ -255,7 +255,7 @@ class Window_input:
 
 @dataclass_json
 @dataclass(slots=True)
-class Window_border:
+class WindowBorder:
     border: Border | None = None
     border_color: Color | None = None
 
@@ -271,19 +271,19 @@ class Window_border:
 
 
 @dataclass(slots=True)
-class Mode_screen:
+class ModeScreen:
     mode: Mode
     submode: Submode | None = None
-    window_inputs: dict[Window, Window_input] = field(
-        init=False, metadata=json_dict(Window, Window_input)
+    window_inputs: dict[Window, WindowInput] = field(
+        init=False, metadata=json_dict(Window, WindowInput)
     )
 
     def __post_init__(self):
         mode = self.mode
-        self.window_inputs = {w: Window_input() for w in mode.windows()}
+        self.window_inputs = {w: WindowInput() for w in mode.windows()}
 
         def window_border(window):
-            d = Window_border()
+            d = WindowBorder()
             if not mode.window_has_border(window):
                 d.border = Border.Off
                 d.border_color = Color.BLACK
@@ -310,8 +310,8 @@ class Jtech:
     pip_location: PipLocation | None = None
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
-    mode_screens: Dict[Mode, Mode_screen] = field(init=False)
-    window_borders: dict[Window, Window_border] = field(init=False)
+    mode_screens: Dict[Mode, ModeScreen] = field(init=False)
+    window_borders: dict[Window, WindowBorder] = field(init=False)
     connection: Connection | None = None
 
     @classmethod
@@ -320,9 +320,9 @@ class Jtech:
 
     def __post_init__(self) -> None:
         self.mode_screens = {
-            mode: Mode_screen(mode=mode, submode=None) for mode in Mode.all()
+            mode: ModeScreen(mode=mode, submode=None) for mode in Mode.all()
         }
-        self.window_borders = {w: Window_border() for w in Window.all()}
+        self.window_borders = {w: WindowBorder() for w in Window.all()}
 
     async def reset(self) -> None:
         self.power = None
@@ -332,16 +332,16 @@ class Jtech:
         self.__post_init__()
         await self.disconnect()
 
-    def mode_screen(self, mode) -> Mode_screen:
+    def mode_screen(self, mode) -> ModeScreen:
         return self.mode_screens[mode]
     
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screen(mode).submode
 
-    def window_input(self, mode: Mode, w: Window) -> Window_input:
+    def window_input(self, mode: Mode, w: Window) -> WindowInput:
         return self.mode_screen(mode).window_inputs[w]
 
-    def window_border(self, w: Window) -> Window_border:
+    def window_border(self, w: Window) -> WindowBorder:
         return self.window_borders[w]
 
     def check_expectation(self, description, x, y) -> None:

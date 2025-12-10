@@ -48,7 +48,7 @@ tv_ips = {
 
 
 @dataclass(slots=True)
-class _ATV:
+class AtvConnection:
     tv: TV
     appleTV: AppleTV | None = None
 
@@ -156,7 +156,7 @@ class _ATV:
 
 @dataclass(slots=True)
 class ATV:
-    atv: _ATV
+    atv: AtvConnection
     queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
     task: Task = field(init=False, repr=False)
 
@@ -246,7 +246,7 @@ class ATV:
 @dataclass(slots=True)
 class ATVs:
     by_tv: Dict[TV, ATV] = field(
-        default_factory=lambda: {tv: ATV(_ATV(tv)) for tv in TV.all()}
+        default_factory=lambda: {tv: ATV(AtvConnection(tv)) for tv in TV.all()}
     )
 
     @classmethod

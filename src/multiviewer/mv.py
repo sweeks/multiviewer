@@ -16,7 +16,7 @@ from .base import *
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import JtechManager
-from .jtech_output import Full, JtechOutput, Pip, Pbp, Quad, Triple, Window_contents
+from .jtech_output import Full, JtechOutput, Pip, Pbp, Quad, Triple, WindowContents
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
@@ -696,7 +696,7 @@ def render(mv: Multiviewer) -> JtechOutput:
 
     def window(
         mode: Mode, layout_window: Window, mv_window: Window | None = None
-    ) -> Window_contents:
+    ) -> WindowContents:
         if mv_window is None:
             mv_window = layout_window
         if not mode.window_has_border(layout_window):
@@ -707,7 +707,7 @@ def render(mv: Multiviewer) -> JtechOutput:
             border = Color.GREEN
         else:
             border = Color.GRAY
-        return Window_contents(hdmi=mv.window_input[mv_window], border=border)
+        return WindowContents(hdmi=mv.window_input[mv_window], border=border)
 
     if mv.is_fullscreen:
         if not mv.fullscreen_shows_pip:
