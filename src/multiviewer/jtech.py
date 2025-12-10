@@ -311,9 +311,7 @@ class Jtech:
     audio_from: Hdmi | None = None
     audio_mute: Mute | None = None
     mode_screens: Dict[Mode, Mode_screen] = field(init=False)
-    window_borders: dict[Window, Window_border] = field(
-        init=False, metadata=json_dict(Window, Window_border)
-    )
+    window_borders: dict[Window, Window_border] = field(init=False)
     connection: Connection | None = None
 
     @classmethod
@@ -321,30 +319,30 @@ class Jtech:
         return dataclasses.field(default_factory=Jtech)
 
     def __post_init__(self) -> None:
-        self.init_mode_screens()
-        self.window_borders = {w: Window_border() for w in Window.all()}
-
-    def init_mode_screens(self):
         self.mode_screens = {
             mode: Mode_screen(mode=mode, submode=None) for mode in Mode.all()
         }
+        self.window_borders = {w: Window_border() for w in Window.all()}
 
     async def reset(self) -> None:
         self.power = None
         self.mode = None
         self.audio_from = None
         self.audio_mute = None
-        self.init_mode_screens()
+        self.__post_init__()
         await self.disconnect()
 
+    def mode_screen(self, mode) -> Mode_screen:
+        return self.mode_screens[mode]
+    
     def get_submode(self, mode: Mode) -> Submode | None:
-        return self.mode_screens[mode].submode
+        return self.mode_screen(mode).submode
+
+    def window_input(self, mode: Mode, w: Window) -> Window_input:
+        return self.mode_screen(mode).window_inputs[w]
 
     def window_border(self, w: Window) -> Window_border:
         return self.window_borders[w]
-
-    def window_input(self, mode: Mode, w: Window) -> Window_input:
-        return self.mode_screens[mode].window_inputs[w]
 
     def check_expectation(self, description, x, y) -> None:
         if x is not None and y is not None and x != y:
@@ -355,8 +353,9 @@ class Jtech:
         self.mode = m
 
     def record_submode(self, mode: Mode, submode: Submode | None) -> None:
-        self.check_expectation("submode", self.mode_screens[mode].submode, submode)
-        self.mode_screens[mode].submode = submode
+        mode_screen = self.mode_screen(mode)
+        self.check_expectation("submode", mode_screen.submode, submode)
+        mode_screen.submode = submode
 
     def record_audio_from(self, h) -> None:
         self.check_expectation("audio from", self.audio_from, h)
