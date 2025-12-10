@@ -94,6 +94,8 @@ class RemotePress:
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
+    # power is the state of the virtual multiviewer.  During initialization, we ensure
+    # that the physical devices match it.
     power: Power = Power.ON
     multimode: Multimode = Multimode.QUAD
     submode: Submode = W1_PROMINENT
@@ -199,26 +201,31 @@ async def update_jtech_output_forever(mv: Multiviewer):
 
 
 async def initialize(mv: Multiviewer):
+    if False: debug_print()
     mv.task = Task.create(type(mv).__name__, update_jtech_output_forever(mv))
-    set_power(mv, mv.power)
-
+    desired_power = mv.power
+    mv.power = await mv.jtech_manager.current_power()
+    if mv.power != desired_power:
+        if mv.power == Power.ON:
+            await power_on(mv)
+        else:
+            await power_off(mv)
+    validate(mv)
 
 async def create() -> Multiviewer:
     mv = Multiviewer()
     await initialize(mv)
-    validate(mv)
     return mv
 
 
 async def load(path: Path) -> Multiviewer:
-    if False:
-        debug_print()
+    log(f"loading multiviewer state from {path}")
     try:
         mv = Multiviewer.from_json(path.read_text())
         await initialize(mv)
-        validate(mv)
         return mv
     except Exception:
+        log("failed to load, creating new multiviewer")
         return await create()
 
 
@@ -245,6 +252,8 @@ def set_power(mv: Multiviewer, p: Power) -> None:
 async def power_off(mv: Multiviewer) -> None:
     if False:
         debug_print(mv)
+    if mv.power == Power.OFF:
+        return
     log("turning off power")
     for tv in TV.all():
         mv.atvs.atv(tv).sleep()

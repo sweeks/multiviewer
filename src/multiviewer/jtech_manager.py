@@ -39,7 +39,8 @@ class JtechManager:
 
     async def current_power(self) -> Power:
         await self.synced()
-        return await self.jtech.read_power()
+        assert self.desired_power is not None
+        return self.desired_power
 
     async def current_output(self) -> JtechOutput:
         await self.synced()
@@ -48,40 +49,35 @@ class JtechManager:
 
     def set_power(self, desired_power: Power) -> None:
         if desired_power != self.desired_power:
-            if False:
-                debug_print(desired_power)
             self.desired_power = desired_power
             self.desync()
 
     def set_output(self, desired_output: JtechOutput) -> None:
         if desired_output != self.desired_output:
-            if False:
-                debug_print(desired_output)
             self.desired_output = desired_output
             self.desync()
+
+    def should_abort(self) -> bool:
+        return self.desynced_event.is_set()
 
     # sync returns True iff it finished successfully.
     async def sync(self) -> bool:
         if False:
             debug_print(self)
-
-        def should_abort() -> bool:
-            return self.desynced_event.is_set()
-
         jtech = self.jtech
         if self.desired_power is None:
-            return True
+            self.desired_power = await jtech.read_power()
         await jtech.set_power(self.desired_power)
-        if self.desired_power == Power.OFF:
+        if self.desired_power == Power.OFF or not self.should_send_commands_to_device:
             return True
         await jtech.unmute()
-        if should_abort():
+        if self.should_abort():
             return False
         desired_output = self.desired_output
         if desired_output is None:
             return True
         log(f"setting jtech output: {desired_output}")
-        if await desired_output.set(jtech, should_abort):
+        if await desired_output.set(jtech, self.should_abort):
             log("set jtech output finished")
         else:
             log("set jtech output aborted")
@@ -90,10 +86,10 @@ class JtechManager:
         # and compare. But first, we wait a bit, because if we don't, the jtech sometimes
         # lies.
         await aio.wait_for(self.desynced_event.wait(), timeout=1)
-        if should_abort():
+        if self.should_abort():
             return False
         log("reading jtech output")
-        self.jtech_output = await JtechOutput.read(jtech, should_abort)
+        self.jtech_output = await JtechOutput.read(jtech, self.should_abort)
         if self.jtech_output is None:
             log("read jtech output aborted")
             return False
@@ -110,12 +106,9 @@ class JtechManager:
         while True:  # Loop forever
             try:
                 self.desynced_event.clear()
-                if not self.should_send_commands_to_device:
-                    is_synced = True
-                else:
-                    is_synced = await aio.wait_for(self.sync(), timeout=10)
-                    if is_synced is None:
-                        fail("sync timeout")
+                is_synced = await aio.wait_for(self.sync(), timeout=10)
+                if is_synced is None:
+                    fail("sync timeout")
                 if is_synced and not self.desynced_event.is_set():
                     self.synced_event.set()
                     await self.desynced_event.wait()

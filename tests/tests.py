@@ -435,11 +435,10 @@ async def main():
     global _the_mv
     arg = sys.argv[1] if len(sys.argv) > 1 else "all"
     the_mv = await mv.create()
+    _the_mv = the_mv
     # mv.save(mv, Path("TEST_MV.json").resolve())
     the_mv.jtech_manager.should_send_commands_to_device = False
-    if mv.power(the_mv) == mv.Power.OFF:
-        await mv.power_on(the_mv)
-    _the_mv = the_mv
+    await mv.power_on(the_mv)
     await run(parse_selection(arg))
     await mv.shutdown(the_mv)
 

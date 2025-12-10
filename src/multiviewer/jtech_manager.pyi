@@ -14,10 +14,10 @@ class JtechManager:
 
     should_send_commands_to_device: bool
     """This determines whether we send commands and read responses from the physical jtech
-    device. That is what we want in mvd, and sometimes in tests. But sometimes in tests,
-    we just want to test our multiviewer logic, in which case, we set
-    should_send_commands_to_device=False. In that case, the below functions don't do
-    anything, and current_power and current_output just return the last set value."""
+    device (except for read_power and set_power). mvd uses True. Tests use True or False,
+    depending on whether we just want to test our multiviewer logic.  When False, the
+    below functions don't do anything, and current_power and current_output just return
+    the last set value."""
 
     def set_power(self, desired_power: Power) -> None: ...
     def set_output(self, desired_output: JtechOutput) -> None: ...

@@ -39,7 +39,6 @@ async def become_daemon():
     except Exception as e:
         log_exc(e)
     mvd_state_path = Path("state.json").resolve()
-    log(f"loading {mvd_state_path}")
     the_mv = await mv.load(mvd_state_path)
     mv.update_jtech_output(the_mv)
 
