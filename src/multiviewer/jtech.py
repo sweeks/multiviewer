@@ -293,13 +293,13 @@ class Mode_screen:
         if not self.mode.has_submode():
             submode = ""
         elif self.submode is None:
-            submode = "(?)"
+            submode = "(?) "
         else:
-            submode = f"({self.submode.to_int()})"
+            submode = f"({self.submode.to_int()}) "
         windows = " ".join(
             [self.window_inputs[w].__repr__() for w in self.mode.windows()]
         )
-        return f"{self.mode.name}{submode} {windows}"
+        return f"{submode}{windows}"
 
 
 @dataclass(slots=True)
