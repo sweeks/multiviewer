@@ -7,27 +7,25 @@ from . import json_field
 from .aio import Event, Task
 from .base import *
 from .jtech import Jtech, Mute, Power
-from .jtech_screen import Screen
+from .jtech_output import JtechOutput
 
 
 @dataclass(slots=True)
-class Jtech_manager:
+class JtechManager:
     should_send_commands_to_device: bool = True
     desired_power: Power | None = None
-    desired_screen: Screen | None = None
+    desired_output: JtechOutput | None = None
     jtech: Jtech = Jtech.field()
-    jtech_screen: Screen | None = None
+    jtech_output: JtechOutput | None = None
     desynced_event: Event = Event.field()
     synced_event: Event = Event.field()
     # A background task that is constantly trying to make the jtech match desired_power
-    # and desired_screen.
+    # and desired_output.
     task: Task = Task.field()
 
     @classmethod
     def field(cls):
-        return dataclasses.field(
-            default_factory=Jtech_manager, metadata=json_field.omit
-        )
+        return dataclasses.field(default_factory=JtechManager, metadata=json_field.omit)
 
     def __post_init__(self) -> None:
         self.task = aio.Task.create(type(self).__name__, self.sync_forever())
@@ -43,10 +41,10 @@ class Jtech_manager:
         await self.synced()
         return await self.jtech.read_power()
 
-    async def current_screen(self) -> Screen:
+    async def current_output(self) -> JtechOutput:
         await self.synced()
-        assert self.desired_screen is not None
-        return self.desired_screen
+        assert self.desired_output is not None
+        return self.desired_output
 
     def set_power(self, desired_power: Power) -> None:
         if desired_power != self.desired_power:
@@ -55,11 +53,11 @@ class Jtech_manager:
             self.desired_power = desired_power
             self.desync()
 
-    def set_screen(self, desired_screen: Screen) -> None:
-        if desired_screen != self.desired_screen:
+    def set_output(self, desired_output: JtechOutput) -> None:
+        if desired_output != self.desired_output:
             if False:
-                debug_print(desired_screen)
-            self.desired_screen = desired_screen
+                debug_print(desired_output)
+            self.desired_output = desired_output
             self.desync()
 
     # sync returns True iff it finished successfully.
@@ -79,32 +77,31 @@ class Jtech_manager:
         await jtech.unmute()
         if should_abort():
             return False
-        desired_screen = self.desired_screen
-        if desired_screen is None:
+        desired_output = self.desired_output
+        if desired_output is None:
             return True
-        log(f"setting screen: {desired_screen}")
-        set_screen_finished = await desired_screen.set_jtech(jtech, should_abort)
-        if set_screen_finished:
-            log("set screen finished")
+        log(f"setting jtech output: {desired_output}")
+        if await desired_output.set(jtech, should_abort):
+            log("set jtech output finished")
         else:
-            log("set screen aborted")
+            log("set jtech output aborted")
             return False
-        # We'd like to check whether device.set_screen worked, so we device.read_screen
+        # We'd like to check whether desired_output.set worked, so we JtechOutput.read
         # and compare. But first, we wait a bit, because if we don't, the jtech sometimes
         # lies.
         await aio.wait_for(self.desynced_event.wait(), timeout=1)
         if should_abort():
             return False
-        log("reading screen")
-        self.jtech_screen = await Screen.read_jtech(jtech, should_abort)
-        if self.jtech_screen is None:
-            log("read screen aborted")
+        log("reading jtech output")
+        self.jtech_output = await JtechOutput.read(jtech, should_abort)
+        if self.jtech_output is None:
+            log("read jtech output aborted")
             return False
         else:
-            log(f"read screen: {self.jtech_screen}")
-            is_synced = self.jtech_screen == desired_screen
+            log(f"read jtech output: {self.jtech_output}")
+            is_synced = self.jtech_output == desired_output
             if not is_synced:
-                log(f"screen mismatch")
+                log(f"jtech output mismatch")
             return is_synced
 
     # The call to self.sync in sync_forever is the only code that sends commands to the

@@ -15,8 +15,8 @@ from .atv import ATVs, TV
 from .base import *
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
-from .jtech_manager import Jtech_manager
-from .jtech_screen import Full, Pip, Pbp, Quad, Screen, Triple, Window_contents
+from .jtech_manager import JtechManager
+from .jtech_output import Full, JtechOutput, Pip, Pbp, Quad, Triple, Window_contents
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
@@ -112,7 +112,7 @@ class Multiviewer(Jsonable):
     last_remote_press: RemotePress | None = field(
         default=None, metadata=json_field.omit
     )
-    jtech_manager: Jtech_manager = Jtech_manager.field()
+    jtech_manager: JtechManager = JtechManager.field()
     # We maintain a volume delta for each TV, which we use to automatically adjust
     # volume_delta when unmuting or when the selected TV changes.
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
@@ -191,15 +191,15 @@ def reset(mv: Multiviewer) -> None:
     mv.window_input = initial_window_input()
 
 
-async def update_screen_forever(mv: Multiviewer):
+async def update_jtech_output_forever(mv: Multiviewer):
     if False:
         while True:
             await aio.sleep(1)
-            update_screen(mv)
+            update_jtech_output(mv)
 
 
 async def initialize(mv: Multiviewer):
-    mv.task = Task.create(type(mv).__name__, update_screen_forever(mv))
+    mv.task = Task.create(type(mv).__name__, update_jtech_output_forever(mv))
     set_power(mv, mv.power)
 
 
@@ -261,7 +261,7 @@ async def power_on(mv: Multiviewer) -> None:
     log("turning on power")
     set_power(mv, Power.ON)
     # We reset all the volume deltas to zero, because this is a new TV session for the
-    # user.  This causes the initial update_screen to set the desired volume_delta
+    # user.  This causes the initial update_jtech_output to set the desired volume_delta
     # to zero, which in turn causes the Volume manager to set the actual volume_delta
     # to zero.
     mv.volume_delta_by_tv = volume_deltas_zero()
@@ -537,15 +537,15 @@ def describe_volume(mv: Multiviewer) -> str:
     return mv.volume.describe_volume()
 
 
-async def describe_screen(mv: Multiviewer) -> str:
-    screen = await mv.jtech_manager.current_screen()
-    return screen.one_line_description()
+async def describe_jtech_output(mv: Multiviewer) -> str:
+    output = await mv.jtech_manager.current_output()
+    return output.one_line_description()
 
 
 async def info(mv: Multiviewer) -> str:
-    screen = await describe_screen(mv)
+    output = await describe_jtech_output(mv)
     volume = describe_volume(mv)
-    return f"{screen} {volume}"
+    return f"{output} {volume}"
 
 
 def log_double_tap_duration(d: timedelta) -> None:
@@ -681,16 +681,16 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     return {}
 
 
-def render(mv: Multiviewer) -> Screen:
+def render(mv: Multiviewer) -> JtechOutput:
     if False:
         debug_print()
 
     def window(
-        mode: Mode, screen_window: Window, mv_window: Window | None = None
+        mode: Mode, layout_window: Window, mv_window: Window | None = None
     ) -> Window_contents:
         if mv_window is None:
-            mv_window = screen_window
-        if not mode.window_has_border(screen_window):
+            mv_window = layout_window
+        if not mode.window_has_border(layout_window):
             border = None
         elif mv.control_apple_tv and mv_window == mv.selected_window:
             border = Color.RED
@@ -733,20 +733,20 @@ def render(mv: Multiviewer) -> Screen:
                 w3=window(mode, W3),
                 w4=window(mode, W4),
             )
-    return Screen(layout=layout, audio_from=mv.window_input[mv.selected_window])
+    return JtechOutput(layout=layout, audio_from=mv.window_input[mv.selected_window])
 
 
-def update_screen(mv: Multiviewer) -> None:
-    mv.jtech_manager.set_screen(render(mv))
+def update_jtech_output(mv: Multiviewer) -> None:
+    mv.jtech_manager.set_output(render(mv))
     mv.volume.set_volume_delta(mv.volume_delta_by_tv[selected_tv(mv)])
 
 
-async def do_command_and_update_screen(mv: Multiviewer, args: list[str]) -> JSON:
+async def do_command_and_update_jtech_output(mv: Multiviewer, args: list[str]) -> JSON:
     if False:
         debug_print(args, mv)
     result = await do_command(mv, args)
     validate(mv)
-    update_screen(mv)
+    update_jtech_output(mv)
     return result
 
 

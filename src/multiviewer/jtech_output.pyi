@@ -58,15 +58,15 @@ Layout: TypeAlias = Full | Pip | Pbp | Triple | Quad
 
 
 @dataclass(slots=True)
-class Screen:
+class JtechOutput:
     layout: Layout
     audio_from: Hdmi
 
     def one_line_description(self) -> str: ...
 
     @classmethod
-    async def read_jtech(
-        cls, device: Jtech, should_abort: Callable[[], bool]
-    ) -> Screen | None: ...
+    async def read(
+        cls, jtech: Jtech, should_abort: Callable[[], bool]
+    ) -> JtechOutput | None: ...
 
-    async def set_jtech(self, device: Jtech, should_abort: Callable[[], bool]) -> bool: ...
+    async def set(self, jtech: Jtech, should_abort: Callable[[], bool]) -> bool: ...

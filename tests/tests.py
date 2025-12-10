@@ -43,7 +43,7 @@ async def tv_do(s, e=None):
     for c in commands:
         if False:
             debug_print(c)
-        j = await mv.do_command_and_update_screen(the_mv(), c)
+        j = await mv.do_command_and_update_jtech_output(the_mv(), c)
         last = json.dumps(j)
     if e is not None:
         expect(last, e)
@@ -51,7 +51,7 @@ async def tv_do(s, e=None):
 
 async def tv_is(expected):
     await mv.synced(the_mv())
-    expect(await mv.describe_screen(the_mv()), expected)
+    expect(await mv.describe_jtech_output(the_mv()), expected)
 
 
 async def vol_is(expected):

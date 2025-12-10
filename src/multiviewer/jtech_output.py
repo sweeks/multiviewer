@@ -146,7 +146,7 @@ def layout_pip_location(layout: Layout) -> PipLocation | None:
 
 @dataclass_json
 @dataclass(slots=True)
-class Screen:
+class JtechOutput:
     layout: Layout
     audio_from: Hdmi
 
@@ -173,9 +173,9 @@ class Screen:
         return self.one_line_description()
 
     @classmethod
-    async def read_jtech(
+    async def read(
         cls, jtech: Jtech, should_abort: Callable[[], bool]
-    ) -> Screen | None:
+    ) -> JtechOutput | None:
         mode = await jtech.read_mode()
         if should_abort():
             return None
@@ -238,7 +238,7 @@ class Screen:
             )
         return cls(layout=layout, audio_from=audio_from)
 
-    async def set_jtech(self, jtech: Jtech, should_abort: Callable[[], bool]) -> bool:
+    async def set(self, jtech: Jtech, should_abort: Callable[[], bool]) -> bool:
         if False:
             debug_print(self, jtech)
         layout = self.layout

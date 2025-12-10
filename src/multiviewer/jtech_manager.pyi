@@ -1,28 +1,29 @@
 """
-Manage the jtech device, by continually syncing the desired power and screen.
+Manage the jtech device, by continually syncing the desired power and output.
 """
 
 # Local package
 from .base import *
 from .jtech import Power
-from .jtech_screen import Screen
+from .jtech_output import JtechOutput
 
-class Jtech_manager:
+
+class JtechManager:
     @classmethod
-    def field(cls) -> Jtech_manager: ...
+    def field(cls) -> JtechManager: ...
 
     should_send_commands_to_device: bool
     """This determines whether we send commands and read responses from the physical jtech
     device. That is what we want in mvd, and sometimes in tests. But sometimes in tests,
     we just want to test our multiviewer logic, in which case, we set
     should_send_commands_to_device=False. In that case, the below functions don't do
-    anything, and current_power and current_screen just return the last set value."""
+    anything, and current_power and current_output just return the last set value."""
 
     def set_power(self, desired_power: Power) -> None: ...
-    def set_screen(self, desired_screen: Screen) -> None: ...
+    def set_output(self, desired_output: JtechOutput) -> None: ...
 
     async def current_power(self) -> Power: ...
-    async def current_screen(self) -> Screen: ...
+    async def current_output(self) -> JtechOutput: ...
 
     def synced(self) -> Awaitable[None]:
-        """Wait until the jtech is synced to desired power and screen."""
+        """Wait until the jtech is synced to desired power and output."""

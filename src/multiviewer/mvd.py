@@ -41,7 +41,7 @@ async def become_daemon():
     mvd_state_path = Path("state.json").resolve()
     log(f"loading {mvd_state_path}")
     the_mv = await mv.load(mvd_state_path)
-    mv.update_screen(the_mv)
+    mv.update_jtech_output(the_mv)
 
     async def run_command(args):
         if False:
@@ -50,7 +50,7 @@ async def become_daemon():
             log(f"{args}")
         t0 = time.perf_counter()
         try:
-            return await mv.do_command_and_update_screen(the_mv, args)
+            return await mv.do_command_and_update_jtech_output(the_mv, args)
         except Exception as e:
             log_exc(e)
         finally:
