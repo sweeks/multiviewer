@@ -16,7 +16,7 @@ from .base import *
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import Jtech_manager
-from .jtech_screen import Screen, Window_contents
+from .jtech_screen import Full, Pip, Pbp, Quad, Screen, Triple, Window_contents
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
@@ -684,12 +684,12 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
 def render(mv: Multiviewer) -> Screen:
     if False:
         debug_print()
-    window_input = mv.window_input
-    mode: Mode
-    submode: Submode | None
-    windows = {}
 
-    def set_window(mode: Mode, screen_window: Window, mv_window: Window) -> None:
+    def window(
+        mode: Mode, screen_window: Window, mv_window: Window | None = None
+    ) -> Window_contents:
+        if mv_window is None:
+            mv_window = screen_window
         if not mode.window_has_border(screen_window):
             border = None
         elif mv.control_apple_tv and mv_window == mv.selected_window:
@@ -698,28 +698,42 @@ def render(mv: Multiviewer) -> Screen:
             border = Color.GREEN
         else:
             border = Color.GRAY
-        windows[screen_window] = Window_contents(
-            hdmi=window_input[mv_window], border=border
-        )
+        return Window_contents(hdmi=mv.window_input[mv_window], border=border)
 
-    pip_location = None
     if mv.is_fullscreen:
-        submode = None
-        set_window(Mode.FULL, W1, mv.full_window)
         if not mv.fullscreen_shows_pip:
-            mode = Mode.FULL
+            layout = Full(w1=window(Mode.FULL, W1, mv.full_window))
         else:
-            mode = Mode.PIP
-            pip_location = mv.pip_location
-            set_window(Mode.PIP, W2, mv.pip_window)
+            layout = Pip(
+                pip_location=mv.pip_location,
+                w1=window(Mode.PIP, W1, mv.full_window),
+                w2=window(Mode.PIP, W2, mv.pip_window),
+            )
     else:
         mode = mv.multimode.to_mode()
         submode = mv.submode
-        for w in mode.windows():
-            set_window(mode, w, w)
-    return Screen(
-        mode, submode, pip_location, window_input[mv.selected_window], windows
-    )
+        if mode == Mode.PBP:
+            layout = Pbp(
+                submode=submode,
+                w1=window(mode, W1),
+                w2=window(mode, W2),
+            )
+        elif mode == Mode.TRIPLE:
+            layout = Triple(
+                submode=submode,
+                w1=window(mode, W1),
+                w2=window(mode, W2),
+                w3=window(mode, W3),
+            )
+        else:
+            layout = Quad(
+                submode=submode,
+                w1=window(mode, W1),
+                w2=window(mode, W2),
+                w3=window(mode, W3),
+                w4=window(mode, W4),
+            )
+    return Screen(layout=layout, audio_from=mv.window_input[mv.selected_window])
 
 
 def update_screen(mv: Multiviewer) -> None:

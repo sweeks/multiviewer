@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 # Standard library
+from dataclasses import dataclass
+from typing import Callable, TypeAlias, TypedDict
+
+# Local package
 from .base import *
-from .json_field import json_dict
-from .jtech import (
-    Border,
-    Color,
-    Hdmi,
-    Jtech,
-    Mode,
-    PipLocation,
-    Submode,
-    Window,
-)
+from .jtech import Border, Color, Hdmi, Jtech, Mode, PipLocation, Submode, Window
+
+W1 = Window.W1
+W2 = Window.W2
+W3 = Window.W3
+W4 = Window.W4
 
 
 def color_letter(c: Color) -> str:
@@ -55,31 +54,120 @@ class Window_contents:
 
 @dataclass_json
 @dataclass(slots=True)
+class Full:
+    w1: Window_contents
+
+    def windows(self) -> dict[Window, Window_contents]:
+        return {W1: self.w1}
+
+
+@dataclass_json
+@dataclass(slots=True)
+class Pip:
+    pip_location: PipLocation
+    w1: Window_contents
+    w2: Window_contents
+
+    def windows(self) -> dict[Window, Window_contents]:
+        return {W1: self.w1, W2: self.w2}
+
+
+@dataclass_json
+@dataclass(slots=True)
+class Pbp:
+    submode: Submode
+    w1: Window_contents
+    w2: Window_contents
+
+    def windows(self) -> dict[Window, Window_contents]:
+        return {W1: self.w1, W2: self.w2}
+
+
+@dataclass_json
+@dataclass(slots=True)
+class Triple:
+    submode: Submode
+    w1: Window_contents
+    w2: Window_contents
+    w3: Window_contents
+
+    def windows(self) -> dict[Window, Window_contents]:
+        return {W1: self.w1, W2: self.w2, W3: self.w3}
+
+
+@dataclass_json
+@dataclass(slots=True)
+class Quad:
+    submode: Submode
+    w1: Window_contents
+    w2: Window_contents
+    w3: Window_contents
+    w4: Window_contents
+
+    def windows(self) -> dict[Window, Window_contents]:
+        return {
+            W1: self.w1,
+            W2: self.w2,
+            W3: self.w3,
+            W4: self.w4,
+        }
+
+
+Layout: TypeAlias = Full | Pip | Pbp | Triple | Quad
+
+
+def layout_windows(layout: Layout) -> dict[Window, Window_contents]:
+    return layout.windows()
+
+
+def layout_mode(layout: Layout) -> Mode:
+    if isinstance(layout, Full):
+        return Mode.FULL
+    if isinstance(layout, Pip):
+        return Mode.PIP
+    if isinstance(layout, Pbp):
+        return Mode.PBP
+    if isinstance(layout, Triple):
+        return Mode.TRIPLE
+    return Mode.QUAD
+
+
+def layout_submode(layout: Layout) -> Submode | None:
+    if isinstance(layout, (Pbp, Triple, Quad)):
+        return layout.submode
+    return None
+
+
+def layout_pip_location(layout: Layout) -> PipLocation | None:
+    if isinstance(layout, Pip):
+        return layout.pip_location
+    return None
+
+
+@dataclass_json
+@dataclass(slots=True)
 class Screen:
-    mode: Mode
-    submode: Submode | None
-    pip_location: PipLocation | None
+    layout: Layout
     audio_from: Hdmi
-    windows: dict[Window, Window_contents] = field(
-        metadata=json_dict(Window, Window_contents)
-    )
 
     def one_line_description(self) -> str:
-        s = self
-        if s.submode is not None:
-            sub_str = f"({s.submode.to_int()})"
-        elif s.pip_location is not None:
-            sub_str = f"({s.pip_location})"
+        mode = layout_mode(self.layout)
+        submode = layout_submode(self.layout)
+        pip_location = layout_pip_location(self.layout)
+        if submode is not None:
+            sub_str = f"({submode.to_int()})"
+        elif pip_location is not None:
+            sub_str = f"({pip_location})"
         else:
             sub_str = ""
         parts = []
-        for w, c in sorted(s.windows.items()):
+        for w, c in sorted(layout_windows(self.layout).items()):
             h = f"{c.hdmi.value}"
             border = c.border
             if border is not None:
                 h = f"[{h}]{color_letter(border)}"
             parts.append(h)
-        return f"{s.mode.value}{sub_str} A{s.audio_from.to_int()} " + " ".join(parts)
+        return f"{mode.value}{sub_str} A{self.audio_from.to_int()} " + " ".join(parts)
 
     def __repr__(self) -> str:
         return self.one_line_description()
@@ -88,11 +176,6 @@ class Screen:
     async def read_jtech(
         cls, jtech: Jtech, should_abort: Callable[[], bool]
     ) -> Screen | None:
-        """
-        Send commands to the J-Tech to read its currently displayed screen. After sending
-        each command, check should_abort(); if it returns True, abort early and return
-        None. Otherwise, return the read Screen.
-        """
         mode = await jtech.read_mode()
         if should_abort():
             return None
@@ -100,13 +183,13 @@ class Screen:
         if should_abort():
             return None
         if mode == Mode.PIP:
-            pip_location = await jtech.read_pip_location()
+            pip_location = await jtech.read_pip_location() or PipLocation.NE
         else:
             pip_location = None
         audio_from = await jtech.read_audio_from()
         if should_abort():
             return None
-        windows = {}
+        windows: dict[Window, Window_contents] = {}
         for window in mode.windows():
             hdmi = await jtech.read_window_input(mode, window)
             if should_abort():
@@ -124,52 +207,72 @@ class Screen:
                     if should_abort():
                         return None
             windows[window] = Window_contents(hdmi, border)
-        return cls(mode, submode, pip_location, audio_from, windows)
+        layout: Layout
+        if mode == Mode.FULL:
+            layout = Full(w1=windows[W1])
+        elif mode == Mode.PIP:
+            layout = Pip(
+                pip_location=pip_location or PipLocation.NE,
+                w1=windows[W1],
+                w2=windows[W2],
+            )
+        elif mode == Mode.PBP:
+            assert submode is not None
+            layout = Pbp(submode=submode, w1=windows[W1], w2=windows[W2])
+        elif mode == Mode.TRIPLE:
+            assert submode is not None
+            layout = Triple(
+                submode=submode,
+                w1=windows[W1],
+                w2=windows[W2],
+                w3=windows[W3],
+            )
+        else:
+            assert submode is not None
+            layout = Quad(
+                submode=submode,
+                w1=windows[W1],
+                w2=windows[W2],
+                w3=windows[W3],
+                w4=windows[W4],
+            )
+        return cls(layout=layout, audio_from=audio_from)
 
-    async def set_jtech(self, device: Jtech, should_abort: Callable[[], bool]) -> bool:
-        """
-        Send commands to the J-Tech to make its displayed screen match this Screen.
-        After sending each command, check should_abort(); if it returns True, abort early
-        and return False. Return True if the entire desired Screen was set.
-        """
-        desired = self
+    async def set_jtech(self, jtech: Jtech, should_abort: Callable[[], bool]) -> bool:
         if False:
-            debug_print(desired, device)
-        await device.set_mode(desired.mode)
+            debug_print(self, jtech)
+        layout = self.layout
+        mode = layout_mode(layout)
+        submode = layout_submode(layout)
+        pip_location = layout_pip_location(layout)
+        await jtech.set_mode(mode)
         if should_abort():
             return False
-        if desired.mode == Mode.PIP:
-            if desired.pip_location is None:
-                pip_location = PipLocation.NE
-            else:
-                pip_location = desired.pip_location
-            await device.set_pip_location(pip_location)
+        if mode == Mode.PIP and pip_location is not None:
+            await jtech.set_pip_location(pip_location)
             if should_abort():
                 return False
-        if desired.submode is not None:
-            await device.set_submode(desired.mode, desired.submode)
+        if submode is not None:
+            await jtech.set_submode(mode, submode)
             if should_abort():
                 return False
-        # Set window inputs and turn on borders.
-        for w, d in desired.windows.items():
-            await device.set_window_input(desired.mode, w, d.hdmi)
+        windows = layout_windows(layout)
+        for w, d in windows.items():
+            await jtech.set_window_input(mode, w, d.hdmi)
             if should_abort():
                 return False
             if d.border is not None:
-                await device.set_border(desired.mode, w, Border.On)
+                await jtech.set_border(mode, w, Border.On)
                 if should_abort():
                     return False
-                await device.set_border_color(desired.mode, w, d.border)
+                await jtech.set_border_color(mode, w, d.border)
                 if should_abort():
                     return False
-        # Turn off borders.  We do this after turning on borders, because the visual
-        # effect is nicer. The user sees the new border 100ms sooner.
-        for w, d in desired.windows.items():
-            if d.border is None and desired.mode.window_has_border(w):
-                await device.set_border(desired.mode, w, Border.Off)
+        for w, d in windows.items():
+            if d.border is None and mode.window_has_border(w):
+                await jtech.set_border(mode, w, Border.Off)
                 if should_abort():
                     return False
-        # We do audio last, after visual effects.
-        await device.set_audio_from(desired.audio_from)
-        await device.unmute()
+        await jtech.set_audio_from(self.audio_from)
+        await jtech.unmute()
         return True
