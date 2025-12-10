@@ -4,5 +4,5 @@
   "venv": ".venv",
   "extraPaths": ["src"],
   "typeCheckingMode": "standard",
-  "exclude": ["build"]
+  "exclude": ["build", ".venv"]
 }
