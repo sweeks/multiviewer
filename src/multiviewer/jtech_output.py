@@ -14,30 +14,6 @@ W3 = Window.W3
 W4 = Window.W4
 
 
-def color_letter(c: Color) -> str:
-    match c:
-        case Color.BLACK:
-            return "K"
-        case Color.RED:
-            return "R"
-        case Color.GREEN:
-            return "G"
-        case Color.BLUE:
-            return "B"
-        case Color.YELLOW:
-            return "Y"
-        case Color.MAGENTA:
-            return "M"
-        case Color.CYAN:
-            return "C"
-        case Color.WHITE:
-            return "W"
-        case Color.GRAY:
-            return "A"
-        case _:
-            fail("invalid color", c)
-
-
 @dataclass_json
 @dataclass(slots=True)
 class Window_contents:
@@ -47,8 +23,7 @@ class Window_contents:
     def __repr__(self) -> str:
         s = f"{self.hdmi!r}"
         if self.border:
-            c = color_letter(self.border)
-            s = f"[{s}]{c}"
+            s = f"[{s}]{self.border.letter()}"
         return s
 
 
@@ -165,7 +140,7 @@ class JtechOutput:
             h = f"{c.hdmi.value}"
             border = c.border
             if border is not None:
-                h = f"[{h}]{color_letter(border)}"
+                h = f"[{h}]{border.letter()}"
             parts.append(h)
         return f"{mode.value}{sub_str} A{self.audio_from.to_int()} " + " ".join(parts)
 

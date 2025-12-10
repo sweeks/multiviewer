@@ -28,6 +28,10 @@ class Color(MyStrEnum):
     WHITE: Color
     GRAY: Color
 
+    def letter(self) -> str: ...
+    @staticmethod
+    def letter_for(color: Color | None) -> str: ...
+
 class Border:
     On: Border
     Off: Border

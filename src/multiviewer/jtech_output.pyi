@@ -7,9 +7,6 @@ from .base import *
 from .jtech import Color, Hdmi, Jtech, PipLocation, Submode, Window
 
 
-def color_letter(c: Color) -> str: ...
-
-
 @dataclass(slots=True)
 class Window_contents:
     """Describes one window on the TV screen."""

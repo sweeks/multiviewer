@@ -169,6 +169,35 @@ class Color(MyStrEnum):
     WHITE = auto()
     GRAY = auto()
 
+    def letter(self) -> str:
+        match self:
+            case Color.BLACK:
+                return "K"
+            case Color.RED:
+                return "R"
+            case Color.GREEN:
+                return "G"
+            case Color.BLUE:
+                return "B"
+            case Color.YELLOW:
+                return "Y"
+            case Color.MAGENTA:
+                return "M"
+            case Color.CYAN:
+                return "C"
+            case Color.WHITE:
+                return "W"
+            case Color.GRAY:
+                return "A"
+            case _:
+                fail("invalid color", self)
+
+    @staticmethod
+    def letter_for(color: Color | None) -> str:
+        if color is None:
+            return "?"
+        return color.letter()
+
 
 BLACK = Color.BLACK
 RED = Color.RED
@@ -229,6 +258,16 @@ class Window_input:
 class Window_border:
     border: Border | None = None
     border_color: Color | None = None
+
+    def __repr__(self) -> str:
+        if self.border is None:
+            s = "?"
+        elif self.border == Border.On:
+            s = "[]"
+        else:
+            s = ""
+        c = Color.letter_for(self.border_color)
+        return f"{s}{c}"
 
 
 @dataclass(slots=True)
