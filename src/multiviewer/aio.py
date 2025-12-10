@@ -32,7 +32,7 @@ async def wait_for(a, *, timeout):
     start = datetime.datetime.now()
     try:
         return await asyncio.wait_for(a, timeout)
-    except asyncio.TimeoutError as e:
+    except asyncio.TimeoutError:
         duration = (datetime.datetime.now() - start).total_seconds()
         if False:
             log(f"wait_for timeout: timeout={timeout}s duration={duration}s")
@@ -52,12 +52,12 @@ class Event(asyncio.Event):
 
 class StreamReader(asyncio.StreamReader):
     def __repr__(self) -> str:
-        return f"<StreamReader>"
+        return "<StreamReader>"
 
 
 class StreamWriter(asyncio.StreamWriter):
     def __repr__(self) -> str:
-        return f"<StreamWriter>"
+        return "<StreamWriter>"
 
 
 class Task(asyncio.Task):

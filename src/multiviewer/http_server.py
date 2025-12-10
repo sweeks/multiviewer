@@ -55,7 +55,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             command = command_json
         except Exception as e:
             log_exc(e)
-            self.respond(400, f"bad request")
+            self.respond(400, "bad request")
             return
         try:
             response = aio.run_coroutine_threadsafe(

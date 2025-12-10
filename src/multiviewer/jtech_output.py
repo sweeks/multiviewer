@@ -2,7 +2,7 @@ from __future__ import annotations
 
 # Standard library
 from dataclasses import dataclass
-from typing import Callable, TypeAlias, TypedDict
+from typing import Callable, TypeAlias
 
 # Local package
 from .base import *

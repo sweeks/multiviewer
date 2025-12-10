@@ -12,7 +12,17 @@ import traceback
 from dataclasses import dataclass, field
 from enum import auto
 from enum import StrEnum as _StrEnum
-from typing import Any, Awaitable, Callable, Coroutine, Dict, Generic, List, Mapping
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    ClassVar,
+    Coroutine,
+    Dict,
+    Generic,
+    List,
+    Mapping,
+)
 from typing import Optional, NoReturn, Self, Tuple, Type, TypeAlias, TypeVar, Union
 
 # Third-party
@@ -23,10 +33,6 @@ JSON: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 class Jsonable:
     pass
-
-
-from dataclasses import dataclass
-from typing import ClassVar
 
 
 class RunMode(_StrEnum):

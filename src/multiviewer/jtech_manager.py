@@ -6,7 +6,7 @@ from . import aio
 from . import json_field
 from .aio import Event, Task
 from .base import *
-from .jtech import Jtech, Mute, Power
+from .jtech import Jtech, Power
 from .jtech_output import JtechOutput
 
 
@@ -97,7 +97,7 @@ class JtechManager:
             log(f"read jtech output: {self.jtech_output}")
             is_synced = self.jtech_output == desired_output
             if not is_synced:
-                log(f"jtech output mismatch")
+                log("jtech output mismatch")
             return is_synced
 
     # The call to self.sync in sync_forever is the only code that sends commands to the

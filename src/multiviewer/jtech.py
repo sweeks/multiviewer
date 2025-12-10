@@ -3,7 +3,6 @@ from __future__ import annotations
 # Standard library
 import dataclasses
 import re
-from unittest import result
 
 # Local package
 from . import aio
@@ -679,7 +678,7 @@ class Jtech:
     async def test_aliasing_of_window_input(
         self, mode1: Mode, mode2: Mode, window: Window
     ) -> None:
-        if not window in mode1.windows() or not window in mode2.windows():
+        if window not in mode1.windows() or window not in mode2.windows():
             return
         await self.set_mode(mode1)
         await aio.sleep(1)
@@ -702,7 +701,7 @@ class Jtech:
     async def test_aliasing_of_border(
         self, mode1: Mode, mode2: Mode, window: Window
     ) -> None:
-        if not window in mode1.windows() or not window in mode2.windows():
+        if window not in mode1.windows() or window not in mode2.windows():
             return
         await self.set_mode(mode1)
         await aio.sleep(1)

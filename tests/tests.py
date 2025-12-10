@@ -103,7 +103,7 @@ async def run(selected):
             elapsed = time.perf_counter() - start
             print(f" {elapsed:.1f}s")
             passed += 1
-        except Exception as e:
+        except Exception:
             elapsed = time.perf_counter() - start
             print(f"  FAILED ({elapsed:.1f}s)")
             traceback.print_exc()
