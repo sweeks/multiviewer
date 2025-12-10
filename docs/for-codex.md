@@ -1,6 +1,7 @@
 # For Codex / AI context
 
 - Purpose: quick shared context for Codex tasks in this repo. Keep concise; update when workflows change.
+- Rule: never change code unless explicitly instructed to do so.
 - Reading note: when asked to "read for-codex", do not summarize—it's just to refresh your context.
 - Project: multiviewer remote-control daemon for J-Tech MV41A + four Apple TVs + LG soundbar/TV. Python asyncio daemon under `src/multiviewer`, remote buttons send HTTP to daemon.
 - Start daemon: `bin/start-mvd.sh` (kills prior daemon, logs under `var/mvd.log`).
