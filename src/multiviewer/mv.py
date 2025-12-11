@@ -46,6 +46,7 @@ def hdmi2tv(h: Hdmi) -> TV:
 
 
 max_num_windows = 4
+min_num_windows = 1
 
 
 def volume_deltas_zero():
@@ -54,26 +55,6 @@ def volume_deltas_zero():
 
 def initial_window_input():
     return {W1: H1, W2: H2, W3: H3, W4: H4}
-
-
-class Multimode(MyStrEnum):
-    PBP = auto()
-    TRIPLE = auto()
-    QUAD = auto()
-
-    def to_mode(self) -> Mode:
-        match self:
-            case Multimode.PBP:
-                return Mode.PBP
-            case Multimode.TRIPLE:
-                return Mode.TRIPLE
-            case Multimode.QUAD:
-                return Mode.QUAD
-
-
-PBP = Multimode.PBP
-TRIPLE = Multimode.TRIPLE
-QUAD = Multimode.QUAD
 
 
 @dataclass(slots=True)
@@ -90,13 +71,27 @@ class RemotePress:
     selected_window: Window
 
 
+@dataclass(slots=True)
+class BackPress:
+    at: datetime
+    selected_window: Window
+    tv: TV
+
+
+@dataclass(slots=True)
+class PlayPausePress:
+    at: datetime
+    selected_window: Window
+    previous_border_state: bool
+
+
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
     # power is the state of the virtual multiviewer.  During initialization, we ensure
     # that the physical devices match it.
     power: Power = Power.ON
-    multimode: Multimode = Multimode.QUAD
+    num_active_windows: int = max_num_windows
     submode: Submode = W1_PROMINENT
     is_fullscreen: bool = False
     fullscreen_shows_pip: bool = False
@@ -111,6 +106,10 @@ class Multiviewer(Jsonable):
     )
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
+    last_back_press: BackPress | None = field(default=None, metadata=json_field.omit)
+    last_play_pause_press: PlayPausePress | None = field(
+        default=None, metadata=json_field.omit
+    )
     jtech_manager: JtechManager = JtechManager.field()
     # We maintain a volume delta for each TV, which we use to automatically adjust
     # volume_delta when unmuting or when the selected TV changes.
@@ -124,7 +123,7 @@ class Multiviewer(Jsonable):
 
 
 def num_windows(mv: Multiviewer) -> int:
-    return mv.multimode.to_mode().num_windows()
+    return mv.num_active_windows
 
 
 def last_window(mv: Multiviewer) -> Window:
@@ -153,7 +152,7 @@ def selected_tv(mv: Multiviewer) -> TV:
 
 
 def visible(mv: Multiviewer) -> list[Window]:
-    return mv.multimode.to_mode().windows()
+    return [Window.of_int(i) for i in range(1, 1 + mv.num_active_windows)]
 
 
 def is_visible(mv: Multiviewer, w: Window) -> bool:
@@ -163,8 +162,13 @@ def is_visible(mv: Multiviewer, w: Window) -> bool:
 def validate(mv: Multiviewer) -> None:
     assert_equal(set(mv.window_input.keys()), set(Mode.QUAD.windows()))
     assert_equal(len(set(mv.window_input.values())), len(mv.window_input))
+    assert_(min_num_windows <= mv.num_active_windows <= max_num_windows)
+    if mv.num_active_windows == min_num_windows:
+        assert_(mv.is_fullscreen)
+        assert_(not mv.fullscreen_shows_pip)
     v = visible(mv)
     if not mv.is_fullscreen:
+        assert_(mv.num_active_windows >= 2)
         assert_(mv.selected_window in v)
 
 
@@ -173,7 +177,7 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
-    mv.multimode = QUAD
+    mv.num_active_windows = max_num_windows
     mv.submode = W1_PROMINENT
     mv.is_fullscreen = False
     mv.fullscreen_shows_pip = False
@@ -185,6 +189,8 @@ def reset(mv: Multiviewer) -> None:
     mv.control_apple_tv = False
     mv.last_arrow_press = None
     mv.last_remote_press = None
+    mv.last_back_press = None
+    mv.last_play_pause_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
     mv.window_input = initial_window_input()
@@ -300,10 +306,7 @@ def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
         return False
     if mv.is_fullscreen:
         return True
-    match mv.multimode:
-        case Multimode.PBP | Multimode.TRIPLE | Multimode.QUAD:
-            return mv.submode == W1_PROMINENT
-    raise AssertionError
+    return mv.submode == W1_PROMINENT
 
 
 def swap_window_inputs(mv: Multiviewer, w1: Window, w2: Window) -> None:
@@ -329,8 +332,8 @@ W = Arrow.W
 S = Arrow.S
 
 _arrow_points_to = {
-    PBP: {W1: {E: W2}, W2: {W: W1}},
-    TRIPLE: {
+    2: {W1: {E: W2}, W2: {W: W1}},
+    3: {
         W1: {N: W2, S: W3},
         W2: {W: W1, S: W3},
         W3: {
@@ -338,7 +341,7 @@ _arrow_points_to = {
             W: W1,
         },
     },
-    (QUAD, WINDOWS_SAME): {
+    (4, WINDOWS_SAME): {
         W1: {E: W2, W: W4, S: W3},
         W2: {E: W3, W: W1, S: W4},
         W3: {N: W1, E: W4, W: W2},
@@ -348,7 +351,7 @@ _arrow_points_to = {
             W: W3,
         },
     },
-    (QUAD, W1_PROMINENT): {
+    (4, W1_PROMINENT): {
         W1: {N: W2, E: W3, S: W4},
         W2: {W: W1, S: W3},
         W3: {N: W2, W: W1, S: W4},
@@ -360,31 +363,30 @@ _arrow_points_to = {
 def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
     if False:
         debug_print(arrow)
-    match mv.multimode:
-        case Multimode.PBP | Multimode.TRIPLE:
-            key = mv.multimode
-        case Multimode.QUAD:
-            key = (mv.multimode, mv.submode)
+    match mv.num_active_windows:
+        case 2 | 3:
+            key = mv.num_active_windows
+        case 4:
+            key = (mv.num_active_windows, mv.submode)
+        case _:
+            fail("arrow_points_to invalid num_active_windows", mv.num_active_windows)
     return _arrow_points_to[key][mv.selected_window].get(arrow)
 
 
 def add_window(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
-        mv.multimode = PBP
         mv.is_fullscreen = False
+        mv.num_active_windows = max(2, mv.num_active_windows)
         swap_window_inputs(mv, W1, mv.full_window)
         mv.selected_window = W1
-        if mv.fullscreen_shows_pip:
+        if mv.fullscreen_shows_pip and mv.num_active_windows >= 2:
             if mv.pip_window == W1:
                 swap_window_inputs(mv, W2, mv.full_window)
             else:
                 swap_window_inputs(mv, W2, mv.pip_window)
     else:
-        match mv.multimode:
-            case Multimode.PBP:
-                mv.multimode = TRIPLE
-            case Multimode.TRIPLE:
-                mv.multimode = QUAD
+        if mv.num_active_windows < max_num_windows:
+            mv.num_active_windows += 1
 
 
 def demote_window(mv: Multiviewer, w1: Window) -> None:
@@ -398,41 +400,48 @@ def demote_window(mv: Multiviewer, w1: Window) -> None:
 
 def remove_window(mv: Multiviewer) -> None:
     if not mv.is_fullscreen:
-        match mv.multimode:
-            case Multimode.PBP:
-                mv.is_fullscreen = True
-                mv.full_window = mv.selected_window
-                mv.fullscreen_shows_pip = False
-            case Multimode.TRIPLE:
-                mv.multimode = PBP
-            case Multimode.QUAD:
-                mv.multimode = TRIPLE
+        if mv.num_active_windows == min_num_windows:
+            return
+        if mv.num_active_windows == 2:
+            mv.is_fullscreen = True
+            mv.full_window = mv.selected_window
+            mv.fullscreen_shows_pip = False
+        mv.num_active_windows -= 1
         if not is_visible(mv, mv.selected_window):
             mv.selected_window_border_is_on = True
             mv.selected_window = W1
 
 
 def maybe_entered_pip(mv: Multiviewer) -> None:
-    if mv.fullscreen_shows_pip:
+    if mv.fullscreen_shows_pip and mv.num_active_windows >= 2:
         mv.pip_window = next_window(mv, mv.full_window)
+    elif mv.num_active_windows < 2:
+        mv.fullscreen_shows_pip = False
 
 
 def toggle_fullscreen(mv: Multiviewer) -> None:
-    mv.is_fullscreen = not mv.is_fullscreen
     if mv.is_fullscreen:
+        if mv.num_active_windows >= 2:
+            mv.is_fullscreen = False
+            mv.selected_window_border_is_on = True
+            if not is_visible(mv, mv.selected_window):
+                swap_window_inputs(mv, W1, mv.selected_window)
+                mv.selected_window = W1
+    else:
+        mv.is_fullscreen = True
         mv.full_window = mv.selected_window
         maybe_entered_pip(mv)
-    else:
-        mv.selected_window_border_is_on = True
-        if not is_visible(mv, mv.selected_window):
-            swap_window_inputs(mv, W1, mv.selected_window)
-            mv.selected_window = W1
 
 
 def toggle_submode(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
-        mv.fullscreen_shows_pip = not mv.fullscreen_shows_pip
-        maybe_entered_pip(mv)
+        if mv.num_active_windows == 1:
+            mv.num_active_windows = 2
+            mv.fullscreen_shows_pip = True
+            maybe_entered_pip(mv)
+        elif mv.num_active_windows >= 2:
+            mv.fullscreen_shows_pip = not mv.fullscreen_shows_pip
+            maybe_entered_pip(mv)
     else:
         mv.submode = mv.submode.flip()
 
@@ -465,27 +474,22 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if mv.is_fullscreen:
         if mv.fullscreen_shows_pip:
             if mv.pip_window == mv.selected_window:
-                # Move the PIP on screen
                 pip_location = from_pip_arrow_points_to(mv, arrow)
                 if pip_location is not None:
                     mv.pip_location = pip_location
             else:
-                # Rotate PIP (E, W) or select PIP (N, S)
-                match (arrow, mv.pip_location):
-                    case (Arrow.E, _):
+                match arrow:
+                    case Arrow.E:
                         w = next_window(mv, mv.pip_window)
                         if w == mv.full_window:
                             w = next_window(mv, w)
                         mv.pip_window = w
-                    case (Arrow.W, _):
+                    case Arrow.W:
                         w = prev_window(mv, mv.pip_window)
                         if w == mv.full_window:
                             w = prev_window(mv, w)
                         mv.pip_window = w
-                    case (Arrow.N, PipLocation.NE | PipLocation.NW) | (
-                        Arrow.S,
-                        PipLocation.SE | PipLocation.SW,
-                    ):
+                    case Arrow.N | Arrow.S:
                         mv.selected_window = mv.pip_window
                     case _:
                         pass
@@ -530,6 +534,59 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
                     selected_window=mv.selected_window,
                 )
                 mv.selected_window = points_to
+
+
+def pressed_back(mv: Multiviewer, tv: TV) -> None:
+    at = datetime.now()
+    last_press = mv.last_back_press
+    if last_press is not None and at - last_press.at <= DOUBLE_TAP_MAX_DURATION:
+        log_double_tap_duration(at - last_press.at)
+        mv.last_back_press = None
+        mv.atvs.atv(last_press.tv).screensaver()
+        return
+    if mv.is_fullscreen and mv.num_active_windows == 1:
+        mv.last_back_press = None
+        add_window(mv)
+        return
+    if mv.is_fullscreen:
+        mv.last_back_press = None
+        if mv.fullscreen_shows_pip and mv.selected_window == mv.pip_window:
+            mv.selected_window = mv.full_window
+        else:
+            toggle_fullscreen(mv)
+        return
+    if mv.num_active_windows == min_num_windows:
+        mv.last_back_press = None
+        return
+    mv.last_back_press = BackPress(at=at, selected_window=mv.selected_window, tv=tv)
+    demote_window(mv, mv.selected_window)
+    remove_window(mv)
+
+
+def pressed_play_pause(mv: Multiviewer) -> None:
+    if mv.is_fullscreen:
+        mv.last_play_pause_press = None
+        mv.selected_window_border_is_on = not mv.selected_window_border_is_on
+        return
+    at = datetime.now()
+    last_press = mv.last_play_pause_press
+    if (
+        last_press is not None
+        and last_press.selected_window == mv.selected_window
+        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+    ):
+        log_double_tap_duration(at - last_press.at)
+        mv.last_play_pause_press = None
+        mv.selected_window_border_is_on = last_press.previous_border_state
+        toggle_submode(mv)
+    else:
+        previous_state = mv.selected_window_border_is_on
+        mv.selected_window_border_is_on = not mv.selected_window_border_is_on
+        mv.last_play_pause_press = PlayPausePress(
+            at=at,
+            selected_window=mv.selected_window,
+            previous_border_state=previous_state,
+        )
 
 
 def toggle_mute(mv: Multiviewer) -> None:
@@ -602,11 +659,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Back":
             if mv.control_apple_tv:
                 atv.menu()
-            elif mv.is_fullscreen:
-                if mv.fullscreen_shows_pip and mv.selected_window == mv.pip_window:
-                    mv.selected_window = mv.full_window
-                else:
-                    toggle_fullscreen(mv)
+            else:
+                pressed_back(mv, tv)
         case "Demote_window":
             demote_window(mv, mv.selected_window)
         case "Down" | "S":
@@ -618,7 +672,10 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.control_apple_tv:
                 atv.home()
             else:
-                toggle_submode(mv)
+                if mv.is_fullscreen:
+                    toggle_submode(mv)
+                else:
+                    add_window(mv)
         case "Info":
             return await info(mv)
         case "Launch":
@@ -634,7 +691,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.control_apple_tv:
                 atv.play_pause()
             else:
-                mv.selected_window_border_is_on = not mv.selected_window_border_is_on
+                pressed_play_pause(mv)
         case "Power_on":
             mv.selected_window_border_is_on = True
             await power_on(mv)
@@ -718,7 +775,16 @@ def render(mv: Multiviewer) -> JtechOutput:
                 w2=window(Mode.PIP, W2, mv.pip_window),
             )
     else:
-        mode = mv.multimode.to_mode()
+        assert_(mv.num_active_windows >= 2)
+        match mv.num_active_windows:
+            case 2:
+                mode = Mode.PBP
+            case 3:
+                mode = Mode.TRIPLE
+            case 4:
+                mode = Mode.QUAD
+            case _:
+                fail(f"invalid num_active_windows={mv.num_active_windows}")
         submode = mv.submode
         if mode == Mode.PBP:
             layout = Pbp(
