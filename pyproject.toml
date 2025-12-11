@@ -26,7 +26,12 @@ target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F"]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # import conventions
+    "UP",  # pyupgrade
+]
 ignore = [
     # Star imports are intentional; base.py defines __all__.
     "F403",
@@ -34,3 +39,7 @@ ignore = [
     # Keep one-line debug toggles like `if False: debug_print()`.
     "E701",
 ]
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]

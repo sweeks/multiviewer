@@ -5,10 +5,19 @@ Stuff used throughout the project.  Most other code does:
 """
 
 # Standard library
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Awaitable, Callable, Coroutine, Dict, Generic, List, Mapping
-from typing import Optional, NoReturn, Self, Tuple, Type, TypeAlias, TypeVar, Union
+from typing import (
+    Any,
+    Generic,
+    NoReturn,
+    Optional,
+    Self,
+    TypeAlias,
+    TypeVar,
+    Union,
+)
 
 # Third-party
 from dataclasses_json import dataclass_json
@@ -23,6 +32,9 @@ class RunMode:
     def get(cls) -> RunMode: ...
 
 JSON: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
+Dict = dict
+List = list
+Tuple = tuple
 
 class Jsonable:
     def to_json(self, *args, **kwargs) -> str: ...
@@ -60,7 +72,7 @@ class MyStrEnum(StrEnum):
 def auto() -> Any:
     """The same as enum.auto.  Use this to initialize MyStrEnum members."""
 
-def attach_int(cls: Type[T], table: Mapping[T, int]) -> None:
+def attach_int(cls: type[T], table: Mapping[T, int]) -> None:
     "Used with MyStrEnum to specify the bijection between class members and ints."
 
 def fail(*args: object) -> NoReturn:

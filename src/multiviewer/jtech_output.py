@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 # Standard library
 from dataclasses import dataclass
-from typing import Callable, TypeAlias
+from typing import TypeAlias
 
 # Local package
 from .base import *

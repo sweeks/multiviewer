@@ -2,8 +2,7 @@
 import dataclasses
 
 # Local package
-from . import aio
-from . import json_field
+from . import aio, json_field
 from .aio import Event, Task
 from .base import *
 from .jtech import Jtech, Power

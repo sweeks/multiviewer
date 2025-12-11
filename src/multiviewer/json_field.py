@@ -2,9 +2,9 @@ from __future__ import annotations
 
 # Standard library
 import inspect
+from enum import Enum
 
 from dataclasses_json import config
-from enum import Enum
 
 # Local package
 from .base import *

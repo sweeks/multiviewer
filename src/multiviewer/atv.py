@@ -1,22 +1,19 @@
 # atv.py — persistent Apple TV control with synchronous API
 
 # Standard library
-from asyncio import Queue, Task
-
 import dataclasses
 import time
+from asyncio import Queue, Task
 
 # Third-party
 import pyatv
-
 from pyatv.interface import AppleTV
 from pyatv.storage.file_storage import FileStorage
 
+from . import aio, config, json_field
+
 # Local package
 from .base import *
-from . import aio
-from . import config
-from . import json_field
 
 
 class TV(MyStrEnum):

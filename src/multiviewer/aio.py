@@ -32,7 +32,7 @@ async def wait_for(a, *, timeout):
     start = datetime.datetime.now()
     try:
         return await asyncio.wait_for(a, timeout)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         duration = (datetime.datetime.now() - start).total_seconds()
         if False:
             log(f"wait_for timeout: timeout={timeout}s duration={duration}s")

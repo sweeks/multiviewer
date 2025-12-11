@@ -8,15 +8,14 @@ from pathlib import Path
 from dataclasses_json import dataclass_json
 
 # Local package
-from . import aio
-from . import json_field
+from . import aio, json_field
 from .aio import Task
-from .atv import ATVs, TV
+from .atv import TV, ATVs
 from .base import *
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import JtechManager
-from .jtech_output import Full, JtechOutput, Pip, Pbp, Quad, Triple, WindowContents
+from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)

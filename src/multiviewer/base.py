@@ -8,27 +8,29 @@ import pprint
 import sys
 import time
 import traceback
-
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
-from enum import auto
 from enum import StrEnum as _StrEnum
+from enum import auto
 from typing import (
     Any,
-    Awaitable,
-    Callable,
     ClassVar,
-    Coroutine,
-    Dict,
     Generic,
-    List,
-    Mapping,
+    NoReturn,
+    Optional,
+    Self,
+    TypeAlias,
+    TypeVar,
+    Union,
 )
-from typing import Optional, NoReturn, Self, Tuple, Type, TypeAlias, TypeVar, Union
 
 # Third-party
 from dataclasses_json import dataclass_json
 
 JSON: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
+Dict = dict
+List = list
+Tuple = tuple
 
 
 class Jsonable:
@@ -159,7 +161,7 @@ class MyStrEnum(_StrEnum):
         cls.missing_attach_int()
 
     @classmethod
-    def of_int(cls: Type[T], i: int) -> T:
+    def of_int(cls: type[T], i: int) -> T:
         cls.missing_attach_int()
 
     def to_int(self) -> int:

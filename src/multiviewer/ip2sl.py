@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from . import aio, config
+
 # Local package
 from .base import *
-from . import aio
-from . import config
 
 TERM = b"\r"
 

@@ -5,8 +5,7 @@ import socket
 import time
 
 # Local package
-from . import aio
-from . import config
+from . import aio, config
 from .base import *
 
 IR_VOLUME_UP = (
