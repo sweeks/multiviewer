@@ -413,7 +413,7 @@ async def _():
 
 @test("Volume is adjusted when switching TVs")
 async def _():
-    await tv_do("Reset; Play_pause; Play_pause; Volume_up; E; Volume_down")
+    await tv_do("Reset; Volume_up; E; Volume_down")
     await vol_is("V-1")
 
 
@@ -430,7 +430,7 @@ async def _():
 @test("Remote double tap")
 async def _():
     await tv_do("Reset; Remote; Remote", "1")
-    await tv_do("Play_pause; Play_pause; E; Remote; Remote", "2")
+    await tv_do("E; Remote; Remote", "3")
 
 
 @test("Info")
