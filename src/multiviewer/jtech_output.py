@@ -138,7 +138,7 @@ class JtechOutput:
         else:
             sub_str = ""
         parts = []
-        for w, c in sorted(layout_windows(self.layout).items()):
+        for _w, c in sorted(layout_windows(self.layout).items()):
             h = f"{c.hdmi.value}"
             border = c.border
             if border is not None:

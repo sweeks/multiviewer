@@ -39,9 +39,7 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
         codec_type = t_or_codec
 
         # dataclasses_json classes expose class-level schema() and instance to_dict()
-        has_schema = hasattr(codec_type, "schema") and callable(
-            getattr(codec_type, "schema")
-        )
+        has_schema = hasattr(codec_type, "schema") and callable(codec_type.schema)
         has_to_dict = hasattr(codec_type, "to_dict")
         if has_schema and has_to_dict:
             return (
@@ -77,10 +75,7 @@ def json_dict(key_t_or_codec: Any, val_t_or_codec: Any):
 
     def decoder(pairs: Any) -> dict[object, object]:
         # Accept both the intended list-of-pairs and a legacy JSON object for resilience.
-        if isinstance(pairs, dict):
-            it = pairs.items()
-        else:
-            it = pairs  # expect iterable of [k, v]
+        it = pairs.items() if isinstance(pairs, dict) else pairs
         return {k_dec(k): v_dec(v) for k, v in it}
 
     return config(encoder=encoder, decoder=decoder)

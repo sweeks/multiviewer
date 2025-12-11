@@ -42,14 +42,14 @@ def hdmi2tv(h: Hdmi) -> TV:
             return TV.TV3
         case Hdmi.H4:
             return TV.TV4
-    assert False
+    raise AssertionError
 
 
 max_num_windows = 4
 
 
 def volume_deltas_zero():
-    return {tv: 0 for tv in TV.all()}
+    return dict.fromkeys(TV.all(), 0)
 
 
 def initial_window_input():
@@ -303,7 +303,7 @@ def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
     match mv.multimode:
         case Multimode.PBP | Multimode.TRIPLE | Multimode.QUAD:
             return mv.submode == W1_PROMINENT
-    assert False
+    raise AssertionError
 
 
 def swap_window_inputs(mv: Multiviewer, w1: Window, w2: Window) -> None:

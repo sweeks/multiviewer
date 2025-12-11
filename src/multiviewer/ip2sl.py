@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+# Standard library
+import contextlib
+
 from . import aio, config
 
 # Local package
@@ -48,7 +51,5 @@ class Connection:
 
     async def close(self) -> None:
         self.writer.close()
-        try:
+        with contextlib.suppress(Exception):
             await self.writer.wait_closed()
-        except Exception:
-            pass
