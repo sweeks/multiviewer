@@ -724,8 +724,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             atv.sleep()
         case "Test":
             pass
-        case "Toggle_fullscreen":
-            toggle_fullscreen(mv)
         case "Toggle_submode":
             toggle_submode(mv)
         case "Up" | "N":
