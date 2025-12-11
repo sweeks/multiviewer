@@ -654,8 +654,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
     match command:
-        case "Add_window":
-            add_window(mv)
         case "Back":
             if mv.control_apple_tv:
                 atv.menu()
