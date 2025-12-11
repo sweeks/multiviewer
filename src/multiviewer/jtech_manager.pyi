@@ -7,7 +7,6 @@ from .base import *
 from .jtech import Power
 from .jtech_output import JtechOutput
 
-
 class JtechManager:
     @classmethod
     def field(cls) -> JtechManager: ...
@@ -21,9 +20,7 @@ class JtechManager:
 
     def set_power(self, desired_power: Power) -> None: ...
     def set_output(self, desired_output: JtechOutput) -> None: ...
-
     async def current_power(self) -> Power: ...
     async def current_output(self) -> JtechOutput: ...
-
     def synced(self) -> Awaitable[None]:
         """Wait until the jtech is synced to desired power and output."""

@@ -6,7 +6,6 @@ from typing import Callable, TypeAlias
 from .base import *
 from .jtech import Color, Hdmi, Jtech, PipLocation, Submode
 
-
 @dataclass(slots=True)
 class WindowContents:
     """Describes one window on the TV screen."""
@@ -14,11 +13,9 @@ class WindowContents:
     hdmi: Hdmi
     border: Color | None
 
-
 @dataclass(slots=True)
 class Full:
     w1: WindowContents
-
 
 @dataclass(slots=True)
 class Pip:
@@ -26,13 +23,11 @@ class Pip:
     w1: WindowContents
     w2: WindowContents
 
-
 @dataclass(slots=True)
 class Pbp:
     submode: Submode
     w1: WindowContents
     w2: WindowContents
-
 
 @dataclass(slots=True)
 class Triple:
@@ -40,7 +35,6 @@ class Triple:
     w1: WindowContents
     w2: WindowContents
     w3: WindowContents
-
 
 @dataclass(slots=True)
 class Quad:
@@ -50,9 +44,7 @@ class Quad:
     w3: WindowContents
     w4: WindowContents
 
-
 Layout: TypeAlias = Full | Pip | Pbp | Triple | Quad
-
 
 @dataclass(slots=True)
 class JtechOutput:
@@ -60,10 +52,8 @@ class JtechOutput:
     audio_from: Hdmi
 
     def one_line_description(self) -> str: ...
-
     @classmethod
     async def read(
         cls, jtech: Jtech, should_abort: Callable[[], bool]
     ) -> JtechOutput | None: ...
-
     async def set(self, jtech: Jtech, should_abort: Callable[[], bool]) -> bool: ...

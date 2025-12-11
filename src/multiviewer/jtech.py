@@ -333,7 +333,7 @@ class Jtech:
 
     def mode_screen(self, mode) -> ModeScreen:
         return self.mode_screens[mode]
-    
+
     def get_submode(self, mode: Mode) -> Submode | None:
         return self.mode_screen(mode).submode
 

@@ -201,7 +201,8 @@ async def update_jtech_output_forever(mv: Multiviewer):
 
 
 async def initialize(mv: Multiviewer):
-    if False: debug_print()
+    if False:
+        debug_print()
     mv.task = Task.create(type(mv).__name__, update_jtech_output_forever(mv))
     desired_power = mv.power
     mv.power = await mv.jtech_manager.current_power()
@@ -211,6 +212,7 @@ async def initialize(mv: Multiviewer):
         else:
             await power_off(mv)
     validate(mv)
+
 
 async def create() -> Multiviewer:
     mv = Multiviewer()
