@@ -1,4 +1,3 @@
-# fix class names to be camelcase
 # screen-: remove currently selected window
 # screen+ and screen- should change the number of multimode windows, without
 changing the current mode, so from fullscreen/pip, you can remove/add

@@ -95,8 +95,10 @@ The main shortcut does not need a button, but needs to be added to the Shortcuts
 and needs to be changed with the hostname of the daemon.
 
 The daemon Python code uses a virtual environment to install dependencies and the
-multiviewer package (used by tests).  To set up `.venv`, run
-[setup-venv.sh](bin/setup-venv.sh).
+multiviewer package (used by tests).  To set up `.venv` and install the repo’s git
+hooks, run [setup-repo.sh](bin/setup-repo.sh). That script sets
+`core.hooksPath=githooks`, so new commits automatically run Ruff and Black via the
+pre-commit hook.
 
 [start-mvd.sh](bin/start-mvd.sh) starts the daemon.  At startup, the new daemon first
 kills the prior daemon and then starts a new HTTP server.

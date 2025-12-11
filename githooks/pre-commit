@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
+  echo "Missing .venv/. Activate or create it before committing." >&2
+  exit 1
+fi
+
+"$ROOT/bin/format-all-code.sh"
