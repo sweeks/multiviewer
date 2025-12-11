@@ -290,7 +290,7 @@ async def _():
     await tv_is("FULL A1 H1")
 
 
-@test("Remove_window")
+@test("Back removes window")
 async def _():
     await tv_do("Reset; S; Back")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
@@ -300,13 +300,13 @@ async def _():
     await tv_is("FULL A2 H2")
 
 
-@test("Remove_window preserves submode")
+@test("Back to remove window preserves submode")
 async def _():
     await tv_do("Reset; Play_pause; Play_pause; S; Back")
     await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
 
 
-@test("Remove_window switches audio to visible window")
+@test("Back switches audio to visible window")
 async def _():
     await tv_do("Reset; S; Back")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
@@ -322,7 +322,7 @@ async def _():
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
-@test("Add_window and Remove_window preserve submode")
+@test("Adding and removing windows preserve submode")
 async def _():
     await tv_do("Reset; Play_pause; Play_pause; S; Back")
     await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
