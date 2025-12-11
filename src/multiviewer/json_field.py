@@ -36,17 +36,22 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
 
     # Class-based resolution
     if inspect.isclass(t_or_codec):
-        T = t_or_codec
+        codec_type = t_or_codec
 
         # dataclasses_json classes expose class-level schema() and instance to_dict()
-        has_schema = hasattr(T, "schema") and callable(getattr(T, "schema"))
-        has_to_dict = hasattr(T, "to_dict")
+        has_schema = hasattr(codec_type, "schema") and callable(
+            getattr(codec_type, "schema")
+        )
+        has_to_dict = hasattr(codec_type, "to_dict")
         if has_schema and has_to_dict:
-            return (lambda o: o.to_dict(), lambda d: T.schema().load(d))  # type: ignore[attr-defined]
+            return (
+                lambda o: o.to_dict(),
+                lambda d: codec_type.schema().load(d),
+            )  # type: ignore[attr-defined]
 
         # Enums: centralized name-based codec
-        if issubclass(T, Enum):
-            return (lambda e: e.name, lambda s: T[s])  # type: ignore[index]
+        if issubclass(codec_type, Enum):
+            return (lambda e: e.name, lambda s: codec_type[s])  # type: ignore[index]
 
     # Fallback: numbers, strings, bools, None, plain dict/list, etc.
     return _identity_codec()

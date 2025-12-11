@@ -24,8 +24,8 @@ class Server(ThreadingHTTPServer):
 
     run_command: Callable[[list[str]], Awaitable[JSON]]
 
-    def __init__(self, server_address, RequestHandlerClass, run_command):
-        super().__init__(server_address, RequestHandlerClass)
+    def __init__(self, server_address, request_handler_class, run_command):
+        super().__init__(server_address, request_handler_class)
         self.run_command = run_command
         self.stop = False
         self.timeout = 0.1

@@ -47,7 +47,7 @@ tv_ips = {
 @dataclass(slots=True)
 class AtvConnection:
     tv: TV
-    appleTV: AppleTV | None = None
+    apple_tv: AppleTV | None = None
 
     async def connect(self) -> AppleTV:
         tv = self.tv
@@ -59,27 +59,28 @@ class AtvConnection:
         devices = await pyatv.scan(aio.event_loop, hosts=[tv_ips[tv]], storage=storage)
         if not devices:
             fail(f"could not connect to {tv}")
-        appleTV = await pyatv.connect(devices[0], aio.event_loop, storage=storage)
-        appleTV.push_updater.stop()
-        self.appleTV = appleTV
+        apple_tv = await pyatv.connect(devices[0], aio.event_loop, storage=storage)
+        apple_tv.push_updater.stop()
+        self.apple_tv = apple_tv
         ms = int((time.perf_counter() - t0) * 1000)
         log(f"connected to {tv} ({ms}ms)")
-        return appleTV
+        return apple_tv
 
-    async def get_appleTV(self) -> AppleTV:
-        if self.appleTV is not None:
-            return self.appleTV
-        return await self.connect()
+    async def get_apple_tv(self) -> AppleTV:
+        if self.apple_tv is not None:
+            return self.apple_tv
+        self.apple_tv = await self.connect()
+        return self.apple_tv
 
     async def close(self) -> None:
-        if self.appleTV is not None:
-            appleTV = self.appleTV
-            self.appleTV = None
-            await aio.gather(*(appleTV.close()))
+        if self.apple_tv is not None:
+            apple_tv = self.apple_tv
+            self.apple_tv = None
+            await aio.gather(*(apple_tv.close()))
 
     async def do_command(self, command: str, args: list[str]):
-        appleTV = await self.get_appleTV()
-        await getattr(appleTV.remote_control, command)(*args)
+        apple_tv = await self.get_apple_tv()
+        await getattr(apple_tv.remote_control, command)(*args)
 
     async def home(self):
         await self.do_command("home", [])
@@ -134,21 +135,21 @@ class AtvConnection:
         await self.menu()
 
     async def sleep(self) -> None:
-        appleTV = await self.get_appleTV()
-        await appleTV.power.turn_off()
+        apple_tv = await self.get_apple_tv()
+        await apple_tv.power.turn_off()
 
     async def wake(self) -> None:
-        appleTV = await self.get_appleTV()
-        await appleTV.power.turn_on()
+        apple_tv = await self.get_apple_tv()
+        await apple_tv.power.turn_on()
         await aio.sleep(8)
         await self.screensaver()
 
     async def launch(self, url: str) -> None:
-        appleTV = await self.get_appleTV()
-        await appleTV.apps.launch_app(url)
+        apple_tv = await self.get_apple_tv()
+        await apple_tv.apps.launch_app(url)
         await aio.sleep(2)
-        await appleTV.remote_control.select()
-        await appleTV.remote_control.select()
+        await apple_tv.remote_control.select()
+        await apple_tv.remote_control.select()
 
 
 @dataclass(slots=True)
