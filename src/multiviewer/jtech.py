@@ -379,9 +379,7 @@ class Jtech:
         self.check_expectation(f"{w} input", wi.hdmi, h)
         wi.hdmi = h
 
-    def unexpected_response(
-        self, command, response, expected_response=None
-    ) -> NoReturn:
+    def unexpected_response(self, command, response, expected_response=None) -> NoReturn:
         message = f"jtech gave unexpected response '{response}' to command '{command}'"
         if expected_response is not None:
             message = f"{message}, expected '{expected_response}'"

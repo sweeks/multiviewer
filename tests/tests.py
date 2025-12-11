@@ -30,9 +30,7 @@ def expect(actual, expected, frame_index=2):
     if actual != expected:
         frame = inspect.stack()[frame_index]
         lineno = frame.lineno
-        print(
-            f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}"
-        )
+        print(f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}")
 
 
 async def tv_do(s, e=None):
@@ -347,7 +345,8 @@ async def _():
 async def _():
     await tv_do("Reset; Remote; Wait 0.3")
     await tv_do(
-        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; Up; Wait 1"
+        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
+        "Up; Wait 1"
     )
 
 

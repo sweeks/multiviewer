@@ -110,9 +110,7 @@ class Multiviewer(Jsonable):
         default=datetime.now(), metadata=json_field.omit
     )
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
-    last_remote_press: RemotePress | None = field(
-        default=None, metadata=json_field.omit
-    )
+    last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     # We maintain a volume delta for each TV, which we use to automatically adjust
     # volume_delta when unmuting or when the selected TV changes.
