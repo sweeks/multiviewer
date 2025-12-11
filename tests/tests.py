@@ -312,7 +312,7 @@ async def _():
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 
-@test("Add_window")
+@test("Home adds window")
 async def _():
     await tv_do("Reset; S; Back; Wait 0.4; S; Back")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
@@ -330,7 +330,7 @@ async def _():
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H4]G [H3]A")
 
 
-@test("Demote_window")
+@test("Back demotes window")
 async def _():
     await tv_do("Reset; Back")
     await tv_is("TRIPLE(2) A2 [H2]G [H3]A [H4]A")

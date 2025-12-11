@@ -661,8 +661,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 atv.menu()
             else:
                 pressed_back(mv, tv)
-        case "Demote_window":
-            demote_window(mv, mv.selected_window)
         case "Down" | "S":
             if mv.control_apple_tv:
                 atv.down()
