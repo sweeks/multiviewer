@@ -486,9 +486,7 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
             if mv.pip_window == mv.selected_window:
                 pip_location = from_pip_arrow_points_to(mv, arrow)
                 if pip_location is not None:
-                    mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = (
-                        pip_location
-                    )
+                    mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_location
             else:
                 match arrow:
                     case Arrow.E:
