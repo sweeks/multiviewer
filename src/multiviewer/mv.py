@@ -53,6 +53,10 @@ def volume_deltas_zero():
     return dict.fromkeys(TV.all(), 0)
 
 
+def initial_pip_location_by_tv():
+    return dict.fromkeys(TV.all(), PipLocation.NE)
+
+
 def initial_window_input():
     return {W1: H1, W2: H2, W3: H3, W4: H4}
 
@@ -95,7 +99,9 @@ class Multiviewer(Jsonable):
     submode: Submode = W1_PROMINENT
     is_fullscreen: bool = False
     fullscreen_shows_pip: bool = False
-    pip_location: PipLocation = PipLocation.NE
+    pip_location_by_tv: dict[TV, PipLocation] = field(
+        default_factory=initial_pip_location_by_tv, metadata=json_dict(TV, PipLocation)
+    )
     selected_window: Window = W1
     full_window: Window = W1
     pip_window: Window = W2
@@ -147,6 +153,10 @@ def window_tv(mv: Multiviewer, w: Window) -> TV:
     return hdmi2tv(window_input(mv, w))
 
 
+def pip_location(mv: Multiviewer) -> PipLocation:
+    return mv.pip_location_by_tv[window_tv(mv, mv.full_window)]
+
+
 def selected_tv(mv: Multiviewer) -> TV:
     return window_tv(mv, mv.selected_window)
 
@@ -183,7 +193,7 @@ def reset(mv: Multiviewer) -> None:
     mv.fullscreen_shows_pip = False
     mv.full_window = W1
     mv.pip_window = W2
-    mv.pip_location = PipLocation.NE
+    mv.pip_location_by_tv = initial_pip_location_by_tv()
     mv.selected_window = W1
     mv.selected_window_border_is_on = True
     mv.control_apple_tv = False
@@ -448,7 +458,7 @@ def toggle_submode(mv: Multiviewer) -> None:
 
 def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
     assert mv.is_fullscreen and mv.fullscreen_shows_pip
-    match (mv.pip_location, arrow):
+    match (pip_location(mv), arrow):
         case (PipLocation.NW, Arrow.E):
             return PipLocation.NE
         case (PipLocation.NW, Arrow.S):
@@ -476,7 +486,9 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
             if mv.pip_window == mv.selected_window:
                 pip_location = from_pip_arrow_points_to(mv, arrow)
                 if pip_location is not None:
-                    mv.pip_location = pip_location
+                    mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = (
+                        pip_location
+                    )
             else:
                 match arrow:
                     case Arrow.E:
@@ -762,7 +774,7 @@ def render(mv: Multiviewer) -> JtechOutput:
             layout = Full(w1=window(Mode.FULL, W1, mv.full_window))
         else:
             layout = Pip(
-                pip_location=mv.pip_location,
+                pip_location=pip_location(mv),
                 w1=window(Mode.PIP, W1, mv.full_window),
                 w2=window(Mode.PIP, W2, mv.pip_window),
             )

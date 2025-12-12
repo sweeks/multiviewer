@@ -7,6 +7,7 @@
 - Start daemon: `bin/start-mvd.sh` (kills prior daemon, logs under `var/mvd.log`).
 - Stop daemon: `python -m multiviewer.stop_mvd` (or let start script kill prior instance).
 - Tests: `PYTHONPATH=src .venv/bin/python tests/tests.py` (end-to-end, but jtech commands disabled in tests via `should_send_commands_to_device = False`; still uses asyncio event loop). Make sure the repo `.venv` is active or referenced explicitly.
+- Workflow note: user runs tests (see `bin/test-all.sh`) and provides the log; Codex should read the log instead of running tests.
 - Config: `src/multiviewer/config.py` holds IP/hostnames; Apple TV pairing lives in external `.pyatv.conf` (not in repo).
 - Notes: prefer `rg` for search; files of interest include `mv.py` (state machine), `jtech.py` (device sync), `atv.py` (Apple TV control), `volume.py` (soundbar IR via WF2IR), `http_server.py` (command endpoint).
 - Pyright: `pyrightconfig.json` points the CLI at the repo `.venv` and adds `src` to `extraPaths`; Pylance already picks this up via VS Code settings.

@@ -262,6 +262,18 @@ async def _():
     await tv_is("PIP(NE) A2 H1 [H2]G")
 
 
+@test("PIP location follows TV")
+async def _():
+    await tv_do("Reset; Select; Home; N; W")
+    await tv_is("PIP(NW) A2 H1 [H2]G")
+    await tv_do("Select")
+    await tv_is("PIP(NE) A2 H2 [H1]A")
+    await tv_do("N; S")
+    await tv_is("PIP(SE) A1 H2 [H1]G")
+    await tv_do("Select")
+    await tv_is("PIP(NW) A1 H1 [H2]A")
+
+
 @test("Rotate PIP window")
 async def _():
     await tv_do("Reset; Select; Home; E")
