@@ -17,24 +17,35 @@ i.e. the TV currently displayed in the selected window.
 The remote control is an iPhone 13 Mini, which has a home screen with buttons that control
 the J-Tech, the Apple TVs, and the volume. Here is the home screen:
 
-<img src="remote-control/home-screen.jpg" width="300">
+<img src="remote-control/home-screen.png" width="300">
 
-For multiview navigation, there are arrow buttons, select, back, and home. The arrow
-buttons change the selected window, and double tap moves the selected TV. The select
-button makes the selected TV fullscreen, and back returns to multiview. The home button
-toggles between different multiview layouts.  The plus-window and minus-window button add
-or remove an TV from multiview.  The demote button (down right arrow) moves the selected
-TV to the bottom right window on screen (and promotes the other windows).
+The buttons are the same as you would find on an Apple TV remote (Up, Down, Left, Right,
+Select, Back, TV, Play/Pause), and they behave just the same, operating on the selected
+Apple TV.  The remote button is the one button not on an Apple TV -- it toggles the remote
+so that the eight other keypad buttons act as an Apple TV remote or act as a multiviewer
+remote. In Apple TV mode, the selected window has a red border; in multiview mode, it's
+green. wonder. Double tapping the remote button brings up the iOS Remote app for the
+selected TV.
 
-The remote button toggles the selected window (red border) so that the arrows, select,
-back, home, and play/pause behave like an Apple TV remote for the selected TV. Double
-tapping the remote button brings up the iOS Remote app for the selected TV.
+In multiview, arrow buttons change the selected window, and double tap moves the selected
+TV, swapping it with the TV the arrow points to. Select makes the selected TV fullscreen;
+from there, Back returns to multiview.  
+
+In multiview, some of the TVs are visible, and some are hidden (when multiview shows fewer
+than four windows).  If there are hidden TVs, the TV button adds a window displaying one.
+If there are two or more visible TVs, the back button hides the selected TV.  Double
+tapping Back hides the selected TV and starts its screensaver.
+
+In fullscreen, Right and Left cycle the fullscreen window through the TVs visible in
+multiview.  The TV button toggles the visibility of a PIP (picture-in-picture) window.  In
+PIP, pressing right or left cycles the PIP window through the TVs visible in multiview
+(except for the fullscreen TV). In PIP, Select selects the PIP window.  From, there Select
+swaps the PIP and fullscreen TVs, Right and Left cycle through TVs, and double-tap on
+arrows moves the PIP window around the corners of the full window.
 
 The bottom row of buttons (mute, volume up, volume down) control the volume.  The
 multiviewer has a different volume setting for each TV, and automatically adjusts volume
 when switching TVs.
-
-The screensaver button takes the selected TV to screensaver. 
 
 The power button toggles on/off the power of all the hardware in the system, including
 Apple TVs, Jtech, soundbar, and TV.

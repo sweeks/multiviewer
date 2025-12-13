@@ -1,3 +1,5 @@
+# in PIP, press Select to select PIP (and keep Back to go back)
+# in PIP with pip selected, double tap to move, E/W to rotate PIP
 # pylance: turn on strict type checking
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
