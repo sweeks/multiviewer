@@ -9,4 +9,5 @@ if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
   exit 1
 fi
 
-"$ROOT/bin/format-all-code.sh"
+"$ROOT/bin/format-code.sh"
+"$ROOT/bin/format-docs.sh"

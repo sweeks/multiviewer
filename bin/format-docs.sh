@@ -20,4 +20,4 @@ fi
 cd "$root"
 
 # Format README plus all docs/*.md
-zsh -c 'mdformat --wrap 90 README.md docs/**/*.md' mdformat="$mdformat_bin"
+"$mdformat_bin" --wrap 90 README.md docs/**/*.md

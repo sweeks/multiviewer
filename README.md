@@ -106,7 +106,8 @@ needs to be changed with the hostname of the daemon.
 The daemon Python code uses a virtual environment to install dependencies and the
 multiviewer package (used by tests). To set up `.venv` and install the repo’s git hooks,
 run [setup-repo.sh](bin/setup-repo.sh). That script sets `core.hooksPath=githooks`, so new
-commits automatically run Ruff and Black via the pre-commit hook.
+commits automatically run the formatting scripts (Black and mdformat) via the pre-commit
+hook.
 
 [start-mvd.sh](bin/start-mvd.sh) starts the daemon. At startup, the new daemon first kills
 the prior daemon and then starts a new HTTP server.

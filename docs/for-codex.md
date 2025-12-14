@@ -14,7 +14,8 @@
   disabled in tests via `should_send_commands_to_device = False`; still uses asyncio event
   loop). Make sure the repo `.venv` is active or referenced explicitly.
 - Workflow note: user runs tests (see `bin/test-all.sh`) and provides the log; Codex
-  should read the log instead of running tests.
+  should run `bin/test-all.sh` after changes (device I/O disabled by default) and include
+  the results in the response.
 - Config: `src/multiviewer/config.py` holds IP/hostnames; Apple TV pairing lives in
   external `.pyatv.conf` (not in repo).
 - Notes: prefer `rg` for search; files of interest include `mv.py` (state machine),
@@ -31,4 +32,5 @@
   intentionally.
 - Editor: VS Code on macOS; in inline git diffs use the editor title bar “…” menu → “Open
   File” to jump to the real file at the same line.
-- Formatting: run `bin/format-all-code.sh` to apply Black across `src` and `tests`.
+- Formatting: run `bin/format-code.sh` to apply Black across `src` and `tests`, and
+  `bin/format-docs.sh` for markdown.
