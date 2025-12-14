@@ -47,13 +47,13 @@ window's border.
 In fullscreen, **Right** and **Left** cycle the fullscreen window through the TVs visible
 in multiview. The **TV** button toggles the visibility of a PIP (picture-in-picture)
 window. In PIP, pressing **Right** or **Left** cycles the PIP window through the TVs
-visible in multiview (except for the fullscreen TV).  **Select** swaps the PIP and
-fullscreen windows.  Pressing **Up** or **Down** toward the PIP window selects it.  Double
+visible in multiview (except for the fullscreen TV). **Select** swaps the PIP and
+fullscreen windows. Pressing **Up** or **Down** toward the PIP window selects it. Double
 tapping arrows moves the PIP window around the corners.
 
 The bottom row of buttons (**Mute**, **Volume Up**, **Volume Down**) control the volume.
 The multiviewer has a different volume setting for each TV, and automatically adjusts
-volume when switching TVs.  Mute is shared across all TVs.
+volume when switching TVs. Mute is shared across all TVs.
 
 # Implementation
 
