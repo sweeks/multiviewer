@@ -468,19 +468,25 @@ def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
                 rotate_pip_window(mv, Arrow.E)
             case Arrow.N | Arrow.S:
                 pass
+        mv.selected_window = mv.pip_window
         pip_loc = from_pip_arrow_points_to(mv, arrow)
         if pip_loc is not None:
             mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_loc
         mv.last_arrow_press = None
         return
     # Single tap
+    pip_is_selected = mv.selected_window == mv.pip_window
     match arrow:
         case Arrow.E:
             rotate_pip_window(mv, Arrow.E)
+            if pip_is_selected:
+                mv.selected_window = mv.pip_window
         case Arrow.W:
             rotate_pip_window(mv, Arrow.W)
+            if pip_is_selected:
+                mv.selected_window = mv.pip_window
         case Arrow.N | Arrow.S:
-            if mv.selected_window == mv.pip_window:
+            if pip_is_selected:
                 if arrow_points_from_pip_to_full(mv, arrow):
                     mv.selected_window = mv.full_window
             else:

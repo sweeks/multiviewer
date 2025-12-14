@@ -304,6 +304,16 @@ async def _():
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
 
+@test("Rotate PIP window when PIP selected")
+async def _():
+    await tv_do("Reset; Select; Home; N")
+    await tv_is("PIP(NE) A2 H1 [H2]G")
+    await tv_do("E")
+    await tv_is("PIP(NE) A3 H1 [H3]G")
+    await tv_do("W")
+    await tv_is("PIP(NE) A2 H1 [H2]G")
+
+
 @test("Back exits fullscreen PIP")
 async def _():
     await tv_do("Reset; Select; Home; Back")
