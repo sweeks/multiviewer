@@ -241,7 +241,21 @@ async def _():
     await tv_is("PIP(NE) A2 H2 [H1]A")
 
 
-@test("Change PIP location")
+@test("Change PIP location from full")
+async def _():
+    await tv_do("Reset; Select; Home")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
+    await tv_do("W; W")
+    await tv_is("PIP(NW) A1 H1 [H2]A")
+    await tv_do("S; S")
+    await tv_is("PIP(SW) A1 H1 [H2]A")
+    await tv_do("E; E")
+    await tv_is("PIP(SE) A1 H1 [H2]A")
+    await tv_do("N; N")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
+
+
+@test("Change PIP location from PIP")
 async def _():
     await tv_do("Reset; Select; Home; N")
     await tv_do("W; W")
@@ -264,12 +278,12 @@ async def _():
 
 @test("PIP location follows TV")
 async def _():
-    await tv_do("Reset; Select; Home; N; W; W")
-    await tv_is("PIP(NW) A2 H1 [H2]G")
+    await tv_do("Reset; Select; Home; W; W")
+    await tv_is("PIP(NW) A1 H1 [H2]A")
     await tv_do("Select")
     await tv_is("PIP(NE) A2 H2 [H1]A")
-    await tv_do("S; S; S")
-    await tv_is("PIP(SE) A1 H2 [H1]G")
+    await tv_do("S; S")
+    await tv_is("PIP(SE) A2 H2 [H1]A")
     await tv_do("Select")
     await tv_is("PIP(NW) A1 H1 [H2]A")
 
@@ -282,7 +296,7 @@ async def _():
     await tv_is("PIP(NE) A1 H1 [H4]A")
     await tv_do("Wait 0.4; E")
     await tv_is("PIP(NE) A1 H1 [H2]A")
-    await tv_do("Wait 0.4; W")
+    await tv_do("W")
     await tv_is("PIP(NE) A1 H1 [H4]A")
     await tv_do("Wait 0.4; W")
     await tv_is("PIP(NE) A1 H1 [H3]A")
@@ -300,6 +314,14 @@ async def _():
 async def _():
     await tv_do("Reset; Select; Home; Home")
     await tv_is("FULL A1 H1")
+
+
+@test("Home shows PIP when only one active")
+async def _():
+    await tv_do("Reset; S; Back; Wait 0.4; S; Back; Wait 0.4; Back")
+    await tv_is("FULL A2 H2")
+    await tv_do("Home")
+    await tv_is("PIP(NE) A2 H2 [H1]A")
 
 
 @test("Back removes window")
@@ -354,14 +376,6 @@ async def _():
     await tv_is("FULL A2 H2")
     await tv_do("Wait 0.4; Back")
     await tv_is("PBP(2) A2 [H2]G [H1]A")
-
-
-@test("Home shows PIP when only one active")
-async def _():
-    await tv_do("Reset; S; Back; Wait 0.4; S; Back; Wait 0.4; Back")
-    await tv_is("FULL A2 H2")
-    await tv_do("Home")
-    await tv_is("PIP(NE) A2 H2 [H1]A")
 
 
 # @test("Home")
