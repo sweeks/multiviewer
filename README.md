@@ -19,39 +19,41 @@ the J-Tech, the Apple TVs, and the volume. Here is the home screen:
 
 <img src="remote-control/home-screen.png" width="300">
 
-The power button toggles on/off the power of all the hardware in the system, including
-Apple TVs, Jtech, soundbar, and TV. The Sports and TV app are the ordinary iOS apps, and
-are handy for choosing what to watch. From the TV app, you can share a show to start it
-playing on the selected TV -- unfortunately, this only works reliably for shows, and not
-for most sports streams, so far.
+The **Power** button toggles on/off the power of all the hardware in the system, including
+Apple TVs, Jtech, soundbar, and TV. The **Sports** and **TV** apps are the ordinary iOS
+apps, and are handy for choosing what to watch. From the **TV** app, you can share a show
+to start it playing on the selected TV -- unfortunately, this only works reliably for
+shows, and not for most sports streams, so far.
 
-The next nine buttons are like a keypad on an Apple TV remote (Up, Down, Left, Right,
-Select, Back, TV, Play/Pause), plus a Remote button. Remote toggles the other eight so
-that they can act as an Apple TV remote or as a multiviewer remote.
+The next nine buttons are like a keypad on an Apple TV remote (**Up**, **Down**, **Left**,
+**Right**, **Select**, **Back**, **TV**, **Play/Pause**), plus a **Remote** button.
+**Remote** toggles the other eight so that they can act as an Apple TV remote or as a
+multiviewer remote.
 
-In Apple TV mode, the selected window has a red border, and the eight buttons and they
-behave like an Apple TV remote on the selected Apple TV. Double tapping Remote brings up
-the iOS Remote app for the selected TV.
+In Apple TV mode, the selected window has a red border, and the eight buttons behave like
+an Apple TV remote on the selected Apple TV. Double tapping **Remote** brings up the iOS
+Remote app for the selected TV.
 
 In multiview mode, the selected window has a green border. The arrow buttons change the
 selected window, and double tap moves the selected TV, swapping it with the TV the arrow
-points to. Select makes the selected TV fullscreen; from there, Back returns to multiview.
-In multiview, some of the TVs are visible, and some are hidden (when multiview shows fewer
-than four windows). If there are hidden TVs, the TV button adds a window displaying one.
-If there are two or more visible TVs, the back button hides the selected TV and removes
-its window. Double tapping Back hides the selected TV and starts its screensaver. Finally,
-Play/Pause toggles visibilty of the selected window's border.
+points to. **Select** makes the selected TV fullscreen; from there, **Back** returns to
+multiview. In multiview, some of the TVs are visible, and some are hidden (when multiview
+shows fewer than four windows). If there are hidden TVs, the **TV** button adds a window
+displaying one. If there are two or more visible TVs, the **Back** button hides the
+selected TV and removes its window. Double tapping **Back** hides the selected TV and
+starts its screensaver. Finally, **Play/Pause** toggles visibility of the selected
+window's border.
 
-In fullscreen, Right and Left cycle the fullscreen window through the TVs visible in
-multiview. The TV button toggles the visibility of a PIP (picture-in-picture) window. In
-PIP, pressing right or left cycles the PIP window through the TVs visible in multiview
-(except for the fullscreen TV). In PIP, Select selects the PIP window. From, there Select
-swaps the PIP and fullscreen TVs, Right and Left cycle through TVs, and double-tap on
-arrows moves the PIP window around the corners of the full window.
+In fullscreen, **Right** and **Left** cycle the fullscreen window through the TVs visible
+in multiview. The **TV** button toggles the visibility of a PIP (picture-in-picture)
+window. In PIP, pressing **Right** or **Left** cycles the PIP window through the TVs
+visible in multiview (except for the fullscreen TV).  **Select** swaps the PIP and
+fullscreen windows.  Pressing **Up** or **Down** toward the PIP window selects it.  Double
+tapping arrows moves the PIP window around the corners.
 
-The bottom row of buttons (mute, volume up, volume down) control the volume. The
-multiviewer has a different volume setting for each TV, and automatically adjusts volume
-when switching TVs.
+The bottom row of buttons (**Mute**, **Volume Up**, **Volume Down**) control the volume.
+The multiviewer has a different volume setting for each TV, and automatically adjusts
+volume when switching TVs.  Mute is shared across all TVs.
 
 # Implementation
 

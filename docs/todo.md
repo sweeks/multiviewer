@@ -10,6 +10,8 @@
 
 # tests.py: volume delta across power off+on
 
+# rework remote-contorl-user-guide.md
+
 # add docs/developer-guide.md
 
 # put VSCode Code/User in git, and push daily to github
