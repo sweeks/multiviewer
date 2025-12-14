@@ -206,6 +206,12 @@ def reset(mv: Multiviewer) -> None:
     mv.window_input = initial_window_input()
 
 
+def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
+    mv.jtech_manager.set_should_send_commands_to_device(b)
+    mv.atvs.set_should_send_commands_to_device(b)
+    mv.volume.set_should_send_commands_to_device(b)
+
+
 async def update_jtech_output_forever(mv: Multiviewer):
     if False:
         while True:

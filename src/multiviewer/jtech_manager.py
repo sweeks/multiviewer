@@ -11,7 +11,7 @@ from .jtech_output import JtechOutput
 
 @dataclass(slots=True)
 class JtechManager:
-    should_send_commands_to_device: bool = True
+    should_send_commands_to_device: bool = False
     desired_power: Power | None = None
     desired_output: JtechOutput | None = None
     jtech: Jtech = Jtech.field()
@@ -38,7 +38,8 @@ class JtechManager:
 
     async def current_power(self) -> Power:
         await self.synced()
-        assert self.desired_power is not None
+        if self.desired_power is None:
+            self.desired_power = Power.ON
         return self.desired_power
 
     async def current_output(self) -> JtechOutput:
@@ -56,6 +57,11 @@ class JtechManager:
             self.desired_output = desired_output
             self.desync()
 
+    def set_should_send_commands_to_device(self, b: bool) -> None:
+        if self.should_send_commands_to_device != b:
+            self.should_send_commands_to_device = b
+            self.desync()
+
     def should_abort(self) -> bool:
         return self.desynced_event.is_set()
 
@@ -63,11 +69,14 @@ class JtechManager:
     async def sync(self) -> bool:
         if False:
             debug_print(self)
+        if not self.should_send_commands_to_device:
+            # In test mode we still track desired state but never touch the device.
+            return True
         jtech = self.jtech
         if self.desired_power is None:
             self.desired_power = await jtech.read_power()
         await jtech.set_power(self.desired_power)
-        if self.desired_power == Power.OFF or not self.should_send_commands_to_device:
+        if self.desired_power == Power.OFF:
             return True
         await jtech.unmute()
         if self.should_abort():

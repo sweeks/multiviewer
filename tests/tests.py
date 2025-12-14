@@ -378,29 +378,29 @@ async def _():
     await tv_is("PBP(2) A2 [H2]G [H1]A")
 
 
-# @test("Home")
-# async def _():
-#     await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
+@test("Home")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
 
 
-# @test("Home Right Down Left Up")
-# async def _():
-#     await tv_do("Reset; Remote; Wait 0.3")
-#     await tv_do(
-#         "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
-#         "Up; Wait 1"
-#     )
+@test("Home Right Down Left Up")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3")
+    await tv_do(
+        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
+        "Up; Wait 1"
+    )
 
 
-# @test("Play_pause")
-# async def _():
-#     await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
+@test("Play_pause")
+async def _():
+    await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
 
 
-# @test("Screensaver")
-# async def _():
-#     await tv_do("Reset; Screensaver")
-#     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
+@test("Screensaver")
+async def _():
+    await tv_do("Reset; Screensaver")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
 @test("Volume")
@@ -464,12 +464,12 @@ async def _():
     await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A V+0"')
 
 
-# @test("Power")
-# async def _():
-#     # We do a state change before turning off to make sure it is preserved.
-#     # We do a state change after turning on to make sure that we can.
-#     await tv_do("Reset; E; Power; Wait 10; Power; S")
-#     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
+@test("Power")
+async def _():
+    # We do a state change before turning off to make sure it is preserved.
+    # We do a state change after turning on to make sure that we can.
+    await tv_do("Reset; E; Power; Wait 10; Power; S")
+    await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
 
 async def main():
@@ -478,7 +478,7 @@ async def main():
     the_mv = await mv.create()
     _the_mv = the_mv
     # mv.save(mv, Path("TEST_MV.json").resolve())
-    the_mv.jtech_manager.should_send_commands_to_device = False
+    mv.set_should_send_commands_to_device(the_mv, False)
     await mv.power_on(the_mv)
     await run(parse_selection(arg))
     await mv.shutdown(the_mv)

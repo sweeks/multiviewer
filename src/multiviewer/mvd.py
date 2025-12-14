@@ -38,6 +38,7 @@ async def become_daemon():
         log_exc(e)
     mvd_state_path = Path("state.json").resolve()
     the_mv = await mv.load(mvd_state_path)
+    mv.set_should_send_commands_to_device(the_mv, True)
     mv.update_jtech_output(the_mv)
 
     async def run_command(args):

@@ -12,6 +12,7 @@ from .base import *
 @dataclass_json
 @dataclass(slots=True)
 class Volume:
+    should_send_commands_to_device: bool = False
     current_mute: bool = False
     desired_mute: bool = False
     current_volume_delta: int = 0
@@ -60,6 +61,11 @@ class Volume:
         )
 
     async def sync(self) -> None:
+        if not self.should_send_commands_to_device:
+            # In test mode, just mirror desired state locally.
+            self.current_mute = self.desired_mute
+            self.current_volume_delta = self.desired_volume_delta
+            return
         if self.current_mute != self.desired_mute:
             self.current_mute = self.desired_mute
             await wf2ir.mute()
@@ -95,3 +101,6 @@ class Volume:
         self.desired_mute = False
         self.current_volume_delta = 0
         self.desired_volume_delta = 0
+
+    def set_should_send_commands_to_device(self, b: bool) -> None:
+        self.should_send_commands_to_device = b

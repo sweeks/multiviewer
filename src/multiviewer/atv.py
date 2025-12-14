@@ -47,12 +47,15 @@ tv_ips = {
 @dataclass(slots=True)
 class AtvConnection:
     tv: TV
+    should_send_commands_to_device: bool = False
     apple_tv: AppleTV | None = None
 
     async def connect(self) -> AppleTV:
         tv = self.tv
         if False:
             debug_print(tv)
+        if not self.should_send_commands_to_device:
+            fail("connect should not be called when commands are disabled")
         t0 = time.perf_counter()
         storage = FileStorage.default_storage(aio.event_loop)
         await storage.load()
@@ -73,12 +76,17 @@ class AtvConnection:
         return self.apple_tv
 
     async def close(self) -> None:
+        if not self.should_send_commands_to_device:
+            self.apple_tv = None
+            return
         if self.apple_tv is not None:
             apple_tv = self.apple_tv
             self.apple_tv = None
             await aio.gather(*(apple_tv.close()))
 
     async def do_command(self, command: str, args: list[str]):
+        if not self.should_send_commands_to_device:
+            return
         apple_tv = await self.get_apple_tv()
         await getattr(apple_tv.remote_control, command)(*args)
 
@@ -128,6 +136,8 @@ class AtvConnection:
         await self.do_command("volume_up", [])
 
     async def screensaver(self) -> None:
+        if not self.should_send_commands_to_device:
+            return
         await self.home()
         await aio.sleep(2)
         await self.home()
@@ -135,16 +145,22 @@ class AtvConnection:
         await self.menu()
 
     async def sleep(self) -> None:
+        if not self.should_send_commands_to_device:
+            return
         apple_tv = await self.get_apple_tv()
         await apple_tv.power.turn_off()
 
     async def wake(self) -> None:
+        if not self.should_send_commands_to_device:
+            return
         apple_tv = await self.get_apple_tv()
         await apple_tv.power.turn_on()
         await aio.sleep(8)
         await self.screensaver()
 
     async def launch(self, url: str) -> None:
+        if not self.should_send_commands_to_device:
+            return
         apple_tv = await self.get_apple_tv()
         await apple_tv.apps.launch_app(url)
         await aio.sleep(2)
@@ -250,6 +266,10 @@ class ATVs:
     @classmethod
     def field(cls):
         return dataclasses.field(default_factory=ATVs, metadata=json_field.omit)
+
+    def set_should_send_commands_to_device(self, b: bool) -> None:
+        for atv in self.by_tv.values():
+            atv.atv.should_send_commands_to_device = b
 
     async def shutdown(self):
         await self.synced()
