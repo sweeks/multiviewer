@@ -468,7 +468,6 @@ def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
                 rotate_pip_window(mv, Arrow.E)
             case Arrow.N | Arrow.S:
                 pass
-        mv.selected_window = mv.pip_window
         pip_loc = from_pip_arrow_points_to(mv, arrow)
         if pip_loc is not None:
             mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_loc
