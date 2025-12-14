@@ -244,31 +244,31 @@ async def _():
 @test("Change PIP location")
 async def _():
     await tv_do("Reset; Select; Home; N")
-    await tv_do("W")
+    await tv_do("W; W")
     await tv_is("PIP(NW) A2 H1 [H2]G")
-    await tv_do("S")
+    await tv_do("S; S")
     await tv_is("PIP(SW) A2 H1 [H2]G")
-    await tv_do("E")
+    await tv_do("E; E")
     await tv_is("PIP(SE) A2 H1 [H2]G")
-    await tv_do("N")
+    await tv_do("N; N")
     await tv_is("PIP(NE) A2 H1 [H2]G")
-    await tv_do("S")
+    await tv_do("S; S")
     await tv_is("PIP(SE) A2 H1 [H2]G")
-    await tv_do("W")
+    await tv_do("W; W")
     await tv_is("PIP(SW) A2 H1 [H2]G")
-    await tv_do("N")
+    await tv_do("N; N")
     await tv_is("PIP(NW) A2 H1 [H2]G")
-    await tv_do("E")
+    await tv_do("E; E")
     await tv_is("PIP(NE) A2 H1 [H2]G")
 
 
 @test("PIP location follows TV")
 async def _():
-    await tv_do("Reset; Select; Home; N; W")
+    await tv_do("Reset; Select; Home; N; W; W")
     await tv_is("PIP(NW) A2 H1 [H2]G")
     await tv_do("Select")
     await tv_is("PIP(NE) A2 H2 [H1]A")
-    await tv_do("N; S")
+    await tv_do("S; S; S")
     await tv_is("PIP(SE) A1 H2 [H1]G")
     await tv_do("Select")
     await tv_is("PIP(NW) A1 H1 [H2]A")
@@ -278,15 +278,15 @@ async def _():
 async def _():
     await tv_do("Reset; Select; Home; E")
     await tv_is("PIP(NE) A1 H1 [H3]A")
-    await tv_do("E")
+    await tv_do("Wait 0.4; E")
     await tv_is("PIP(NE) A1 H1 [H4]A")
-    await tv_do("E")
+    await tv_do("Wait 0.4; E")
     await tv_is("PIP(NE) A1 H1 [H2]A")
-    await tv_do("W")
+    await tv_do("Wait 0.4; W")
     await tv_is("PIP(NE) A1 H1 [H4]A")
-    await tv_do("W")
+    await tv_do("Wait 0.4; W")
     await tv_is("PIP(NE) A1 H1 [H3]A")
-    await tv_do("W")
+    await tv_do("Wait 0.4; W")
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
 
@@ -364,29 +364,29 @@ async def _():
     await tv_is("PIP(NE) A2 H2 [H1]A")
 
 
-@test("Home")
-async def _():
-    await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
+# @test("Home")
+# async def _():
+#     await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
 
 
-@test("Home Right Down Left Up")
-async def _():
-    await tv_do("Reset; Remote; Wait 0.3")
-    await tv_do(
-        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
-        "Up; Wait 1"
-    )
+# @test("Home Right Down Left Up")
+# async def _():
+#     await tv_do("Reset; Remote; Wait 0.3")
+#     await tv_do(
+#         "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
+#         "Up; Wait 1"
+#     )
 
 
-@test("Play_pause")
-async def _():
-    await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
+# @test("Play_pause")
+# async def _():
+#     await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
 
 
-@test("Screensaver")
-async def _():
-    await tv_do("Reset; Screensaver")
-    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
+# @test("Screensaver")
+# async def _():
+#     await tv_do("Reset; Screensaver")
+#     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
 @test("Volume")
@@ -450,12 +450,12 @@ async def _():
     await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A V+0"')
 
 
-@test("Power")
-async def _():
-    # We do a state change before turning off to make sure it is preserved.
-    # We do a state change after turning on to make sure that we can.
-    await tv_do("Reset; E; Power; Wait 10; Power; S")
-    await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
+# @test("Power")
+# async def _():
+#     # We do a state change before turning off to make sure it is preserved.
+#     # We do a state change after turning on to make sure that we can.
+#     await tv_do("Reset; E; Power; Wait 10; Power; S")
+#     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
 
 async def main():

@@ -65,7 +65,7 @@ def initial_window_input():
 class ArrowPress:
     at: datetime
     arrow: Arrow
-    points_to: Window
+    points_to: Window | None
     selected_window: Window
 
 
@@ -383,6 +383,144 @@ def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
     return _arrow_points_to[key][mv.selected_window].get(arrow)
 
 
+def pressed_arrow_in_full(mv: Multiviewer, arrow: Arrow) -> None:
+    match arrow:
+        case Arrow.N | Arrow.S:
+            pass
+        case Arrow.E:
+            mv.full_window = next_window(mv, mv.selected_window)
+            mv.selected_window = mv.full_window
+        case Arrow.W:
+            mv.full_window = prev_window(mv, mv.selected_window)
+            mv.selected_window = mv.full_window
+
+
+def rotate_pip_window(mv: Multiviewer, direction: Arrow) -> None:
+    if direction == Arrow.E:
+        w = next_window(mv, mv.pip_window)
+        if w == mv.full_window:
+            w = next_window(mv, w)
+    elif direction == Arrow.W:
+        w = prev_window(mv, mv.pip_window)
+        if w == mv.full_window:
+            w = prev_window(mv, w)
+    else:
+        fail("invalid rotate direction", direction)
+    mv.pip_window = w
+
+
+def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
+    assert mv.is_fullscreen and mv.fullscreen_shows_pip
+    match (pip_location(mv), arrow):
+        case (PipLocation.NW, Arrow.E):
+            return PipLocation.NE
+        case (PipLocation.NW, Arrow.S):
+            return PipLocation.SW
+        case (PipLocation.NE, Arrow.W):
+            return PipLocation.NW
+        case (PipLocation.NE, Arrow.S):
+            return PipLocation.SE
+        case (PipLocation.SW, Arrow.N):
+            return PipLocation.NW
+        case (PipLocation.SW, Arrow.E):
+            return PipLocation.SE
+        case (PipLocation.SE, Arrow.N):
+            return PipLocation.NE
+        case (PipLocation.SE, Arrow.W):
+            return PipLocation.SW
+    return None
+
+
+def arrow_points_from_full_to_pip(mv: Multiviewer, arrow: Arrow) -> bool:
+    if arrow not in (Arrow.N, Arrow.S):
+        return False
+    loc = pip_location(mv)
+    return (loc in (PipLocation.NW, PipLocation.NE) and arrow == Arrow.N) or (
+        loc in (PipLocation.SW, PipLocation.SE) and arrow == Arrow.S
+    )
+
+
+def arrow_points_from_pip_to_full(mv: Multiviewer, arrow: Arrow) -> bool:
+    return arrow in (Arrow.N, Arrow.S) and not arrow_points_from_full_to_pip(mv, arrow)
+
+
+def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
+    snapshot_selected_window = mv.selected_window
+    at = datetime.now()
+    last_press = mv.last_arrow_press
+    if (
+        last_press is not None
+        and arrow == last_press.arrow
+        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+    ):
+        # Double tap -- undo single-tap effect and change PIP location.
+        mv.selected_window = last_press.selected_window
+        match arrow:
+            case Arrow.E:
+                rotate_pip_window(mv, Arrow.W)
+            case Arrow.W:
+                rotate_pip_window(mv, Arrow.E)
+            case Arrow.N | Arrow.S:
+                pass
+        pip_loc = from_pip_arrow_points_to(mv, arrow)
+        if pip_loc is not None:
+            mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_loc
+        mv.last_arrow_press = None
+        return
+    # Single tap
+    match arrow:
+        case Arrow.E:
+            rotate_pip_window(mv, Arrow.E)
+        case Arrow.W:
+            rotate_pip_window(mv, Arrow.W)
+        case Arrow.N | Arrow.S:
+            if mv.selected_window == mv.pip_window:
+                if arrow_points_from_pip_to_full(mv, arrow):
+                    mv.selected_window = mv.full_window
+            else:
+                if arrow_points_from_full_to_pip(mv, arrow):
+                    mv.selected_window = mv.pip_window
+    mv.last_arrow_press = ArrowPress(
+        arrow=arrow,
+        points_to=None,
+        at=at,
+        selected_window=snapshot_selected_window,
+    )
+
+
+def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
+    # If single tap, change the selected window to the pointed-to window. If double
+    # tap, swap the previously selected window with the previously pointed-to window.
+    mv.selected_window_border_is_on = True
+    last_press = mv.last_arrow_press
+    at = datetime.now()
+    if (
+        last_press is not None
+        and arrow == last_press.arrow
+        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+    ):
+        # Double tap
+        assert last_press.points_to is not None
+        log_double_tap_duration(at - last_press.at)
+        mv.last_arrow_press = None
+        swap_window_inputs(mv, last_press.selected_window, last_press.points_to)
+        if window_is_prominent(mv, last_press.selected_window):
+            mv.selected_window = last_press.selected_window
+        else:
+            mv.selected_window = last_press.points_to
+    else:
+        points_to = arrow_points_to(mv, arrow)
+        if points_to is not None:
+            # Single tap
+            mv.last_arrow_press = ArrowPress(
+                arrow=arrow,
+                points_to=points_to,
+                at=at,
+                selected_window=mv.selected_window,
+            )
+            mv.selected_window = points_to
+
+
 def add_window(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
         mv.is_fullscreen = False
@@ -456,94 +594,16 @@ def toggle_submode(mv: Multiviewer) -> None:
         mv.submode = mv.submode.flip()
 
 
-def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
-    assert mv.is_fullscreen and mv.fullscreen_shows_pip
-    match (pip_location(mv), arrow):
-        case (PipLocation.NW, Arrow.E):
-            return PipLocation.NE
-        case (PipLocation.NW, Arrow.S):
-            return PipLocation.SW
-        case (PipLocation.NE, Arrow.W):
-            return PipLocation.NW
-        case (PipLocation.NE, Arrow.S):
-            return PipLocation.SE
-        case (PipLocation.SW, Arrow.N):
-            return PipLocation.NW
-        case (PipLocation.SW, Arrow.E):
-            return PipLocation.SE
-        case (PipLocation.SE, Arrow.N):
-            return PipLocation.NE
-        case (PipLocation.SE, Arrow.W):
-            return PipLocation.SW
-    return None
-
-
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if False:
         debug_print(arrow)
     if mv.is_fullscreen:
         if mv.fullscreen_shows_pip:
-            if mv.pip_window == mv.selected_window:
-                pip_location = from_pip_arrow_points_to(mv, arrow)
-                if pip_location is not None:
-                    mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_location
-            else:
-                match arrow:
-                    case Arrow.E:
-                        w = next_window(mv, mv.pip_window)
-                        if w == mv.full_window:
-                            w = next_window(mv, w)
-                        mv.pip_window = w
-                    case Arrow.W:
-                        w = prev_window(mv, mv.pip_window)
-                        if w == mv.full_window:
-                            w = prev_window(mv, w)
-                        mv.pip_window = w
-                    case Arrow.N | Arrow.S:
-                        mv.selected_window = mv.pip_window
-                    case _:
-                        pass
-        else:  # FULL
-            match arrow:
-                case Arrow.N | Arrow.S:
-                    pass
-                case Arrow.E:
-                    mv.full_window = next_window(mv, mv.selected_window)
-                    mv.selected_window = mv.full_window
-                case Arrow.W:
-                    mv.full_window = prev_window(mv, mv.selected_window)
-                    mv.selected_window = mv.full_window
-
-    else:
-        # If single tap, change the selected window to the pointed-to window. If double
-        # tap, swap the previously selected window with the previously pointed-to window.
-        mv.selected_window_border_is_on = True
-        last_press = mv.last_arrow_press
-        at = datetime.now()
-        if (
-            last_press is not None
-            and arrow == last_press.arrow
-            and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
-        ):
-            # Double tap
-            log_double_tap_duration(at - last_press.at)
-            mv.last_arrow_press = None
-            swap_window_inputs(mv, last_press.selected_window, last_press.points_to)
-            if window_is_prominent(mv, last_press.selected_window):
-                mv.selected_window = last_press.selected_window
-            else:
-                mv.selected_window = last_press.points_to
+            pressed_arrow_in_pip(mv, arrow)
         else:
-            points_to = arrow_points_to(mv, arrow)
-            if points_to is not None:
-                # Single tap
-                mv.last_arrow_press = ArrowPress(
-                    arrow=arrow,
-                    points_to=points_to,
-                    at=at,
-                    selected_window=mv.selected_window,
-                )
-                mv.selected_window = points_to
+            pressed_arrow_in_full(mv, arrow)
+    else:
+        pressed_arrow_in_multiview(mv, arrow)
 
 
 def pressed_back(mv: Multiviewer, tv: TV) -> None:

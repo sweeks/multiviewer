@@ -1,3 +1,5 @@
+# make a testing mode that doesn't touch any device (jtech, atv, volume)
+# restore commented out tests
 # pylance: turn on strict type checking
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
@@ -12,3 +14,15 @@
 # Mac still sleeps with lid closed, stopping mvd
 # fix fuzzy remote-control icons
 # video demo
+Full selected:
+- N/S toward pip select pip
+- E/W rotate pip
+- double-tap NEWS move pip
+- Select swap full/pip (keep full selected)
+- Back & BackX2 as with multiview
+Pip selected:
+- N/S toward full select full
+- E/W rotate pip
+- double-tap NEWS move pip
+- Select swap full/pip and select the new full
+- Back & BackX2 as with multiview
