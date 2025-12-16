@@ -1,3 +1,7 @@
+# screensaver should demote TV to last hidden window
+
+# resurrect delete-window button, and move Back-as-delete to it
+
 # tests.py: some way so we don't have to wait to prevent double tap
 
 # it should never be a double tap if there is an intervening button
