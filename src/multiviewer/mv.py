@@ -109,7 +109,7 @@ class Multiviewer(Jsonable):
     # that the physical devices match it.
     power: Power = Power.ON
     num_active_windows: int = max_num_windows
-    submode: Submode = W1_PROMINENT
+    multiview_submode: Submode = W1_PROMINENT
     is_fullscreen: bool = False
     fullscreen_shows_pip: bool = False
     pip_location_by_tv: dict[TV, PipLocation] = field(
@@ -201,7 +201,7 @@ async def shutdown(mv: Multiviewer) -> None:
 
 def reset(mv: Multiviewer) -> None:
     mv.num_active_windows = max_num_windows
-    mv.submode = W1_PROMINENT
+    mv.multiview_submode = W1_PROMINENT
     mv.is_fullscreen = False
     mv.fullscreen_shows_pip = False
     mv.full_window = W1
@@ -335,7 +335,7 @@ def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
         return False
     if mv.is_fullscreen:
         return True
-    return mv.submode == W1_PROMINENT
+    return mv.multiview_submode == W1_PROMINENT
 
 
 def swap_window_tvs(mv: Multiviewer, w1: Window, w2: Window) -> None:
@@ -396,7 +396,7 @@ def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
         case 2 | 3:
             key = mv.num_active_windows
         case 4:
-            key = (mv.num_active_windows, mv.submode)
+            key = (mv.num_active_windows, mv.multiview_submode)
         case _:
             fail("arrow_points_to invalid num_active_windows", mv.num_active_windows)
     return _arrow_points_to[key][mv.selected_window].get(arrow)
@@ -615,7 +615,7 @@ def toggle_submode(mv: Multiviewer) -> None:
             mv.fullscreen_shows_pip = not mv.fullscreen_shows_pip
             maybe_entered_pip(mv)
     else:
-        mv.submode = mv.submode.flip()
+        mv.multiview_submode = mv.multiview_submode.flip()
 
 
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
@@ -871,7 +871,7 @@ def render(mv: Multiviewer) -> JtechOutput:
                 mode = Mode.QUAD
             case _:
                 fail(f"invalid num_active_windows={mv.num_active_windows}")
-        submode = mv.submode
+        submode = mv.multiview_submode
         if mode == Mode.PBP:
             layout = Pbp(
                 submode=submode,

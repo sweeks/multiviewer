@@ -73,10 +73,11 @@ is a boolean that says whether the layout is multiview or fullscreen:
 layout_mode: MULTIVIEW | FULLSCREEN
 ```
 
-For multiview layouts, the state says whether to use submode `(1)` or `(2)`:
+For multiview layouts, the state says whether all windows are the same size (submode `(1)`
+or `W1` is prominent (submode `(2)`):
 
 ```python
-multiview_submode: SUBMODE1 | SUBMODE2
+multiview_submode: WINDOWS_SAME | W1_PROMINENT
 ```
 
 Even when fullscreen, `multiview_submode` is relevant, because it will affect the layout
