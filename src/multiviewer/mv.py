@@ -635,6 +635,7 @@ def toggle_submode(mv: Multiviewer) -> None:
                 set_pip_window(mv)
             else:
                 mv.fullscreen_mode = FULL
+                mv.selected_window = mv.full_window
 
 
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:

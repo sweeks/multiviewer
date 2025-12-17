@@ -326,6 +326,16 @@ async def _():
     await tv_is("FULL A1 H1")
 
 
+@test("Home selects full window when leaving PIP")
+async def _():
+    await tv_do("Reset; Select; Home")
+    await tv_is("PIP(NE) A1 H1 [H2]A")
+    await tv_do("N")
+    await tv_is("PIP(NE) A2 H1 [H2]G")
+    await tv_do("Home")
+    await tv_is("FULL A1 H1")
+
+
 @test("Home does nothing when only one active")
 async def _():
     await tv_do("Reset; S; Back; Wait 0.4; S; Back; Wait 0.4; Back")
