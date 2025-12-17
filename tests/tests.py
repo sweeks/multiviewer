@@ -378,6 +378,28 @@ async def _():
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
+@test("Add_window in FULL enables cycling")
+async def _():
+    await tv_do("Reset; Remove_window; Remove_window; Remove_window")
+    await tv_is("FULL A4 H4")
+    await tv_do("Add_window")
+    await tv_is("FULL A4 H4")
+    await tv_do("E")
+    await tv_is("FULL A3 H3")
+
+
+@test("Add_window in PIP enables cycling")
+async def _():
+    await tv_do("Reset; Remove_window; Remove_window")
+    await tv_is("PBP(2) A3 [H3]G [H4]A")
+    await tv_do("Select; Home")
+    await tv_is("PIP(NE) A3 H3 [H4]A")
+    await tv_do("Add_window")
+    await tv_is("PIP(NE) A3 H3 [H4]A")
+    await tv_do("E")
+    await tv_is("PIP(NE) A3 H3 [H2]A")
+
+
 @test("Adding and removing windows preserve submode")
 async def _():
     await tv_do("Reset; Home; S; Remove_window")
