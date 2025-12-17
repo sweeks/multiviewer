@@ -2,7 +2,8 @@
 
 - Purpose: quick shared context for Codex tasks in this repo. Keep concise; update when
   workflows change.
-- Rule: never change code unless explicitly instructed to do so.
+- Rule: never change code unless explicitly instructed to do so; discuss designs and agree
+  on them before writing any code; only start coding after I explicitly say "code it".
 - Reading note: when asked to "read for-codex", do not summarize—it's just to refresh your
   context.
 - Project: multiviewer remote-control daemon for J-Tech MV41A + four Apple TVs + LG
