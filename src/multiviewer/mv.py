@@ -45,6 +45,19 @@ def hdmi2tv(h: Hdmi) -> TV:
     raise AssertionError
 
 
+def tv2hdmi(tv: TV) -> Hdmi:
+    match tv:
+        case TV.TV1:
+            return Hdmi.H1
+        case TV.TV2:
+            return Hdmi.H2
+        case TV.TV3:
+            return Hdmi.H3
+        case TV.TV4:
+            return Hdmi.H4
+    raise AssertionError
+
+
 max_num_windows = 4
 min_num_windows = 1
 
@@ -57,8 +70,8 @@ def initial_pip_location_by_tv():
     return dict.fromkeys(TV.all(), PipLocation.NE)
 
 
-def initial_window_input():
-    return {W1: H1, W2: H2, W3: H3, W4: H4}
+def initial_window_tv():
+    return {W1: TV.TV1, W2: TV.TV2, W3: TV.TV3, W4: TV.TV4}
 
 
 @dataclass(slots=True)
@@ -122,8 +135,8 @@ class Multiviewer(Jsonable):
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
     atvs: ATVs = ATVs.field()
-    window_input: dict[Window, Hdmi] = field(
-        default_factory=initial_window_input, metadata=json_dict(Window, Hdmi)
+    window_tv: dict[Window, TV] = field(
+        default_factory=initial_window_tv, metadata=json_dict(Window, TV)
     )
     task: Task = Task.field()
 
@@ -145,12 +158,12 @@ def next_window(mv: Multiviewer, w: Window) -> Window:
     return Window.of_int(w.to_int() % num_windows(mv) + 1)
 
 
-def window_input(mv: Multiviewer, w: Window) -> Hdmi:
-    return mv.window_input[w]
-
-
 def window_tv(mv: Multiviewer, w: Window) -> TV:
-    return hdmi2tv(window_input(mv, w))
+    return mv.window_tv[w]
+
+
+def window_input(mv: Multiviewer, w: Window) -> Hdmi:
+    return tv2hdmi(window_tv(mv, w))
 
 
 def pip_location(mv: Multiviewer) -> PipLocation:
@@ -170,8 +183,8 @@ def is_visible(mv: Multiviewer, w: Window) -> bool:
 
 
 def validate(mv: Multiviewer) -> None:
-    assert_equal(set(mv.window_input.keys()), set(Mode.QUAD.windows()))
-    assert_equal(len(set(mv.window_input.values())), len(mv.window_input))
+    assert_equal(set(mv.window_tv.keys()), set(Mode.QUAD.windows()))
+    assert_equal(len(set(mv.window_tv.values())), len(mv.window_tv))
     assert_(min_num_windows <= mv.num_active_windows <= max_num_windows)
     if mv.num_active_windows == min_num_windows:
         assert_(mv.is_fullscreen)
@@ -203,7 +216,7 @@ def reset(mv: Multiviewer) -> None:
     mv.last_play_pause_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
-    mv.window_input = initial_window_input()
+    mv.window_tv = initial_window_tv()
 
 
 def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
@@ -325,14 +338,14 @@ def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
     return mv.submode == W1_PROMINENT
 
 
-def swap_window_inputs(mv: Multiviewer, w1: Window, w2: Window) -> None:
+def swap_window_tvs(mv: Multiviewer, w1: Window, w2: Window) -> None:
     if False:
         debug_print(f"{w1} <-> {w2}")
-    window_input = mv.window_input
-    h1 = window_input[w1]
-    h2 = window_input[w2]
-    window_input[w1] = h2
-    window_input[w2] = h1
+    window_tv = mv.window_tv
+    tv1 = window_tv[w1]
+    tv2 = window_tv[w2]
+    window_tv[w1] = tv2
+    window_tv[w2] = tv1
 
 
 class Arrow(MyStrEnum):
@@ -514,7 +527,7 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
         assert last_press.points_to is not None
         log_double_tap_duration(at - last_press.at)
         mv.last_arrow_press = None
-        swap_window_inputs(mv, last_press.selected_window, last_press.points_to)
+        swap_window_tvs(mv, last_press.selected_window, last_press.points_to)
         if window_is_prominent(mv, last_press.selected_window):
             mv.selected_window = last_press.selected_window
         else:
@@ -536,13 +549,13 @@ def add_window(mv: Multiviewer) -> None:
     if mv.is_fullscreen:
         mv.is_fullscreen = False
         mv.num_active_windows = max(2, mv.num_active_windows)
-        swap_window_inputs(mv, W1, mv.full_window)
+        swap_window_tvs(mv, W1, mv.full_window)
         mv.selected_window = W1
         if mv.fullscreen_shows_pip and mv.num_active_windows >= 2:
             if mv.pip_window == W1:
-                swap_window_inputs(mv, W2, mv.full_window)
+                swap_window_tvs(mv, W2, mv.full_window)
             else:
-                swap_window_inputs(mv, W2, mv.pip_window)
+                swap_window_tvs(mv, W2, mv.pip_window)
     else:
         if mv.num_active_windows < max_num_windows:
             mv.num_active_windows += 1
@@ -553,7 +566,7 @@ def demote_window(mv: Multiviewer, w1: Window) -> None:
         last = last_window(mv)
         while w1 != last:
             w2 = next_window(mv, w1)
-            swap_window_inputs(mv, w1, w2)
+            swap_window_tvs(mv, w1, w2)
             w1 = w2
 
 
@@ -584,7 +597,7 @@ def toggle_fullscreen(mv: Multiviewer) -> None:
             mv.is_fullscreen = False
             mv.selected_window_border_is_on = True
             if not is_visible(mv, mv.selected_window):
-                swap_window_inputs(mv, W1, mv.selected_window)
+                swap_window_tvs(mv, W1, mv.selected_window)
                 mv.selected_window = W1
     else:
         mv.is_fullscreen = True
@@ -836,7 +849,7 @@ def render(mv: Multiviewer) -> JtechOutput:
             border = Color.GREEN
         else:
             border = Color.GRAY
-        return WindowContents(hdmi=mv.window_input[mv_window], border=border)
+        return WindowContents(hdmi=window_input(mv, mv_window), border=border)
 
     if mv.is_fullscreen:
         if not mv.fullscreen_shows_pip:
@@ -880,7 +893,7 @@ def render(mv: Multiviewer) -> JtechOutput:
                 w3=window(mode, W3),
                 w4=window(mode, W4),
             )
-    return JtechOutput(layout=layout, audio_from=mv.window_input[mv.selected_window])
+    return JtechOutput(layout=layout, audio_from=window_input(mv, mv.selected_window))
 
 
 def update_jtech_output(mv: Multiviewer) -> None:

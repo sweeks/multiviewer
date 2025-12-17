@@ -14,7 +14,7 @@ The multiviewer holds a single boolean with the power state of the entire system
 including all devices:
 
 ```
-Power: ON | OFF
+power: ON | OFF
 ```
 
 The multiviewer is responsible for turning on and off devices to match this state.
@@ -297,7 +297,7 @@ When:
 
 the dual-use buttons behave as follows:
 
-- **Select**: swaps `full_window` and `pip_window`.  This does not change `window_tv`.
+- **Select**: swaps `full_window` and `pip_window`. This does not change `window_tv`.
 
 - **Up**, **Down**: change the selected window between the full window and the pip window,
   if the arrow points from the selected window to the other window.
