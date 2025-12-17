@@ -564,24 +564,8 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
 
 
 def add_window(mv: Multiviewer) -> None:
-    match mv.layout_mode:
-        case LayoutMode.MULTIVIEW:
-            if mv.num_active_windows < max_num_windows:
-                mv.num_active_windows += 1
-        case LayoutMode.FULLSCREEN:
-            mv.layout_mode = MULTIVIEW
-            mv.num_active_windows = max(2, mv.num_active_windows)
-            swap_window_tvs(mv, W1, mv.full_window)
-            mv.selected_window = W1
-            match mv.fullscreen_mode:
-                case FullscreenMode.FULL:
-                    pass
-                case FullscreenMode.PIP:
-                    if mv.num_active_windows >= 2:
-                        if mv.pip_window == W1:
-                            swap_window_tvs(mv, W2, mv.full_window)
-                        else:
-                            swap_window_tvs(mv, W2, mv.pip_window)
+    if mv.num_active_windows < max_num_windows:
+        mv.num_active_windows += 1
 
 
 def demote_window(mv: Multiviewer, w1: Window) -> None:
@@ -740,6 +724,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
     match command:
+        case "Add_window":
+            add_window(mv)
         case "Back":
             match mv.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -760,11 +746,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                     toggle_submode(mv)
         case "Info":
             return await info(mv)
-        case "Add_window":
-            add_window(mv)
-        case "Remove_window":
-            demote_window(mv, mv.selected_window)
-            remove_window(mv)
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
@@ -788,6 +769,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             await toggle_power(mv)
         case "Remote":
             return remote(mv, tv)
+        case "Remove_window":
+            demote_window(mv, mv.selected_window)
+            remove_window(mv)
         case "Reset":
             reset(mv)
         case "Right" | "E":
