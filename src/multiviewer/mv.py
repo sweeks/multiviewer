@@ -136,10 +136,6 @@ class Multiviewer(Jsonable):
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
-    most_recent_command_at: datetime = field(
-        default=datetime.now(), metadata=json_field.omit
-    )
-    task: Task = Task.field()
 
 
 def last_active_window(mv: Multiviewer) -> Window:
@@ -223,17 +219,9 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
     mv.volume.set_should_send_commands_to_device(b)
 
 
-async def update_jtech_output_forever(mv: Multiviewer):
-    if False:
-        while True:
-            await aio.sleep(1)
-            update_jtech_output(mv)
-
-
 async def initialize(mv: Multiviewer):
     if False:
         debug_print()
-    mv.task = Task.create(type(mv).__name__, update_jtech_output_forever(mv))
     desired_power = mv.power
     mv.power = await mv.jtech_manager.current_power()
     if mv.power != desired_power:
@@ -687,7 +675,6 @@ def swap_full_and_pip_windows(mv: Multiviewer) -> None:
 async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     if False:
         debug_print(args)
-    mv.most_recent_command_at = datetime.now()
     command = args[0]
     if mv.power == Power.OFF and command not in ["Power", "Power_on", "Wait"]:
         return {}
