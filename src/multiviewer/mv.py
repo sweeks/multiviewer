@@ -32,6 +32,15 @@ WINDOWS_SAME = Submode.WINDOWS_SAME
 W1_PROMINENT = Submode.W1_PROMINENT
 
 
+class LayoutMode(MyStrEnum):
+    MULTIVIEW = auto()
+    FULLSCREEN = auto()
+
+
+MULTIVIEW = LayoutMode.MULTIVIEW
+FULLSCREEN = LayoutMode.FULLSCREEN
+
+
 def hdmi2tv(h: Hdmi) -> TV:
     match h:
         case Hdmi.H1:
@@ -110,7 +119,7 @@ class Multiviewer(Jsonable):
     power: Power = Power.ON
     num_active_windows: int = max_num_windows
     multiview_submode: Submode = W1_PROMINENT
-    is_fullscreen: bool = False
+    layout_mode: LayoutMode = MULTIVIEW
     fullscreen_shows_pip: bool = False
     pip_location_by_tv: dict[TV, PipLocation] = field(
         default_factory=initial_pip_location_by_tv, metadata=json_dict(TV, PipLocation)
@@ -187,10 +196,10 @@ def validate(mv: Multiviewer) -> None:
     assert_equal(len(set(mv.window_tv.values())), len(mv.window_tv))
     assert_(min_num_windows <= mv.num_active_windows <= max_num_windows)
     if mv.num_active_windows == min_num_windows:
-        assert_(mv.is_fullscreen)
+        assert_(mv.layout_mode == FULLSCREEN)
         assert_(not mv.fullscreen_shows_pip)
     v = visible(mv)
-    if not mv.is_fullscreen:
+    if mv.layout_mode == MULTIVIEW:
         assert_(mv.num_active_windows >= 2)
         assert_(mv.selected_window in v)
 
@@ -202,7 +211,7 @@ async def shutdown(mv: Multiviewer) -> None:
 def reset(mv: Multiviewer) -> None:
     mv.num_active_windows = max_num_windows
     mv.multiview_submode = W1_PROMINENT
-    mv.is_fullscreen = False
+    mv.layout_mode = MULTIVIEW
     mv.fullscreen_shows_pip = False
     mv.full_window = W1
     mv.pip_window = W2
@@ -333,7 +342,7 @@ def set_selected_window(mv: Multiviewer, w: Window) -> None:
 def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
     if w != W1:
         return False
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         return True
     return mv.multiview_submode == W1_PROMINENT
 
@@ -429,7 +438,7 @@ def rotate_pip_window(mv: Multiviewer, direction: Arrow) -> None:
 
 
 def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
-    assert mv.is_fullscreen and mv.fullscreen_shows_pip
+    assert mv.layout_mode == FULLSCREEN and mv.fullscreen_shows_pip
     match (pip_location(mv), arrow):
         case (PipLocation.NW, Arrow.E):
             return PipLocation.NE
@@ -546,8 +555,8 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
 
 
 def add_window(mv: Multiviewer) -> None:
-    if mv.is_fullscreen:
-        mv.is_fullscreen = False
+    if mv.layout_mode == FULLSCREEN:
+        mv.layout_mode = MULTIVIEW
         mv.num_active_windows = max(2, mv.num_active_windows)
         swap_window_tvs(mv, W1, mv.full_window)
         mv.selected_window = W1
@@ -562,7 +571,7 @@ def add_window(mv: Multiviewer) -> None:
 
 
 def demote_window(mv: Multiviewer, w1: Window) -> None:
-    if not mv.is_fullscreen:
+    if mv.layout_mode == MULTIVIEW:
         last = last_window(mv)
         while w1 != last:
             w2 = next_window(mv, w1)
@@ -571,11 +580,11 @@ def demote_window(mv: Multiviewer, w1: Window) -> None:
 
 
 def remove_window(mv: Multiviewer) -> None:
-    if not mv.is_fullscreen:
+    if mv.layout_mode == MULTIVIEW:
         if mv.num_active_windows == min_num_windows:
             return
         if mv.num_active_windows == 2:
-            mv.is_fullscreen = True
+            mv.layout_mode = FULLSCREEN
             mv.full_window = mv.selected_window
             mv.fullscreen_shows_pip = False
         mv.num_active_windows -= 1
@@ -592,21 +601,21 @@ def maybe_entered_pip(mv: Multiviewer) -> None:
 
 
 def toggle_fullscreen(mv: Multiviewer) -> None:
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         if mv.num_active_windows >= 2:
-            mv.is_fullscreen = False
+            mv.layout_mode = MULTIVIEW
             mv.selected_window_border_is_on = True
             if not is_visible(mv, mv.selected_window):
                 swap_window_tvs(mv, W1, mv.selected_window)
                 mv.selected_window = W1
     else:
-        mv.is_fullscreen = True
+        mv.layout_mode = FULLSCREEN
         mv.full_window = mv.selected_window
         maybe_entered_pip(mv)
 
 
 def toggle_submode(mv: Multiviewer) -> None:
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         if mv.num_active_windows == 1:
             mv.num_active_windows = 2
             mv.fullscreen_shows_pip = True
@@ -621,7 +630,7 @@ def toggle_submode(mv: Multiviewer) -> None:
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if False:
         debug_print(arrow)
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         if mv.fullscreen_shows_pip:
             pressed_arrow_in_pip(mv, arrow)
         else:
@@ -638,11 +647,11 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
         mv.last_back_press = None
         mv.atvs.atv(last_press.tv).screensaver()
         return
-    if mv.is_fullscreen and mv.num_active_windows == 1:
+    if mv.layout_mode == FULLSCREEN and mv.num_active_windows == 1:
         mv.last_back_press = None
         add_window(mv)
         return
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         mv.last_back_press = None
         if mv.fullscreen_shows_pip and mv.selected_window == mv.pip_window:
             mv.selected_window = mv.full_window
@@ -658,7 +667,7 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
 
 
 def pressed_play_pause(mv: Multiviewer) -> None:
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         mv.last_play_pause_press = None
         mv.selected_window_border_is_on = not mv.selected_window_border_is_on
         return
@@ -762,7 +771,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.control_apple_tv:
                 atv.home()
             else:
-                if mv.is_fullscreen:
+                if mv.layout_mode == FULLSCREEN:
                     toggle_submode(mv)
                 else:
                     add_window(mv)
@@ -801,7 +810,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Select":
             if mv.control_apple_tv:
                 atv.select()
-            elif mv.is_fullscreen:
+            elif mv.layout_mode == FULLSCREEN:
                 if mv.fullscreen_shows_pip:
                     swap_full_and_pip_windows(mv)
                 else:
@@ -851,7 +860,7 @@ def render(mv: Multiviewer) -> JtechOutput:
             border = Color.GRAY
         return WindowContents(hdmi=window_input(mv, mv_window), border=border)
 
-    if mv.is_fullscreen:
+    if mv.layout_mode == FULLSCREEN:
         if not mv.fullscreen_shows_pip:
             layout = Full(w1=window(Mode.FULL, W1, mv.full_window))
         else:
