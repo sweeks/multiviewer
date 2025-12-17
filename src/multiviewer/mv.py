@@ -779,20 +779,23 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     atv = mv.atvs.atv(tv)
     match command:
         case "Back":
-            if mv.remote_mode == APPLE_TV:
-                atv.menu()
-            else:
-                pressed_back(mv, tv)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.menu()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_back(mv, tv)
         case "Down" | "S":
-            if mv.remote_mode == APPLE_TV:
-                atv.down()
-            else:
-                pressed_arrow(mv, S)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.down()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_arrow(mv, S)
         case "Home":
-            if mv.remote_mode == APPLE_TV:
-                atv.home()
-            else:
-                toggle_submode(mv)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.home()
+                case RemoteMode.MULTIVIEWER:
+                    toggle_submode(mv)
         case "Info":
             return await info(mv)
         case "Add_window":
@@ -800,17 +803,19 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
-            if mv.remote_mode == APPLE_TV:
-                atv.left()
-            else:
-                pressed_arrow(mv, W)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.left()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_arrow(mv, W)
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
-            if mv.remote_mode == APPLE_TV:
-                atv.play_pause()
-            else:
-                pressed_play_pause(mv)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.play_pause()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_play_pause(mv)
         case "Power_on":
             mv.selected_window_has_distinct_border = True
             await power_on(mv)
@@ -821,34 +826,37 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Reset":
             reset(mv)
         case "Right" | "E":
-            if mv.remote_mode == APPLE_TV:
-                atv.right()
-            else:
-                pressed_arrow(mv, E)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.right()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_arrow(mv, E)
         case "Screensaver":
             atv.screensaver()
         case "Select":
-            if mv.remote_mode == APPLE_TV:
-                atv.select()
-            else:
-                match mv.layout_mode:
-                    case LayoutMode.MULTIVIEW:
-                        enter_fullscreen(mv)
-                    case LayoutMode.FULLSCREEN:
-                        match mv.fullscreen_mode:
-                            case FullscreenMode.FULL:
-                                pass
-                            case FullscreenMode.PIP:
-                                swap_full_and_pip_windows(mv)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.select()
+                case RemoteMode.MULTIVIEWER:
+                    match mv.layout_mode:
+                        case LayoutMode.MULTIVIEW:
+                            enter_fullscreen(mv)
+                        case LayoutMode.FULLSCREEN:
+                            match mv.fullscreen_mode:
+                                case FullscreenMode.FULL:
+                                    pass
+                                case FullscreenMode.PIP:
+                                    swap_full_and_pip_windows(mv)
         case "Sleep":
             atv.sleep()
         case "Test":
             pass
         case "Up" | "N":
-            if mv.remote_mode == APPLE_TV:
-                atv.up()
-            else:
-                pressed_arrow(mv, N)
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    atv.up()
+                case RemoteMode.MULTIVIEWER:
+                    pressed_arrow(mv, N)
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
@@ -873,10 +881,15 @@ def render(mv: Multiviewer) -> JtechOutput:
             mv_window = layout_window
         if not mode.window_has_border(layout_window):
             border = None
-        elif mv.remote_mode == APPLE_TV and mv_window == mv.selected_window:
-            border = Color.RED
-        elif mv.selected_window_has_distinct_border and mv_window == mv.selected_window:
-            border = Color.GREEN
+        elif mv_window == mv.selected_window:
+            match mv.remote_mode:
+                case RemoteMode.APPLE_TV:
+                    border = Color.RED
+                case RemoteMode.MULTIVIEWER:
+                    if mv.selected_window_has_distinct_border:
+                        border = Color.GREEN
+                    else:
+                        border = Color.GRAY
         else:
             border = Color.GRAY
         return WindowContents(hdmi=window_input(mv, mv_window), border=border)
