@@ -326,12 +326,12 @@ async def _():
     await tv_is("FULL A1 H1")
 
 
-@test("Home shows PIP when only one active")
+@test("Home does nothing when only one active")
 async def _():
     await tv_do("Reset; S; Back; Wait 0.4; S; Back; Wait 0.4; Back")
     await tv_is("FULL A2 H2")
     await tv_do("Home")
-    await tv_is("PIP(NE) A2 H2 [H1]A")
+    await tv_is("FULL A2 H2")
 
 
 @test("Back removes window")

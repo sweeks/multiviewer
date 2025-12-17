@@ -605,11 +605,8 @@ def remove_window(mv: Multiviewer) -> None:
             mv.selected_window = W1
 
 
-def maybe_entered_pip(mv: Multiviewer) -> None:
-    if mv.fullscreen_mode == PIP and mv.num_active_windows >= 2:
-        mv.pip_window = next_window(mv, mv.full_window)
-    elif mv.num_active_windows < 2:
-        mv.fullscreen_mode = FULL
+def set_pip_window(mv: Multiviewer) -> None:
+    mv.pip_window = next_window(mv, mv.full_window)
 
 
 def toggle_fullscreen(mv: Multiviewer) -> None:
@@ -623,23 +620,20 @@ def toggle_fullscreen(mv: Multiviewer) -> None:
     else:
         mv.layout_mode = FULLSCREEN
         mv.full_window = mv.selected_window
-        maybe_entered_pip(mv)
+        if mv.fullscreen_mode == PIP:
+            set_pip_window(mv)
 
 
 def toggle_submode(mv: Multiviewer) -> None:
-    if mv.layout_mode == FULLSCREEN:
-        if mv.num_active_windows == 1:
-            mv.num_active_windows = 2
-            mv.fullscreen_mode = PIP
-            maybe_entered_pip(mv)
-        elif mv.num_active_windows >= 2:
+    if mv.layout_mode == MULTIVIEW:
+        mv.multiview_submode = mv.multiview_submode.flip()
+    else:
+        if mv.num_active_windows >= 2:
             if mv.fullscreen_mode == FULL:
                 mv.fullscreen_mode = PIP
+                set_pip_window(mv)
             else:
                 mv.fullscreen_mode = FULL
-            maybe_entered_pip(mv)
-    else:
-        mv.multiview_submode = mv.multiview_submode.flip()
 
 
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
