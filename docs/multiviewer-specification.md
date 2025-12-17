@@ -317,8 +317,8 @@ the dual-use buttons behave as follows:
 
 - **Activate TV**: if `num_active_windows < 4`, this increments `num_active_windows`,
   which causes the first (lowest numbered) inactive window to become active. This does not
-  change `window_tv`. If `layout_mode == MULTIVIEW`, the newly active window will appear on
-  screen. If `layout_mode == FULLSCREEN`, the newly active window will not appear, but
+  change `window_tv`. If `layout_mode == MULTIVIEW`, the newly active window will appear
+  on screen. If `layout_mode == FULLSCREEN`, the newly active window will not appear, but
   will be available for cycling.
 
 - **Deactivate TV**: if `num_active_windows > 1`, this decrements `num_active_windows` and
