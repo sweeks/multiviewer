@@ -126,21 +126,23 @@ class Multiviewer(Jsonable):
     # power is the state of the virtual multiviewer.  During initialization, we ensure
     # that the physical devices match it.
     power: Power = Power.ON
+    window_tv: dict[Window, TV] = field(
+        default_factory=initial_window_tv, metadata=json_dict(Window, TV)
+    )
+    layout_mode: LayoutMode = MULTIVIEW
     num_active_windows: int = max_num_windows
     multiview_submode: Submode = W1_PROMINENT
-    layout_mode: LayoutMode = MULTIVIEW
     fullscreen_mode: FullscreenMode = FULL
+    full_window: Window = W1
+    pip_window: Window = W2
     pip_location_by_tv: dict[TV, PipLocation] = field(
         default_factory=initial_pip_location_by_tv, metadata=json_dict(TV, PipLocation)
     )
     selected_window: Window = W1
-    full_window: Window = W1
-    pip_window: Window = W2
     selected_window_border_is_on: bool = True
     control_apple_tv: bool = False
-    most_recent_command_at: datetime = field(
-        default=datetime.now(), metadata=json_field.omit
-    )
+    volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
+    volume: Volume = Volume.field()
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     last_back_press: BackPress | None = field(default=None, metadata=json_field.omit)
@@ -148,13 +150,9 @@ class Multiviewer(Jsonable):
         default=None, metadata=json_field.omit
     )
     jtech_manager: JtechManager = JtechManager.field()
-    # We maintain a volume delta for each TV, which we use to automatically adjust
-    # volume_delta when unmuting or when the selected TV changes.
-    volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
-    volume: Volume = Volume.field()
     atvs: ATVs = ATVs.field()
-    window_tv: dict[Window, TV] = field(
-        default_factory=initial_window_tv, metadata=json_dict(Window, TV)
+    most_recent_command_at: datetime = field(
+        default=datetime.now(), metadata=json_field.omit
     )
     task: Task = Task.field()
 
