@@ -155,7 +155,7 @@ class Multiviewer(Jsonable):
         default_factory=initial_pip_location_by_tv, metadata=json_dict(TV, PipLocation)
     )
     selected_window: Window = W1
-    selected_window_border_is_on: bool = True
+    selected_window_has_distinct_border: bool = True
     remote_mode: RemoteMode = MULTIVIEWER
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
@@ -240,7 +240,7 @@ def reset(mv: Multiviewer) -> None:
     mv.pip_window = W2
     mv.pip_location_by_tv = initial_pip_location_by_tv()
     mv.selected_window = W1
-    mv.selected_window_border_is_on = True
+    mv.selected_window_has_distinct_border = True
     mv.remote_mode = MULTIVIEWER
     mv.last_arrow_press = None
     mv.last_remote_press = None
@@ -547,7 +547,7 @@ def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
 def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
     # If single tap, change the selected window to the pointed-to window. If double
     # tap, swap the previously selected window with the previously pointed-to window.
-    mv.selected_window_border_is_on = True
+    mv.selected_window_has_distinct_border = True
     last_press = mv.last_arrow_press
     at = datetime.now()
     if (
@@ -612,7 +612,7 @@ def remove_window(mv: Multiviewer) -> None:
             mv.fullscreen_mode = FULL
         mv.num_active_windows -= 1
         if not is_visible(mv, mv.selected_window):
-            mv.selected_window_border_is_on = True
+            mv.selected_window_has_distinct_border = True
             mv.selected_window = W1
 
 
@@ -627,7 +627,7 @@ def toggle_fullscreen(mv: Multiviewer) -> None:
     if mv.layout_mode == FULLSCREEN:
         if mv.num_active_windows >= 2:
             mv.layout_mode = MULTIVIEW
-            mv.selected_window_border_is_on = True
+            mv.selected_window_has_distinct_border = True
             if not is_visible(mv, mv.selected_window):
                 swap_window_tvs(mv, W1, mv.selected_window)
                 mv.selected_window = W1
@@ -695,7 +695,9 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
 def pressed_play_pause(mv: Multiviewer) -> None:
     if mv.layout_mode == FULLSCREEN:
         mv.last_play_pause_press = None
-        mv.selected_window_border_is_on = not mv.selected_window_border_is_on
+        mv.selected_window_has_distinct_border = (
+            not mv.selected_window_has_distinct_border
+        )
         return
     at = datetime.now()
     last_press = mv.last_play_pause_press
@@ -706,11 +708,13 @@ def pressed_play_pause(mv: Multiviewer) -> None:
     ):
         log_double_tap_duration(at - last_press.at)
         mv.last_play_pause_press = None
-        mv.selected_window_border_is_on = last_press.previous_border_state
+        mv.selected_window_has_distinct_border = last_press.previous_border_state
         toggle_submode(mv)
     else:
-        previous_state = mv.selected_window_border_is_on
-        mv.selected_window_border_is_on = not mv.selected_window_border_is_on
+        previous_state = mv.selected_window_has_distinct_border
+        mv.selected_window_has_distinct_border = (
+            not mv.selected_window_has_distinct_border
+        )
         mv.last_play_pause_press = PlayPausePress(
             at=at,
             selected_window=mv.selected_window,
@@ -818,7 +822,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             else:
                 pressed_play_pause(mv)
         case "Power_on":
-            mv.selected_window_border_is_on = True
+            mv.selected_window_has_distinct_border = True
             await power_on(mv)
         case "Power":
             await toggle_power(mv)
@@ -880,7 +884,7 @@ def render(mv: Multiviewer) -> JtechOutput:
             border = None
         elif mv.remote_mode == APPLE_TV and mv_window == mv.selected_window:
             border = Color.RED
-        elif mv.selected_window_border_is_on and mv_window == mv.selected_window:
+        elif mv.selected_window_has_distinct_border and mv_window == mv.selected_window:
             border = Color.GREEN
         else:
             border = Color.GRAY
