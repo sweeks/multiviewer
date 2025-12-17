@@ -263,10 +263,11 @@ async def initialize(mv: Multiviewer):
     desired_power = mv.power
     mv.power = await mv.jtech_manager.current_power()
     if mv.power != desired_power:
-        if mv.power == Power.ON:
-            await power_on(mv)
-        else:
-            await power_off(mv)
+        match mv.power:
+            case Power.OFF:
+                await power_off(mv)
+            case Power.ON:
+                await power_on(mv)
     validate(mv)
 
 
@@ -773,7 +774,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         debug_print(args)
     mv.most_recent_command_at = datetime.now()
     command = args[0]
-    if mv.power == Power.OFF and (command not in ["Power", "Power_on", "Wait"]):
+    if mv.power == Power.OFF and command not in ["Power", "Power_on", "Wait"]:
         return {}
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
