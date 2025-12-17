@@ -609,19 +609,20 @@ def set_pip_window(mv: Multiviewer) -> None:
     mv.pip_window = next_window(mv, mv.full_window)
 
 
-def toggle_fullscreen(mv: Multiviewer) -> None:
-    if mv.layout_mode == FULLSCREEN:
-        if mv.num_active_windows >= 2:
-            mv.layout_mode = MULTIVIEW
-            mv.selected_window_has_distinct_border = True
-            if not is_visible(mv, mv.selected_window):
-                swap_window_tvs(mv, W1, mv.selected_window)
-                mv.selected_window = W1
-    else:
-        mv.layout_mode = FULLSCREEN
-        mv.full_window = mv.selected_window
-        if mv.fullscreen_mode == PIP:
-            set_pip_window(mv)
+def enter_multiview(mv: Multiviewer) -> None:
+    if mv.num_active_windows >= 2:
+        mv.layout_mode = MULTIVIEW
+        mv.selected_window_has_distinct_border = True
+        if not is_visible(mv, mv.selected_window):
+            swap_window_tvs(mv, W1, mv.selected_window)
+            mv.selected_window = W1
+
+
+def enter_fullscreen(mv: Multiviewer) -> None:
+    mv.layout_mode = FULLSCREEN
+    mv.full_window = mv.selected_window
+    if mv.fullscreen_mode == PIP:
+        set_pip_window(mv)
 
 
 def toggle_submode(mv: Multiviewer) -> None:
@@ -665,7 +666,7 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
         if mv.fullscreen_mode == PIP and mv.selected_window == mv.pip_window:
             mv.selected_window = mv.full_window
         else:
-            toggle_fullscreen(mv)
+            enter_multiview(mv)
         return
     if mv.num_active_windows == min_num_windows:
         mv.last_back_press = None
@@ -803,7 +804,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 else:
                     pass
             else:
-                toggle_fullscreen(mv)
+                enter_fullscreen(mv)
         case "Sleep":
             atv.sleep()
         case "Test":
