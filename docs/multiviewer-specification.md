@@ -175,7 +175,8 @@ When `selected_window_has_distinct_border == True`, the selected window's border
 depends on `remote_mode` and is either green (`MULTIVIEWER`) or red (`APPLE_TV`). Windows
 whose borders aren't red or green are gray.
 
-When `selected_window_has_distinct_border == False`, all windows have gray borders.
+When `selected_window_has_distinct_border == False`, all windows have gray borders except
+that the selected window is still red if `remote_mode == APPLE_TV`.
 
 # Remote-Control Buttons
 
