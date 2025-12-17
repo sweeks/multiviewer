@@ -578,9 +578,12 @@ def deactivate_tv(mv: Multiviewer) -> None:
     demote_tv(mv, mv.selected_window)
     mv.num_active_windows -= 1
     mv.selected_window = W1
-    if mv.num_active_windows > 1:
-        mv.selected_window_has_distinct_border = True
-    else:
+    mv.selected_window_has_distinct_border = True
+    if mv.layout_mode == FULLSCREEN:
+        mv.full_window = W1
+        if mv.fullscreen_mode == FullscreenMode.PIP:
+            set_pip_window(mv)
+    if mv.num_active_windows == 1:
         mv.layout_mode = FULLSCREEN
         mv.fullscreen_mode = FULL
         mv.full_window = W1
@@ -602,11 +605,8 @@ def enter_multiview(mv: Multiviewer) -> None:
 def enter_fullscreen(mv: Multiviewer) -> None:
     mv.layout_mode = FULLSCREEN
     mv.full_window = mv.selected_window
-    match mv.fullscreen_mode:
-        case FullscreenMode.FULL:
-            pass
-        case FullscreenMode.PIP:
-            set_pip_window(mv)
+    if mv.fullscreen_mode == FullscreenMode.PIP:
+        set_pip_window(mv)
 
 
 def toggle_submode(mv: Multiviewer) -> None:

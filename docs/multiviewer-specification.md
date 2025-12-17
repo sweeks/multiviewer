@@ -268,10 +268,11 @@ When:
 
 **Back** and **Home** behave as follows:
 
-- **Back**: returns to multiview, i.e. makes `layout_mode == MULTIVIEW`. This does not
-  change `window_tv` or `selected_window`.
+- **Back**: if `num_active_windows > 1`, returns to multiview, i.e. makes
+  `layout_mode == MULTIVIEW`. This does not change `window_tv` or `selected_window`.
 
-- **Home**: toggles `fullscreen_mode`. After toggling, the full window is selected.
+- **Home**: if `num_active_windows > 1`, toggles `fullscreen_mode`. After toggling, the
+  full window is selected.
 
 # Dual-use Buttons in `FULL`
 
@@ -316,7 +317,7 @@ the dual-use buttons behave as follows:
 
 - **Activate TV**: if `num_active_windows < 4`, this increments `num_active_windows`,
   which causes the first (lowest numbered) inactive window to become active. This does not
-  change `window_tv`.If `layout_mode == MULTIVIEW`, the newly active window will appear on
+  change `window_tv`. If `layout_mode == MULTIVIEW`, the newly active window will appear on
   screen. If `layout_mode == FULLSCREEN`, the newly active window will not appear, but
   will be available for cycling.
 

@@ -356,6 +356,14 @@ async def _():
     await tv_is("FULL A2 H2")
 
 
+@test("Deactivate_tv keeps selected window visible in FULL")
+async def _():
+    await tv_do("Reset; S; Select")
+    await tv_is("FULL A4 H4")
+    await tv_do("Deactivate_tv")
+    await tv_is("FULL A1 H1")
+
+
 @test("Deactivate_tv preserves submode")
 async def _():
     await tv_do("Reset; Home; S; Deactivate_tv")
