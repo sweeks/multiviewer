@@ -38,8 +38,7 @@ class JtechManager:
 
     async def current_power(self) -> Power:
         await self.synced()
-        if self.desired_power is None:
-            self.desired_power = Power.ON
+        assert self.desired_power is not None
         return self.desired_power
 
     async def current_output(self) -> JtechOutput:
@@ -67,14 +66,11 @@ class JtechManager:
 
     # sync returns True iff it finished successfully.
     async def sync(self) -> bool:
-        if False:
+        if True:
             debug_print(self)
-        if not self.should_send_commands_to_device:
-            # In test mode we still track desired state but never touch the device.
+        if not self.should_send_commands_to_device or self.desired_power is None:
             return True
         jtech = self.jtech
-        if self.desired_power is None:
-            self.desired_power = await jtech.read_power()
         await jtech.set_power(self.desired_power)
         if self.desired_power == Power.OFF:
             return True

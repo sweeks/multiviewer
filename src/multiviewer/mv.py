@@ -220,16 +220,13 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 async def initialize(mv: Multiviewer):
-    if False:
-        debug_print()
-    desired_power = mv.power
-    mv.power = await mv.jtech_manager.current_power()
-    if mv.power != desired_power:
-        match mv.power:
-            case Power.OFF:
-                await power_off(mv)
-            case Power.ON:
-                await power_on(mv)
+    if True:
+        debug_print(mv)
+    match mv.power:
+        case Power.OFF:
+            await power_off(mv)
+        case Power.ON:
+            await power_on(mv)
     validate(mv)
 
 
@@ -259,12 +256,8 @@ def save(mv: Multiviewer, path: Path) -> None:
     tmp.replace(path)
 
 
-def power(mv: Multiviewer) -> Power:
-    return mv.power
-
-
 def set_power(mv: Multiviewer, p: Power) -> None:
-    if False:
+    if True:
         debug_print(p)
     mv.power = p
     mv.jtech_manager.set_power(p)
@@ -273,21 +266,17 @@ def set_power(mv: Multiviewer, p: Power) -> None:
 async def power_off(mv: Multiviewer) -> None:
     if False:
         debug_print(mv)
-    if mv.power == Power.OFF:
-        return
     log("turning off power")
+    set_power(mv, Power.OFF)
     for tv in TV.all():
         mv.atvs.atv(tv).sleep()
     await mv.atvs.synced()
-    set_power(mv, Power.OFF)
     log("power is off")
 
 
 async def power_on(mv: Multiviewer) -> None:
     if False:
         debug_print(mv)
-    if mv.power == Power.ON:
-        return
     log("turning on power")
     set_power(mv, Power.ON)
     # We reset all the volume deltas to zero, because this is a new TV session for the
@@ -720,8 +709,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.MULTIVIEWER:
                     pressed_play_pause(mv)
         case "Power_on":
-            mv.selected_window_has_distinct_border = True
-            await power_on(mv)
+            if mv.power == Power.OFF:
+                mv.selected_window_has_distinct_border = True
+                await power_on(mv)
         case "Power":
             await toggle_power(mv)
         case "Remote":
