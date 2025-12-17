@@ -338,7 +338,9 @@ async def _():
 
 @test("Home does nothing when only one active")
 async def _():
-    await tv_do("Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window")
+    await tv_do(
+        "Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window"
+    )
     await tv_is("FULL A2 H2")
     await tv_do("Home")
     await tv_is("FULL A2 H2")
@@ -392,7 +394,9 @@ async def _():
 
 @test("Back does nothing when only one active")
 async def _():
-    await tv_do("Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window")
+    await tv_do(
+        "Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window"
+    )
     await tv_is("FULL A2 H2")
     await tv_do("Wait 0.4; Back")
     await tv_is("FULL A2 H2")
