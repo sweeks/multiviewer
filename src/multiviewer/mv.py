@@ -122,13 +122,6 @@ class RemotePress:
     selected_window: Window
 
 
-@dataclass(slots=True)
-class BackPress:
-    at: datetime
-    selected_window: Window
-    tv: TV
-
-
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -154,7 +147,6 @@ class Multiviewer(Jsonable):
     volume: Volume = Volume.field()
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
-    last_back_press: BackPress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
     most_recent_command_at: datetime = field(
@@ -237,7 +229,6 @@ def reset(mv: Multiviewer) -> None:
     mv.remote_mode = MULTIVIEWER
     mv.last_arrow_press = None
     mv.last_remote_press = None
-    mv.last_back_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
     mv.window_tv = initial_window_tv()
@@ -675,37 +666,13 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
 
 
 def pressed_back(mv: Multiviewer, tv: TV) -> None:
-    at = datetime.now()
-    last_press = mv.last_back_press
-    if last_press is not None and at - last_press.at <= DOUBLE_TAP_MAX_DURATION:
-        log_double_tap_duration(at - last_press.at)
-        mv.last_back_press = None
-        mv.atvs.atv(last_press.tv).screensaver()
-        return
     match mv.layout_mode:
         case LayoutMode.MULTIVIEW:
-            if mv.num_active_windows == min_num_windows:
-                mv.last_back_press = None
-                return
-            mv.last_back_press = BackPress(
-                at=at, selected_window=mv.selected_window, tv=tv
-            )
-            demote_window(mv, mv.selected_window)
-            remove_window(mv)
-        case LayoutMode.FULLSCREEN if mv.num_active_windows == 1:
-            mv.last_back_press = None
-            add_window(mv)
             return
         case LayoutMode.FULLSCREEN:
-            mv.last_back_press = None
-            match mv.fullscreen_mode:
-                case FullscreenMode.FULL:
-                    enter_multiview(mv)
-                case FullscreenMode.PIP:
-                    if mv.selected_window == mv.pip_window:
-                        mv.selected_window = mv.full_window
-                    else:
-                        enter_multiview(mv)
+            if mv.num_active_windows == 1:
+                return
+            enter_multiview(mv)
             return
 
 
@@ -801,6 +768,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             return await info(mv)
         case "Add_window":
             add_window(mv)
+        case "Remove_window":
+            demote_window(mv, mv.selected_window)
+            remove_window(mv)
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
