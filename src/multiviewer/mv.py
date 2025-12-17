@@ -66,19 +66,6 @@ APPLE_TV = RemoteMode.APPLE_TV
 MULTIVIEWER = RemoteMode.MULTIVIEWER
 
 
-def hdmi2tv(h: Hdmi) -> TV:
-    match h:
-        case Hdmi.H1:
-            return TV.TV1
-        case Hdmi.H2:
-            return TV.TV2
-        case Hdmi.H3:
-            return TV.TV3
-        case Hdmi.H4:
-            return TV.TV4
-    raise AssertionError
-
-
 def tv2hdmi(tv: TV) -> Hdmi:
     match tv:
         case TV.TV1:
@@ -334,12 +321,6 @@ async def toggle_power(mv: Multiviewer) -> None:
             await power_on(mv)
         case Power.ON:
             await power_off(mv)
-
-
-def set_selected_window(mv: Multiviewer, w: Window) -> None:
-    if False:
-        debug_print(mv)
-    mv.selected_window = w
 
 
 def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
