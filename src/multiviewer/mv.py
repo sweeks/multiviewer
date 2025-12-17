@@ -196,7 +196,7 @@ def validate(mv: Multiviewer) -> None:
     assert_equal(set(mv.window_tv.keys()), set(Mode.QUAD.windows()))
     assert_equal(len(set(mv.window_tv.values())), len(mv.window_tv))
     assert_(min_num_windows <= mv.num_active_windows <= max_num_windows)
-    if mv.num_active_windows == min_num_windows:
+    if mv.num_active_windows == 1:
         assert_(mv.layout_mode == FULLSCREEN)
         assert_(mv.fullscreen_mode == FULL)
     v = visible(mv)
@@ -559,38 +559,31 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
             mv.selected_window = points_to
 
 
-def add_window(mv: Multiviewer) -> None:
+def activate_tv(mv: Multiviewer) -> None:
     if mv.num_active_windows < max_num_windows:
         mv.num_active_windows += 1
 
 
-def demote_window(mv: Multiviewer, w1: Window) -> None:
-    match mv.layout_mode:
-        case LayoutMode.FULLSCREEN:
-            pass
-        case LayoutMode.MULTIVIEW:
-            last = last_active_window(mv)
-            while w1 != last:
-                w2 = next_active_window(mv, w1)
-                swap_window_tvs(mv, w1, w2)
-                w1 = w2
+def demote_tv(mv: Multiviewer, w1: Window) -> None:
+    last = last_active_window(mv)
+    while w1 != last:
+        w2 = next_active_window(mv, w1)
+        swap_window_tvs(mv, w1, w2)
+        w1 = w2
 
 
-def remove_window(mv: Multiviewer) -> None:
-    match mv.layout_mode:
-        case LayoutMode.FULLSCREEN:
-            pass
-        case LayoutMode.MULTIVIEW:
-            if mv.num_active_windows == min_num_windows:
-                return
-            if mv.num_active_windows == 2:
-                mv.layout_mode = FULLSCREEN
-                mv.full_window = mv.selected_window
-                mv.fullscreen_mode = FULL
-            mv.num_active_windows -= 1
-            if not is_visible(mv, mv.selected_window):
-                mv.selected_window_has_distinct_border = True
-                mv.selected_window = W1
+def deactivate_tv(mv: Multiviewer) -> None:
+    if mv.num_active_windows == 1:
+        return
+    demote_tv(mv, mv.selected_window)
+    mv.num_active_windows -= 1
+    mv.selected_window = W1
+    if mv.num_active_windows > 1:
+        mv.selected_window_has_distinct_border = True
+    else:
+        mv.layout_mode = FULLSCREEN
+        mv.fullscreen_mode = FULL
+        mv.full_window = W1
 
 
 def set_pip_window(mv: Multiviewer) -> None:
@@ -720,8 +713,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
     match command:
-        case "Add_window":
-            add_window(mv)
+        case "Activate_tv":
+            activate_tv(mv)
         case "Back":
             match mv.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -765,9 +758,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             await toggle_power(mv)
         case "Remote":
             return remote(mv, tv)
-        case "Remove_window":
-            demote_window(mv, mv.selected_window)
-            remove_window(mv)
+        case "Deactivate_tv":
+            deactivate_tv(mv)
         case "Reset":
             reset(mv)
         case "Right" | "E":

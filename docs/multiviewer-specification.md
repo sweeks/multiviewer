@@ -186,8 +186,8 @@ The remote control has 15 buttons:
 - Remote
   - **Remote**
 - Multiviewer
-  - **Add Window**
-  - **Remove Window**
+  - **Activate TV**
+  - **Deactivate TV**
 - Apple TV
   - **Screensaver**
 - Dual-use (Multiviewer, Apple TV)
@@ -312,23 +312,21 @@ the dual-use buttons behave as follows:
 - Double tap **Up**, **Down**, **Left**, **Right**: move the pip location in the direction
   of the arrow, when possible, regardless of the selected window.
 
-# **Add Window**, **Remove Window**, and **Screensaver**
+# **Activate TV**, **Deactivate TV**, and **Screensaver**
 
-- **Add Window**: if `num_active_windows < 4`, this increments `num_active_windows`, which
-  causes the first (lowest numbered) inactive window to become active. If
-  `layout_mode == MULTIVIEW`, the newly active window will appear on screen. If
-  `layout_mode == FULLSCREEN`, the newly active window will not appear, but will be
-  available for cycling.
+- **Activate TV**: if `num_active_windows < 4`, this increments `num_active_windows`,
+  which causes the first (lowest numbered) inactive window to become active. This does not
+  change `window_tv`.If `layout_mode == MULTIVIEW`, the newly active window will appear on
+  screen. If `layout_mode == FULLSCREEN`, the newly active window will not appear, but
+  will be available for cycling. 
 
-- **Remove Window**: if `num_active_windows > 1`, this decrements `num_active_windows` and
+- **Deactivate TV**: if `num_active_windows > 1`, this decrements `num_active_windows` and
   demotes the selected TV to become the first inactive TV, promoting the active TVs in
-  higher numbered windows. If the selected window becomes inactive, then `W1` is selected;
-  otherwise the selected window does not change. Afterwards, if `num_active_windows == 1`,
+  higher numbered windows (this changes `window_tv`). Afterwards, the selected window is
+  `W1` and `selected_window_has_distinct_border == True`. If `num_active_windows == 1`,
   then `layout_mode == FULLSCREEN` and `fullscreen_mode == FULL`.
 
 - **Screensaver**: sends commands to the selected Apple TV to take it to screensaver.
-
-**Add Window** and **Remove Window** do not change `window_tv`.
 
 # Invariants
 

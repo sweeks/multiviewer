@@ -339,62 +339,62 @@ async def _():
 @test("Home does nothing when only one active")
 async def _():
     await tv_do(
-        "Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window"
+        "Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv; Wait 0.4; Deactivate_tv"
     )
     await tv_is("FULL A2 H2")
     await tv_do("Home")
     await tv_is("FULL A2 H2")
 
 
-@test("Remove_window removes window")
+@test("Deactivate_tv removes window")
 async def _():
-    await tv_do("Reset; S; Remove_window")
+    await tv_do("Reset; S; Deactivate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
-    await tv_do("Wait 0.4; S; Remove_window")
+    await tv_do("Wait 0.4; S; Deactivate_tv")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
-    await tv_do("Wait 0.4; Remove_window")
+    await tv_do("Wait 0.4; Deactivate_tv")
     await tv_is("FULL A2 H2")
 
 
-@test("Remove_window preserves submode")
+@test("Deactivate_tv preserves submode")
 async def _():
-    await tv_do("Reset; Home; S; Remove_window")
-    await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
+    await tv_do("Reset; Home; S; Deactivate_tv")
+    await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H4]A")
 
 
-@test("Remove_window switches audio to visible window")
+@test("Deactivate_tv switches selected window to W1")
 async def _():
-    await tv_do("Reset; S; Remove_window")
+    await tv_do("Reset; S; Deactivate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 
-@test("Add_window adds window")
+@test("Activate_tv adds window")
 async def _():
-    await tv_do("Reset; S; Remove_window; Wait 0.4; S; Remove_window")
+    await tv_do("Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
-    await tv_do("Add_window")
+    await tv_do("Activate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
-    await tv_do("Add_window")
+    await tv_do("Activate_tv")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
-@test("Add_window in FULL enables cycling")
+@test("Activate_tv in FULL enables cycling")
 async def _():
-    await tv_do("Reset; Remove_window; Remove_window; Remove_window")
+    await tv_do("Reset; Deactivate_tv; Deactivate_tv; Deactivate_tv")
     await tv_is("FULL A4 H4")
-    await tv_do("Add_window")
+    await tv_do("Activate_tv")
     await tv_is("FULL A4 H4")
     await tv_do("E")
     await tv_is("FULL A3 H3")
 
 
-@test("Add_window in PIP enables cycling")
+@test("Activate_tv in PIP enables cycling")
 async def _():
-    await tv_do("Reset; Remove_window; Remove_window")
+    await tv_do("Reset; Deactivate_tv; Deactivate_tv")
     await tv_is("PBP(2) A3 [H3]G [H4]A")
     await tv_do("Select; Home")
     await tv_is("PIP(NE) A3 H3 [H4]A")
-    await tv_do("Add_window")
+    await tv_do("Activate_tv")
     await tv_is("PIP(NE) A3 H3 [H4]A")
     await tv_do("E")
     await tv_is("PIP(NE) A3 H3 [H2]A")
@@ -402,22 +402,22 @@ async def _():
 
 @test("Adding and removing windows preserve submode")
 async def _():
-    await tv_do("Reset; Home; S; Remove_window")
-    await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
-    await tv_do("Home; Add_window; Add_window")
-    await tv_is("QUAD(2) A4 [H1]A [H2]A [H4]G [H3]A")
+    await tv_do("Reset; Home; S; Deactivate_tv")
+    await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H4]A")
+    await tv_do("Home; Activate_tv; Activate_tv")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H4]A [H3]A")
 
 
-@test("Remove_window demotes window")
+@test("Deactivate_tv demotes window")
 async def _():
-    await tv_do("Reset; Remove_window")
+    await tv_do("Reset; Deactivate_tv")
     await tv_is("TRIPLE(2) A2 [H2]G [H3]A [H4]A")
 
 
 @test("Back does nothing when only one active")
 async def _():
     await tv_do(
-        "Reset; S; Remove_window; Wait 0.4; S; Remove_window; Wait 0.4; Remove_window"
+        "Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv; Wait 0.4; Deactivate_tv"
     )
     await tv_is("FULL A2 H2")
     await tv_do("Wait 0.4; Back")
