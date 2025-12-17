@@ -140,7 +140,7 @@ async def _():
 
 @test("Select+Back preserves submode")
 async def _():
-    await tv_do("Reset; Play_pause; Play_pause; Select; Back")
+    await tv_do("Reset; Home; Select; Back")
     await tv_is("QUAD(1) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
@@ -165,7 +165,7 @@ async def _():
 
 @test("NEWS in QUAD(1)")
 async def _():
-    await tv_do("Reset; Play_pause; Play_pause; E")
+    await tv_do("Reset; Home; E")
     await tv_is("QUAD(1) A2 [H1]A [H2]G [H3]A [H4]A")
     await tv_do("W; S")
     await tv_is("QUAD(1) A3 [H1]A [H2]A [H3]G [H4]A")
@@ -346,7 +346,7 @@ async def _():
 
 @test("Back to remove window preserves submode")
 async def _():
-    await tv_do("Reset; Play_pause; Play_pause; S; Back")
+    await tv_do("Reset; Home; S; Back")
     await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
 
 
@@ -356,21 +356,21 @@ async def _():
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 
-@test("Home adds window")
+@test("Add_window adds window")
 async def _():
     await tv_do("Reset; S; Back; Wait 0.4; S; Back")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
-    await tv_do("Home")
+    await tv_do("Add_window")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
-    await tv_do("Home")
+    await tv_do("Add_window")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
 @test("Adding and removing windows preserve submode")
 async def _():
-    await tv_do("Reset; Play_pause; Play_pause; S; Back")
+    await tv_do("Reset; Home; S; Back")
     await tv_is("TRIPLE(1) A4 [H1]A [H2]A [H4]G")
-    await tv_do("Play_pause; Play_pause; Home; Home")
+    await tv_do("Home; Add_window; Add_window")
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H4]G [H3]A")
 
 

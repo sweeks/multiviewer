@@ -129,13 +129,6 @@ class BackPress:
     tv: TV
 
 
-@dataclass(slots=True)
-class PlayPausePress:
-    at: datetime
-    selected_window: Window
-    previous_border_state: bool
-
-
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -162,9 +155,6 @@ class Multiviewer(Jsonable):
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     last_back_press: BackPress | None = field(default=None, metadata=json_field.omit)
-    last_play_pause_press: PlayPausePress | None = field(
-        default=None, metadata=json_field.omit
-    )
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
     most_recent_command_at: datetime = field(
@@ -245,7 +235,6 @@ def reset(mv: Multiviewer) -> None:
     mv.last_arrow_press = None
     mv.last_remote_press = None
     mv.last_back_press = None
-    mv.last_play_pause_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
     mv.window_tv = initial_window_tv()
@@ -693,33 +682,9 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
 
 
 def pressed_play_pause(mv: Multiviewer) -> None:
-    if mv.layout_mode == FULLSCREEN:
-        mv.last_play_pause_press = None
-        mv.selected_window_has_distinct_border = (
-            not mv.selected_window_has_distinct_border
-        )
-        return
-    at = datetime.now()
-    last_press = mv.last_play_pause_press
-    if (
-        last_press is not None
-        and last_press.selected_window == mv.selected_window
-        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
-    ):
-        log_double_tap_duration(at - last_press.at)
-        mv.last_play_pause_press = None
-        mv.selected_window_has_distinct_border = last_press.previous_border_state
-        toggle_submode(mv)
-    else:
-        previous_state = mv.selected_window_has_distinct_border
-        mv.selected_window_has_distinct_border = (
-            not mv.selected_window_has_distinct_border
-        )
-        mv.last_play_pause_press = PlayPausePress(
-            at=at,
-            selected_window=mv.selected_window,
-            previous_border_state=previous_state,
-        )
+    mv.selected_window_has_distinct_border = (
+        not mv.selected_window_has_distinct_border
+    )
 
 
 def toggle_mute(mv: Multiviewer) -> None:
@@ -802,12 +767,11 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.remote_mode == APPLE_TV:
                 atv.home()
             else:
-                if mv.layout_mode == FULLSCREEN:
-                    toggle_submode(mv)
-                else:
-                    add_window(mv)
+                toggle_submode(mv)
         case "Info":
             return await info(mv)
+        case "Add_window":
+            add_window(mv)
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
