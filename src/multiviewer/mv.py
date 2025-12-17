@@ -677,7 +677,9 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
             if mv.num_active_windows == min_num_windows:
                 mv.last_back_press = None
                 return
-            mv.last_back_press = BackPress(at=at, selected_window=mv.selected_window, tv=tv)
+            mv.last_back_press = BackPress(
+                at=at, selected_window=mv.selected_window, tv=tv
+            )
             demote_window(mv, mv.selected_window)
             remove_window(mv)
         case LayoutMode.FULLSCREEN if mv.num_active_windows == 1:
