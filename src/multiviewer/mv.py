@@ -814,8 +814,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             atv.sleep()
         case "Test":
             pass
-        case "Toggle_submode":
-            toggle_submode(mv)
         case "Up" | "N":
             if mv.remote_mode == APPLE_TV:
                 atv.up()
