@@ -666,14 +666,8 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
 
 
 def pressed_back(mv: Multiviewer, tv: TV) -> None:
-    match mv.layout_mode:
-        case LayoutMode.MULTIVIEW:
-            return
-        case LayoutMode.FULLSCREEN:
-            if mv.num_active_windows == 1:
-                return
-            enter_multiview(mv)
-            return
+    if mv.layout_mode == LayoutMode.FULLSCREEN and mv.num_active_windows > 1:
+        enter_multiview(mv)
 
 
 def pressed_play_pause(mv: Multiviewer) -> None:
