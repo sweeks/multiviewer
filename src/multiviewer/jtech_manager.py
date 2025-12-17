@@ -66,7 +66,7 @@ class JtechManager:
 
     # sync returns True iff it finished successfully.
     async def sync(self) -> bool:
-        if True:
+        if False:
             debug_print(self)
         if not self.should_send_commands_to_device or self.desired_power is None:
             return True

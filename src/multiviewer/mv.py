@@ -220,7 +220,7 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 async def initialize(mv: Multiviewer):
-    if True:
+    if False:
         debug_print(mv)
     match mv.power:
         case Power.OFF:
@@ -257,7 +257,7 @@ def save(mv: Multiviewer, path: Path) -> None:
 
 
 def set_power(mv: Multiviewer, p: Power) -> None:
-    if True:
+    if False:
         debug_print(p)
     mv.power = p
     mv.jtech_manager.set_power(p)
