@@ -1,6 +1,6 @@
 This document specifies the behavior of the multiviewer and its remote control. It is
 aimed at developers rather than users of the remote control. We use python pseudo-code for
-clarity. We first describe all of the state of the multiviewer, and how that state
+clarity. We first describe the bits of state in the multiviewer, and how that state
 determines the device settings (screen layout, volume). We then describe the
 remote-control buttons, and how they change the multiviewer state. This structure reflects
 the software architecture, which has the abstract multiviewer state (`mv.py`) and buttons
@@ -39,12 +39,12 @@ At all times, the four windows hold distinct TVs:
 window_tv: Dict[Window, TV]
 ```
 
-Some remote-control action change `window_tv`.
+Some remote-control actions change `window_tv`.
 
 # Screen Layouts
 
 Windows are arranged on screen in various layouts, which determine the windows that are
-displayed, and their locations and sizes. There are five window sizes, relative to TV
+displayed and their locations and sizes. There are five window sizes, relative to TV
 width: full (1/1), prominent (2/3), medium (1/2), small (1/3), and pip (1/5). Here are the
 eight layouts:
 
@@ -176,7 +176,7 @@ whose borders aren't red or green are gray.
 
 When `selected_window_has_distinct_border == False`, all windows have gray borders.
 
-# Remove Control Buttons
+# Remote-Control Buttons
 
 The remote control has 15 buttons:
 
@@ -214,14 +214,14 @@ remote app for the selected Apple TV, and does not change `remote_mode`.
 
 - **Mute**. This toggles `mute` state.
 - **Volume Up**. This increments the volume delta of the selected TV.
-- **Volume Down**. This deccrements the volume delta of the selected TV.
+- **Volume Down**. This decrements the volume delta of the selected TV.
 
 # Dual-use Buttons for Apple TV
 
-In Apple TV remote mode (`remote_mode == APPLE_TV`), the dual-use buttons behave exactly
-like the Apple TV remote buttons of the same name, acting on the selected TV.
+When `remote_mode == APPLE_TV`, the dual-use buttons behave exactly like the
+Apple-TV-remote buttons of the same name, acting on the selected TV.
 
-- Arrows: **Up**, **Down**, **Left**, **Right**
+- **Up**, **Down**, **Left**, **Right**
 - **Select**
 - **Back**
 - **Home**
@@ -229,15 +229,13 @@ like the Apple TV remote buttons of the same name, acting on the selected TV.
 
 # Play/Pause in Multiviewer
 
-When:
-
-- `remote_mode == MULTIVIEWER`
+When `remote_mode == MULTIVIEWER`:
 
 - **Play/Pause**: toggles `selected_window_has_distinct_border`.
 
 # Dual-use Buttons in Multiview
 
-In multiview, when:
+When:
 
 - `remote_mode == MULTIVIEWER`
 - `layout_mode == MULTIVIEW`
@@ -254,27 +252,27 @@ the dual-use buttons behave as follows:
 - **Up**, **Down**, **Left**, **Right**: change the selected window to the window the
   arrow points to. Double tap swaps the TVs in the selected window and the window the
   arrow points to. Double tap, if the selected window is not prominent, moves the selected
-  window to the new window.
+  window to the pointed-to window.
 
 - **Home**: toggles `multiview_submode`.
 
 # Dual-use Buttons in Fullscreen
 
-In fullscreen, when:
+When:
 
 - `remote_mode == MULTIVIEWER`
 - `layout_mode == FULLSCREEN`
 
 **Back** and **Home** behave as follows:
 
-- **Back**: returns to multiview, i.e. `layout_mode == MULTIVIEW`.  This does not change
-  `window_tv` or `selected_window`.
+- **Back**: returns to multiview, i.e. makes `layout_mode == MULTIVIEW`. This does not
+  change `window_tv` or `selected_window`.
 
-- **Home**: toggles `fullscreen_mode`.  After toggling, the full window is selected.
+- **Home**: toggles `fullscreen_mode`. After toggling, the full window is selected.
 
 # Dual-use Buttons in `FULL`
 
-In fullscreen `FULL` mode, when:
+When:
 
 - `remote_mode == MULTIVIEWER`
 - `layout_mode == FULLSCREEN`
@@ -286,12 +284,12 @@ the dual-use buttons behave as follows:
 
 - **Up**, **Down**: no-op.
 
-- **Left**, **Right**: cycle `full_window` among the active windows.  The selected window
+- **Left**, **Right**: cycle `full_window` among the active windows. The selected window
   follows `full_window`.
 
 # Dual-use Buttons in `PIP`
 
-In `PIP`, when:
+When:
 
 - `remote_mode == MULTIVIEWER`
 - `layout_mode == FULLSCREEN`
@@ -299,13 +297,13 @@ In `PIP`, when:
 
 the dual-use buttons behave as follows:
 
-- **Select**: swaps the TVs of the full window and the pip window.
+- **Select**: swaps `full_window` and `pip_window`.  This does not change `window_tv`.
 
 - **Up**, **Down**: change the selected window between the full window and the pip window,
   if the arrow points from the selected window to the other window.
 
 - **Left**, **Right**: cycle `pip_window` among the active windows other than
-  `full_window`.  If the pip window is selected, then the selected window follows
+  `full_window`. If the pip window is selected, then the selected window follows
   `pip_window`.
 
 # **Add Window** and **Remove Window**
@@ -322,30 +320,24 @@ the dual-use buttons behave as follows:
   otherwise the selected window does not change. Afterwards, if `num_active_windows == 1`,
   then `layout_mode == FULLSCREEN` and `fullscreen_mode == FULL`.
 
+**Add Window** and **Remove Window** do not change `window_tv`.
+
 # Invariants
 
 - `window_tv` maps windows to distinct TVs.
 
-- `1 <= num_active_windows <= 4`; the active windows are the prefix `W1..Wn`, and in
-  multiview all active windows are visible.
+- `1 <= num_active_windows <= 4`; the active windows are the prefix `W1..Wn`.
 
-- If `num_active_windows == 1`, then `layout_mode == FULLSCREEN` and `fullscreen_mode ==
-  FULL`.
+- In multiview, all active windows are visible.
 
-- `fullscreen_mode == PIP` implies `num_active_windows >= 2` and `full_window !=
-  pip_window`; `full_window` and `pip_window` are always active windows.
+- The selected window is visible.
 
-- The selected window is always visible; in `FULL` it is `full_window`; in `PIP` it is
-  either `full_window` or `pip_window`.
+- If `num_active_windows == 1`, then `layout_mode == FULLSCREEN` and
+  `fullscreen_mode == FULL`.
+
+- In `PIP`, `full_window` and `pip_window` are distinct active windows.
 
 - Audio follows the selected TV.
 
 - Volume follows the selected TV:
   `volume_delta == volume_delta_by_tv[window_tv[selected_window]]`.
-
-- `pip_location_by_tv` is defined per TV; when a TV is fullscreen, its pip uses that TV’s
-  stored location.
-
-- Borders: if `selected_window_has_distinct_border == False`, all borders are gray; if
-  `True`, the selected window is green in `MULTIVIEWER` mode or red in `APPLE_TV` mode,
-  others are gray.
