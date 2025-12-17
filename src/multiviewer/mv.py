@@ -155,21 +155,17 @@ class Multiviewer(Jsonable):
     task: Task = Task.field()
 
 
-def num_windows(mv: Multiviewer) -> int:
-    return mv.num_active_windows
+def last_active_window(mv: Multiviewer) -> Window:
+    return Window.of_int(mv.num_active_windows)
 
 
-def last_window(mv: Multiviewer) -> Window:
-    return Window.of_int(num_windows(mv))
-
-
-def prev_window(mv: Multiviewer, w: Window) -> Window:
-    n = num_windows(mv)
+def prev_active_window(mv: Multiviewer, w: Window) -> Window:
+    n = mv.num_active_windows
     return Window.of_int(1 + ((w.to_int() + n - 2) % n))
 
 
-def next_window(mv: Multiviewer, w: Window) -> Window:
-    return Window.of_int(w.to_int() % num_windows(mv) + 1)
+def next_active_window(mv: Multiviewer, w: Window) -> Window:
+    return Window.of_int(w.to_int() % mv.num_active_windows + 1)
 
 
 def window_tv(mv: Multiviewer, w: Window) -> TV:
@@ -425,22 +421,22 @@ def pressed_arrow_in_full(mv: Multiviewer, arrow: Arrow) -> None:
         case Arrow.N | Arrow.S:
             pass
         case Arrow.E:
-            mv.full_window = next_window(mv, mv.selected_window)
+            mv.full_window = next_active_window(mv, mv.selected_window)
             mv.selected_window = mv.full_window
         case Arrow.W:
-            mv.full_window = prev_window(mv, mv.selected_window)
+            mv.full_window = prev_active_window(mv, mv.selected_window)
             mv.selected_window = mv.full_window
 
 
 def rotate_pip_window(mv: Multiviewer, direction: Arrow) -> None:
     if direction == Arrow.E:
-        w = next_window(mv, mv.pip_window)
+        w = next_active_window(mv, mv.pip_window)
         if w == mv.full_window:
-            w = next_window(mv, w)
+            w = next_active_window(mv, w)
     elif direction == Arrow.W:
-        w = prev_window(mv, mv.pip_window)
+        w = prev_active_window(mv, mv.pip_window)
         if w == mv.full_window:
-            w = prev_window(mv, w)
+            w = prev_active_window(mv, w)
     else:
         fail("invalid rotate direction", direction)
     mv.pip_window = w
@@ -573,9 +569,9 @@ def demote_window(mv: Multiviewer, w1: Window) -> None:
         case LayoutMode.FULLSCREEN:
             pass
         case LayoutMode.MULTIVIEW:
-            last = last_window(mv)
+            last = last_active_window(mv)
             while w1 != last:
-                w2 = next_window(mv, w1)
+                w2 = next_active_window(mv, w1)
                 swap_window_tvs(mv, w1, w2)
                 w1 = w2
 
@@ -598,7 +594,7 @@ def remove_window(mv: Multiviewer) -> None:
 
 
 def set_pip_window(mv: Multiviewer) -> None:
-    mv.pip_window = next_window(mv, mv.full_window)
+    mv.pip_window = next_active_window(mv, mv.full_window)
 
 
 def enter_multiview(mv: Multiviewer) -> None:
