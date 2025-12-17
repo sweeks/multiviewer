@@ -682,9 +682,7 @@ def pressed_back(mv: Multiviewer, tv: TV) -> None:
 
 
 def pressed_play_pause(mv: Multiviewer) -> None:
-    mv.selected_window_has_distinct_border = (
-        not mv.selected_window_has_distinct_border
-    )
+    mv.selected_window_has_distinct_border = not mv.selected_window_has_distinct_border
 
 
 def toggle_mute(mv: Multiviewer) -> None:
