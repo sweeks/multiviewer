@@ -307,6 +307,9 @@ the dual-use buttons behave as follows:
   `full_window`. If the pip window is selected, then the selected window follows
   `pip_window`.
 
+- Double tap **Up**, **Down**, **Left**, **Right**: move the pip location in the
+  direction of the arrow, when possible, regardless of the selected window.
+
 # **Add Window** and **Remove Window**
 
 - **Add Window**: if `num_active_windows < 4`, this increments `num_active_windows`, which
