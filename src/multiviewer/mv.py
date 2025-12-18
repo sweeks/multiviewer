@@ -350,9 +350,7 @@ async def info(mv: Multiviewer) -> str:
 
 
 def remote(mv: Multiviewer, tv: TV) -> JSON:
-    this_press = RemotePress(
-        at=mv.screen.clock.now(), selected_window=mv.selected_window
-    )
+    this_press = RemotePress(at=mv.screen.clock.now(), selected_window=mv.selected_window)
     last_press = mv.last_remote_press
     if (
         last_press is not None
