@@ -16,6 +16,28 @@ from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import JtechManager
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
+from .mv_screen_state import (
+    FULL,
+    FULLSCREEN,
+    MULTIVIEW,
+    PIP,
+    APPLE_TV,
+    MULTIVIEWER,
+    W1,
+    W1_PROMINENT,
+    W2,
+    W3,
+    W4,
+    WINDOWS_SAME,
+    FullscreenMode,
+    LayoutMode,
+    MvScreenState,
+    RemoteMode,
+    initial_pip_location_by_tv,
+    initial_window_tv,
+    max_num_windows,
+    min_num_windows,
+)
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
@@ -44,63 +66,6 @@ H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3
 H4 = Hdmi.H4
-W1 = Window.W1
-W2 = Window.W2
-W3 = Window.W3
-W4 = Window.W4
-WINDOWS_SAME = Submode.WINDOWS_SAME
-W1_PROMINENT = Submode.W1_PROMINENT
-
-
-class LayoutMode(MyStrEnum):
-    MULTIVIEW = auto()
-    FULLSCREEN = auto()
-
-
-MULTIVIEW = LayoutMode.MULTIVIEW
-FULLSCREEN = LayoutMode.FULLSCREEN
-
-
-class FullscreenMode(MyStrEnum):
-    FULL = auto()
-    PIP = auto()
-
-
-FULL = FullscreenMode.FULL
-PIP = FullscreenMode.PIP
-
-
-class RemoteMode(MyStrEnum):
-    APPLE_TV = auto()
-    MULTIVIEWER = auto()
-
-    def flip(self) -> RemoteMode:
-        match self:
-            case RemoteMode.APPLE_TV:
-                return MULTIVIEWER
-            case RemoteMode.MULTIVIEWER:
-                return APPLE_TV
-
-
-APPLE_TV = RemoteMode.APPLE_TV
-MULTIVIEWER = RemoteMode.MULTIVIEWER
-
-
-def tv2hdmi(tv: TV) -> Hdmi:
-    match tv:
-        case TV.TV1:
-            return Hdmi.H1
-        case TV.TV2:
-            return Hdmi.H2
-        case TV.TV3:
-            return Hdmi.H3
-        case TV.TV4:
-            return Hdmi.H4
-    raise AssertionError
-
-
-max_num_windows = 4
-min_num_windows = 1
 
 
 def volume_deltas_zero():
@@ -135,21 +100,7 @@ class Multiviewer(Jsonable):
     # power is the state of the virtual multiviewer.  During initialization, we ensure
     # that the physical devices match it.
     power: Power = Power.ON
-    window_tv: dict[Window, TV] = field(
-        default_factory=initial_window_tv, metadata=json_dict(Window, TV)
-    )
-    layout_mode: LayoutMode = MULTIVIEW
-    num_active_windows: int = max_num_windows
-    multiview_submode: Submode = W1_PROMINENT
-    fullscreen_mode: FullscreenMode = FULL
-    full_window: Window = W1
-    pip_window: Window = W2
-    pip_location_by_tv: dict[TV, PipLocation] = field(
-        default_factory=initial_pip_location_by_tv, metadata=json_dict(TV, PipLocation)
-    )
-    selected_window: Window = W1
-    selected_window_has_distinct_border: bool = True
-    remote_mode: RemoteMode = MULTIVIEWER
+    screen_state: MvScreenState = field(default_factory=MvScreenState)
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
@@ -159,6 +110,94 @@ class Multiviewer(Jsonable):
     )
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
+
+    @property
+    def window_tv(self):
+        return self.screen_state.window_tv
+
+    @window_tv.setter
+    def window_tv(self, v):
+        self.screen_state.window_tv = v
+
+    @property
+    def layout_mode(self):
+        return self.screen_state.layout_mode
+
+    @layout_mode.setter
+    def layout_mode(self, v):
+        self.screen_state.layout_mode = v
+
+    @property
+    def num_active_windows(self):
+        return self.screen_state.num_active_windows
+
+    @num_active_windows.setter
+    def num_active_windows(self, v):
+        self.screen_state.num_active_windows = v
+
+    @property
+    def multiview_submode(self):
+        return self.screen_state.multiview_submode
+
+    @multiview_submode.setter
+    def multiview_submode(self, v):
+        self.screen_state.multiview_submode = v
+
+    @property
+    def fullscreen_mode(self):
+        return self.screen_state.fullscreen_mode
+
+    @fullscreen_mode.setter
+    def fullscreen_mode(self, v):
+        self.screen_state.fullscreen_mode = v
+
+    @property
+    def full_window(self):
+        return self.screen_state.full_window
+
+    @full_window.setter
+    def full_window(self, v):
+        self.screen_state.full_window = v
+
+    @property
+    def pip_window(self):
+        return self.screen_state.pip_window
+
+    @pip_window.setter
+    def pip_window(self, v):
+        self.screen_state.pip_window = v
+
+    @property
+    def pip_location_by_tv(self):
+        return self.screen_state.pip_location_by_tv
+
+    @pip_location_by_tv.setter
+    def pip_location_by_tv(self, v):
+        self.screen_state.pip_location_by_tv = v
+
+    @property
+    def selected_window(self):
+        return self.screen_state.selected_window
+
+    @selected_window.setter
+    def selected_window(self, v):
+        self.screen_state.selected_window = v
+
+    @property
+    def selected_window_has_distinct_border(self):
+        return self.screen_state.selected_window_has_distinct_border
+
+    @selected_window_has_distinct_border.setter
+    def selected_window_has_distinct_border(self, v):
+        self.screen_state.selected_window_has_distinct_border = v
+
+    @property
+    def remote_mode(self):
+        return self.screen_state.remote_mode
+
+    @remote_mode.setter
+    def remote_mode(self, v):
+        self.screen_state.remote_mode = v
 
 
 def last_active_window(mv: Multiviewer) -> Window:
@@ -175,15 +214,15 @@ def next_active_window(mv: Multiviewer, w: Window) -> Window:
 
 
 def window_tv(mv: Multiviewer, w: Window) -> TV:
-    return mv.window_tv[w]
+    return mv.screen_state.window_tv[w]
 
 
 def window_input(mv: Multiviewer, w: Window) -> Hdmi:
-    return tv2hdmi(window_tv(mv, w))
+    return mv.screen_state.window_input(w)
 
 
 def pip_location(mv: Multiviewer) -> PipLocation:
-    return mv.pip_location_by_tv[window_tv(mv, mv.full_window)]
+    return mv.screen_state.pip_location()
 
 
 def selected_tv(mv: Multiviewer) -> TV:
@@ -795,74 +834,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
 
 
 def render(mv: Multiviewer) -> JtechOutput:
-    if False:
-        debug_print()
-
-    def window(
-        mode: Mode, layout_window: Window, mv_window: Window | None = None
-    ) -> WindowContents:
-        if mv_window is None:
-            mv_window = layout_window
-        if not mode.window_has_border(layout_window):
-            border = None
-        elif mv_window == mv.selected_window:
-            match mv.remote_mode:
-                case RemoteMode.APPLE_TV:
-                    border = Color.RED
-                case RemoteMode.MULTIVIEWER:
-                    if mv.selected_window_has_distinct_border:
-                        border = Color.GREEN
-                    else:
-                        border = Color.GRAY
-        else:
-            border = Color.GRAY
-        return WindowContents(hdmi=window_input(mv, mv_window), border=border)
-
-    match mv.layout_mode:
-        case LayoutMode.FULLSCREEN:
-            match mv.fullscreen_mode:
-                case FullscreenMode.FULL:
-                    layout = Full(w1=window(Mode.FULL, W1, mv.full_window))
-                case FullscreenMode.PIP:
-                    layout = Pip(
-                        pip_location=pip_location(mv),
-                        w1=window(Mode.PIP, W1, mv.full_window),
-                        w2=window(Mode.PIP, W2, mv.pip_window),
-                    )
-        case LayoutMode.MULTIVIEW:
-            assert_(mv.num_active_windows >= 2)
-            match mv.num_active_windows:
-                case 2:
-                    mode = Mode.PBP
-                case 3:
-                    mode = Mode.TRIPLE
-                case 4:
-                    mode = Mode.QUAD
-                case _:
-                    fail(f"invalid num_active_windows={mv.num_active_windows}")
-            submode = mv.multiview_submode
-            if mode == Mode.PBP:
-                layout = Pbp(
-                    submode=submode,
-                    w1=window(mode, W1),
-                    w2=window(mode, W2),
-                )
-            elif mode == Mode.TRIPLE:
-                layout = Triple(
-                    submode=submode,
-                    w1=window(mode, W1),
-                    w2=window(mode, W2),
-                    w3=window(mode, W3),
-                )
-            else:
-                layout = Quad(
-                    submode=submode,
-                    w1=window(mode, W1),
-                    w2=window(mode, W2),
-                    w3=window(mode, W3),
-                    w4=window(mode, W4),
-                )
-    return JtechOutput(layout=layout, audio_from=window_input(mv, mv.selected_window))
+    return mv.screen_state.render()
 
 
 def update_jtech_output(mv: Multiviewer) -> None:
