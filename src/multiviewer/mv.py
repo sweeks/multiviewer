@@ -244,30 +244,30 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     command = args[0]
     if mv.power == Power.OFF and command not in ["Power", "Power_on"]:
         return {}
-    tv = mv.screen.selected_tv()
+    screen = mv.screen
+    tv = screen.selected_tv()
     atv = mv.atvs.atv(tv)
-    screen_state = mv.screen
     match command:
         case "Activate_tv":
-            screen_state.activate_tv()
+            screen.activate_tv()
         case "Back":
             match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_back()
+                    screen.pressed_back()
         case "Down" | "S":
             match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_arrow(S)
+                    screen.pressed_arrow(S)
         case "Home":
             match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.toggle_submode()
+                    screen.toggle_submode()
         case "Info":
             return await info(mv)
         case "Launch":
@@ -277,7 +277,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_arrow(W)
+                    screen.pressed_arrow(W)
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
@@ -285,7 +285,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_play_pause()
+                    screen.pressed_play_pause()
         case "Power_on":
             if mv.power == Power.OFF:
                 mv.screen.selected_window_has_distinct_border = True
@@ -295,7 +295,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Remote":
             return remote(mv, tv)
         case "Deactivate_tv":
-            screen_state.deactivate_tv()
+            screen.deactivate_tv()
         case "Reset":
             reset(mv)
         case "Right" | "E":
@@ -303,7 +303,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_arrow(E)
+                    screen.pressed_arrow(E)
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -311,7 +311,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_select()
+                    screen.pressed_select()
         case "Sleep":
             atv.sleep()
         case "Test":
@@ -321,7 +321,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    screen_state.pressed_arrow(N)
+                    screen.pressed_arrow(N)
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
