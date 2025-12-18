@@ -175,19 +175,21 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Activate_tv":
             screen.activate_tv()
         case "Back":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
                     screen.pressed_back()
+        case "Deactivate_tv":
+            screen.deactivate_tv()
         case "Down" | "S":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
                     screen.pressed_arrow(Arrow.S)
         case "Home":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
@@ -197,7 +199,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
@@ -205,7 +207,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
@@ -216,14 +218,12 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Power":
             await toggle_power(mv)
         case "Remote":
-            mv.screen.remote(tv)
+            screen.remote(tv)
             return tv.to_int()
-        case "Deactivate_tv":
-            screen.deactivate_tv()
         case "Reset":
             reset(mv)
         case "Right" | "E":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
@@ -231,7 +231,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Screensaver":
             atv.screensaver()
         case "Select":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
@@ -241,7 +241,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Test":
             pass
         case "Up" | "N":
-            match mv.screen.remote_mode:
+            match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
