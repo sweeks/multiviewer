@@ -128,25 +128,6 @@ def tv2hdmi(tv: TV) -> Hdmi:
     raise AssertionError
 
 
-class RealClock:
-    def now(self) -> datetime:
-        return datetime.now()
-
-    def advance(self, _: float) -> None:
-        pass
-
-
-class VirtualClock:
-    def __init__(self) -> None:
-        self._now = datetime.now()
-
-    def now(self) -> datetime:
-        return self._now
-
-    def advance(self, seconds: float) -> None:
-        self._now += timedelta(seconds=seconds)
-
-
 @dataclass(slots=True)
 class ArrowPress:
     at: datetime
@@ -179,9 +160,6 @@ class MvScreen(Jsonable):
     selected_window: Window = W1
     selected_window_has_distinct_border: bool = True
     remote_mode: RemoteMode = MULTIVIEWER
-    clock: RealClock | VirtualClock = field(
-        default_factory=RealClock, metadata=json_field.omit
-    )
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
 
@@ -306,16 +284,8 @@ class MvScreen(Jsonable):
     def selected_tv(self) -> TV:
         return self.window_tv[self.selected_window]
 
-    def use_virtual_clock(self) -> None:
-        self.clock = VirtualClock()
-
-    def advance_clock(self, seconds: float) -> None:
-        self.clock.advance(seconds)
-
-    def remote(self, tv: TV) -> JSON:
-        this_press = RemotePress(
-            at=self.clock.now(), selected_window=self.selected_window
-        )
+    def remote(self, tv: TV, *, at: datetime) -> None:
+        this_press = RemotePress(at=at, selected_window=self.selected_window)
         last_press = self.last_remote_press
         if (
             last_press is not None
@@ -326,12 +296,10 @@ class MvScreen(Jsonable):
             self.last_remote_press = None
             # Flip again to cancel the single-tap mode change.
             self.toggle_remote_mode()
-            return tv.to_int()
         else:
             # Single tap
             self.last_remote_press = this_press
             self.toggle_remote_mode()
-            return {}
 
     def validate(self) -> None:
         assert_equal(set(self.window_tv.keys()), set(Mode.QUAD.windows()))
@@ -350,8 +318,6 @@ class MvScreen(Jsonable):
 
     def reset(self) -> None:
         new = MvScreen()
-        # Preserve existing clock
-        new.clock = self.clock
         self.window_tv = new.window_tv
         self.layout_mode = new.layout_mode
         self.num_active_windows = new.num_active_windows
@@ -363,20 +329,19 @@ class MvScreen(Jsonable):
         self.selected_window = new.selected_window
         self.selected_window_has_distinct_border = new.selected_window_has_distinct_border
         self.remote_mode = new.remote_mode
-        self.clock = new.clock
         self.last_arrow_press = None
         self.last_remote_press = None
 
-    def pressed_arrow(self, arrow: Arrow) -> None:
+    def pressed_arrow(self, arrow: Arrow, *, at: datetime) -> None:
         match self.layout_mode:
             case LayoutMode.MULTIVIEW:
-                self.pressed_arrow_in_multiview(arrow)
+                self.pressed_arrow_in_multiview(arrow, at=at)
             case LayoutMode.FULLSCREEN:
                 match self.fullscreen_mode:
                     case FullscreenMode.FULL:
                         self.pressed_arrow_in_full(arrow)
                     case FullscreenMode.PIP:
-                        self.pressed_arrow_in_pip(arrow)
+                        self.pressed_arrow_in_pip(arrow, at=at)
 
     def arrow_points_to(self, arrow: Arrow) -> Window | None:
         match self.num_active_windows:
@@ -448,9 +413,8 @@ class MvScreen(Jsonable):
                 self.full_window = self.prev_active_window(self.selected_window)
                 self.selected_window = self.full_window
 
-    def pressed_arrow_in_pip(self, arrow: Arrow) -> None:
+    def pressed_arrow_in_pip(self, arrow: Arrow, *, at: datetime) -> None:
         snapshot_selected_window = self.selected_window
-        at = self.clock.now()
         last_press = self.last_arrow_press
         if (
             last_press is not None
@@ -496,12 +460,11 @@ class MvScreen(Jsonable):
             selected_window=snapshot_selected_window,
         )
 
-    def pressed_arrow_in_multiview(self, arrow: Arrow) -> None:
+    def pressed_arrow_in_multiview(self, arrow: Arrow, *, at: datetime) -> None:
         # If single tap, change the selected window to the pointed-to window. If double
         # tap, swap the previously selected window with the previously pointed-to window.
         self.selected_window_has_distinct_border = True
         last_press = self.last_arrow_press
-        at = self.clock.now()
         if (
             last_press is not None
             and arrow == last_press.arrow

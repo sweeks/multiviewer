@@ -1,20 +1,41 @@
 from __future__ import annotations
 
 # Standard library
+from datetime import datetime, timedelta
 from pathlib import Path
 
 # Third-party
 from dataclasses_json import dataclass_json
 
 # Local package
+from . import json_field
 from .atv import ATVs
 from .tv import TV
-from .base import JSON, Jsonable, dataclass, debug_print, fail, log
+from .base import JSON, Jsonable, dataclass, debug_print, fail, log, field
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
 from .mv_screen import Arrow, MvScreen, RemoteMode
 from .volume import Volume
+
+
+class RealClock:
+    def now(self) -> datetime:
+        return datetime.now()
+
+    def advance(self, _: float) -> None:
+        pass
+
+
+class VirtualClock:
+    def __init__(self) -> None:
+        self._now = datetime.now()
+
+    def now(self) -> datetime:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += timedelta(seconds=seconds)
 
 
 @dataclass_json
@@ -25,6 +46,9 @@ class Multiviewer(Jsonable):
     atvs: ATVs = ATVs.field()
     jtech_manager: JtechManager = JtechManager.field()
     volume: Volume = Volume.field()
+    clock: RealClock | VirtualClock = field(
+        default_factory=RealClock, metadata=json_field.omit
+    )
 
 
 def selected_tv(mv: Multiviewer) -> TV:
@@ -51,11 +75,15 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 def use_virtual_clock(mv: Multiviewer) -> None:
-    mv.screen.use_virtual_clock()
+    mv.clock = VirtualClock()
 
 
 def advance_clock(mv: Multiviewer, seconds: float) -> None:
-    mv.screen.advance_clock(seconds)
+    mv.clock.advance(seconds)
+
+
+def now(mv: Multiviewer) -> datetime:
+    return mv.clock.now()
 
 
 async def initialize(mv: Multiviewer):
@@ -161,7 +189,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.S)
+                    screen.pressed_arrow(Arrow.S, at=now(mv))
         case "Home":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -177,7 +205,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.W)
+                    screen.pressed_arrow(Arrow.W, at=now(mv))
         case "Mute":
             mv.volume.toggle_mute()
         case "Play_pause":
@@ -196,7 +224,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case Power.ON:
                     await power_off(mv)
         case "Remote":
-            screen.remote(tv)
+            screen.remote(tv, at=now(mv))
             return tv.to_int()
         case "Reset":
             reset(mv)
@@ -205,7 +233,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.E)
+                    screen.pressed_arrow(Arrow.E, at=now(mv))
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -221,7 +249,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.N)
+                    screen.pressed_arrow(Arrow.N, at=now(mv))
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
