@@ -18,6 +18,8 @@ class RemoteMode:
 MULTIVIEWER: RemoteMode
 
 class MvScreen:
+    @classmethod
+    def field(cls) -> MvScreen: ...
     remote_mode: RemoteMode
     selected_window_has_distinct_border: bool
     def selected_tv(self) -> TV: ...

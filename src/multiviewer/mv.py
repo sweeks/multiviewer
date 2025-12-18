@@ -27,7 +27,7 @@ class Multiviewer(Jsonable):
     # power is the state of the virtual multiviewer.  During initialization, we ensure
     # that the physical devices match it.
     power: Power = Power.ON
-    screen: MvScreen = field(default_factory=MvScreen)
+    screen: MvScreen = MvScreen.field()
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
     jtech_manager: JtechManager = JtechManager.field()

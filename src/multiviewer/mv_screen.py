@@ -182,8 +182,16 @@ class MvScreen(Jsonable):
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
     )
-    last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
-    last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
+    last_arrow_press: ArrowPress | None = field(
+        default=None, metadata=json_field.omit
+    )
+    last_remote_press: RemotePress | None = field(
+        default=None, metadata=json_field.omit
+    )
+
+    @classmethod
+    def field(cls) -> "MvScreen":
+        return field(default_factory=MvScreen)
 
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
