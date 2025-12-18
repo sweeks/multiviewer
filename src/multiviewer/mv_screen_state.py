@@ -299,7 +299,9 @@ class MvScreen(Jsonable):
         return self.window_tv[self.selected_window]
 
     def remote(self, tv: TV) -> JSON:
-        this_press = RemotePress(at=self.clock.now(), selected_window=self.selected_window)
+        this_press = RemotePress(
+            at=self.clock.now(), selected_window=self.selected_window
+        )
         last_press = self.last_remote_press
         if (
             last_press is not None
