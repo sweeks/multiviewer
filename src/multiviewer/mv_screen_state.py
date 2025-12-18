@@ -102,6 +102,10 @@ class MvScreenState(Jsonable):
     selected_window_has_distinct_border: bool = True
     remote_mode: RemoteMode = MULTIVIEWER
 
+    def activate_tv(self) -> None:
+        if self.num_active_windows < max_num_windows:
+            self.num_active_windows += 1
+
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])
 

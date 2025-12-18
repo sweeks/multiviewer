@@ -577,11 +577,6 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
             mv.selected_window = points_to
 
 
-def activate_tv(mv: Multiviewer) -> None:
-    if mv.num_active_windows < max_num_windows:
-        mv.num_active_windows += 1
-
-
 def demote_tv(mv: Multiviewer, w1: Window) -> None:
     last = last_active_window(mv)
     while w1 != last:
@@ -729,9 +724,10 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         return {}
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
+    screen_state = mv.screen_state
     match command:
         case "Activate_tv":
-            activate_tv(mv)
+            screen_state.activate_tv()
         case "Back":
             match mv.remote_mode:
                 case RemoteMode.APPLE_TV:
