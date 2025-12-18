@@ -288,6 +288,9 @@ class MvScreen(Jsonable):
     def pip_location(self) -> PipLocation:
         return self.pip_location_by_tv[self.window_tv[self.full_window]]
 
+    def selected_tv(self) -> TV:
+        return self.window_tv[self.selected_window]
+
     def validate(self) -> None:
         assert_equal(set(self.window_tv.keys()), set(Mode.QUAD.windows()))
         assert_equal(len(set(self.window_tv.values())), len(self.window_tv))

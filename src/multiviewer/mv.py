@@ -74,20 +74,10 @@ class Multiviewer(Jsonable):
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
-def window_tv(mv: Multiviewer, w: Window) -> TV:
-    return mv.screen.window_tv[w]
-
-
-def window_input(mv: Multiviewer, w: Window) -> Hdmi:
-    return mv.screen.window_input(w)
-
-
-def pip_location(mv: Multiviewer) -> PipLocation:
-    return mv.screen.pip_location()
 
 
 def selected_tv(mv: Multiviewer) -> TV:
-    return window_tv(mv, mv.screen.selected_window)
+    return mv.screen.selected_tv()
 
 
 def validate(mv: Multiviewer) -> None:
@@ -208,7 +198,7 @@ def toggle_mute(mv: Multiviewer) -> None:
 
 def adjust_volume(mv: Multiviewer, by: int) -> None:
     mv.volume.unmute()
-    mv.volume_delta_by_tv[selected_tv(mv)] += by
+    mv.volume_delta_by_tv[mv.screen.selected_tv()] += by
 
 
 def describe_volume(mv: Multiviewer) -> str:
@@ -254,7 +244,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     command = args[0]
     if mv.power == Power.OFF and command not in ["Power", "Power_on"]:
         return {}
-    tv = selected_tv(mv)
+    tv = mv.screen.selected_tv()
     atv = mv.atvs.atv(tv)
     screen_state = mv.screen
     match command:
