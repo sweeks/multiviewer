@@ -39,6 +39,7 @@ class VirtualClock:
     def advance(self, seconds: float) -> None:
         self._now += timedelta(seconds=seconds)
 
+
 H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3

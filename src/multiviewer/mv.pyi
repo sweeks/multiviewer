@@ -23,11 +23,9 @@ class Power:
     ON: Power
     OFF: Power
 
-
 class Clock:
     def now(self) -> datetime: ...
     def advance(self, seconds: float) -> None: ...
-
 
 class Multiviewer:
     def __init__(self) -> NoReturn:
