@@ -175,4 +175,6 @@ class MvScreenState(Jsonable):
                     )
             case _:
                 fail("invalid layout_mode", self.layout_mode)
-        return JtechOutput(layout=layout, audio_from=self.window_input(self.selected_window))
+        return JtechOutput(
+            layout=layout, audio_from=self.window_input(self.selected_window)
+        )
