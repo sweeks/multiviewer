@@ -5,6 +5,9 @@
 - Rule: never change code unless explicitly instructed to do so; discuss designs and agree
   on them before writing any code; only start coding after I explicitly say "code it".
 - Rule: keep changes minimal and focused on the current goal; avoid unrelated rewrites.
+- Rule: when cleaning unused imports, use the static analyzer (Pyright/Pylance) or a quick
+  AST-based check (e.g., `.venv/bin/python - <<'PY' ...`) to identify and remove only what
+  is truly unused; keep it fast and automated rather than guessing.
 - Reading note: when asked to "read for-codex", do not summarize—it's just to refresh your
   context.
 - Project: multiviewer remote-control daemon for J-Tech MV41A + four Apple TVs + LG
