@@ -258,6 +258,11 @@ class ATVs:
             self.atv(tv).wake()
         await self.synced()
 
+    async def power_off(self) -> None:
+        for tv in TV.all():
+            self.atv(tv).sleep()
+        await self.synced()
+
     async def shutdown(self):
         await self.synced()
         await aio.gather(*(atv.close() for atv in self.by_tv.values()))

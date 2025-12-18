@@ -101,9 +101,7 @@ async def power_off(mv: Multiviewer) -> None:
     log("turning off power")
     mv.power = Power.OFF
     mv.jtech_manager.set_power(Power.OFF)
-    for tv in TV.all():
-        mv.atvs.atv(tv).sleep()
-    await mv.atvs.synced()
+    await mv.atvs.power_off()
     log("power is off")
 
 
