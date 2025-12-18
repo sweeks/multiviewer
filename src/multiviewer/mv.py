@@ -216,7 +216,7 @@ async def info(mv: Multiviewer) -> str:
     return f"{output} {volume}"
 
 
-def remote(mv: Multiviewer, tv: TV) -> JSON:
+def remote(mv: Multiviewer, tv: TV):
     this_press = RemotePress(
         at=mv.screen.clock.now(), selected_window=mv.screen.selected_window
     )
@@ -230,12 +230,10 @@ def remote(mv: Multiviewer, tv: TV) -> JSON:
         mv.last_remote_press = None
         # Flip again to cancel the single-tap mode change.
         mv.screen.toggle_remote_mode()
-        return tv.to_int()
     else:
         # Single tap
         mv.last_remote_press = this_press
         mv.screen.toggle_remote_mode()
-        return {}
 
 
 async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
@@ -293,7 +291,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Power":
             await toggle_power(mv)
         case "Remote":
-            return remote(mv, tv)
+            remote(mv, tv)
+            return tv.to_int()
         case "Deactivate_tv":
             screen.deactivate_tv()
         case "Reset":
