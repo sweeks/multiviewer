@@ -119,11 +119,7 @@ async def power_on(mv: Multiviewer) -> None:
     log("turning on power")
     set_power(mv, Power.ON)
     mv.screen.power_on()
-    # We reset all the volume deltas to zero, because this is a new TV session for the
-    # user.  This causes the initial update_jtech_output to set the desired volume_delta
-    # to zero, which in turn causes the Volume manager to set the actual volume_delta
-    # to zero.
-    mv.volume.reset()
+    mv.volume.power_on()
     # Waking TV1 turns on the LG via CEC.
     for tv in TV.all():
         mv.atvs.atv(tv).wake()
@@ -131,13 +127,22 @@ async def power_on(mv: Multiviewer) -> None:
     log("power is on")
 
 
+def describe_volume(mv: Multiviewer) -> str:
+    return mv.volume.describe_volume()
+
+
+async def describe_jtech_output(mv: Multiviewer) -> str:
+    output = await mv.jtech_manager.current_output()
+    return output.one_line_description()
+
+
 def adjust_volume(mv: Multiviewer, by: int) -> None:
     mv.volume.adjust_volume(mv.screen.selected_tv(), by)
 
 
 async def info(mv: Multiviewer) -> str:
-    output = (await mv.jtech_manager.current_output()).one_line_description()
-    volume = mv.volume.describe_volume()
+    output = await describe_jtech_output(mv)
+    volume = describe_volume(mv)
     return f"{output} {volume}"
 
 
