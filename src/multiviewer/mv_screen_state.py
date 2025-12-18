@@ -163,7 +163,9 @@ class MvScreenState(Jsonable):
             self.layout_mode = MULTIVIEW
 
     def pressed_play_pause(self) -> None:
-        self.selected_window_has_distinct_border = not self.selected_window_has_distinct_border
+        self.selected_window_has_distinct_border = (
+            not self.selected_window_has_distinct_border
+        )
 
     def toggle_remote_mode(self) -> None:
         self.remote_mode = self.remote_mode.flip()
