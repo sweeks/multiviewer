@@ -244,17 +244,13 @@ def render(mv: Multiviewer) -> JtechOutput:
     return mv.screen.render()
 
 
-def update_jtech_output(mv: Multiviewer) -> None:
-    mv.jtech_manager.set_output(render(mv))
-    mv.volume.set_for_tv(selected_tv(mv))
-
-
-async def do_command_and_update_jtech_output(mv: Multiviewer, args: list[str]) -> JSON:
+async def do_command_and_update_devices(mv: Multiviewer, args: list[str]) -> JSON:
     if False:
         debug_print(args, mv)
     result = await do_command(mv, args)
     validate(mv)
-    update_jtech_output(mv)
+    mv.jtech_manager.set_output(render(mv))
+    mv.volume.set_for_tv(selected_tv(mv))
     return result
 
 

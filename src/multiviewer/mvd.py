@@ -48,7 +48,7 @@ async def become_daemon():
             log(f"{args}")
         t0 = time.perf_counter()
         try:
-            return await mv.do_command_and_update_jtech_output(the_mv, args)
+            return await mv.do_command_and_update_devices(the_mv, args)
         except Exception as e:
             log_exc(e)
         finally:

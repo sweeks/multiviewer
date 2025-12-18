@@ -50,11 +50,11 @@ async def tv_do(s, e=None):
                 fail("Double command requires an inner command")
             result = None
             for _ in range(2):
-                result = await mv.do_command_and_update_jtech_output(mv_obj, parts[1:])
+                result = await mv.do_command_and_update_devices(mv_obj, parts[1:])
             last = json.dumps(result)
             mv.advance_clock(mv_obj, 1.0)
         else:
-            j = await mv.do_command_and_update_jtech_output(mv_obj, parts)
+            j = await mv.do_command_and_update_devices(mv_obj, parts)
             last = json.dumps(j)
             mv.advance_clock(mv_obj, 1.0)
     if e is not None:
