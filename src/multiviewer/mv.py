@@ -577,31 +577,6 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
             mv.selected_window = points_to
 
 
-def demote_tv(mv: Multiviewer, w1: Window) -> None:
-    last = last_active_window(mv)
-    while w1 != last:
-        w2 = next_active_window(mv, w1)
-        swap_window_tvs(mv, w1, w2)
-        w1 = w2
-
-
-def deactivate_tv(mv: Multiviewer) -> None:
-    if mv.num_active_windows == 1:
-        return
-    demote_tv(mv, mv.selected_window)
-    mv.num_active_windows -= 1
-    mv.selected_window = W1
-    mv.selected_window_has_distinct_border = True
-    if mv.layout_mode == FULLSCREEN:
-        mv.full_window = W1
-        if mv.fullscreen_mode == FullscreenMode.PIP:
-            set_pip_window(mv)
-    if mv.num_active_windows == 1:
-        mv.layout_mode = FULLSCREEN
-        mv.fullscreen_mode = FULL
-        mv.full_window = W1
-
-
 def set_pip_window(mv: Multiviewer) -> None:
     mv.pip_window = next_active_window(mv, mv.full_window)
 
@@ -773,7 +748,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Remote":
             return remote(mv, tv)
         case "Deactivate_tv":
-            deactivate_tv(mv)
+            screen_state.deactivate_tv()
         case "Reset":
             reset(mv)
         case "Right" | "E":

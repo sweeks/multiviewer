@@ -106,6 +106,44 @@ class MvScreenState(Jsonable):
         if self.num_active_windows < max_num_windows:
             self.num_active_windows += 1
 
+    def last_active_window(self) -> Window:
+        return Window.of_int(self.num_active_windows)
+
+    def next_active_window(self, w: Window) -> Window:
+        return Window.of_int(w.to_int() % self.num_active_windows + 1)
+
+    def set_pip_window(self) -> None:
+        self.pip_window = self.next_active_window(self.full_window)
+
+    def demote_tv(self, w1: Window) -> None:
+        last = self.last_active_window()
+        while w1 != last:
+            w2 = self.next_active_window(w1)
+            self.swap_window_tvs(w1, w2)
+            w1 = w2
+
+    def swap_window_tvs(self, w1: Window, w2: Window) -> None:
+        tv1 = self.window_tv[w1]
+        tv2 = self.window_tv[w2]
+        self.window_tv[w1] = tv2
+        self.window_tv[w2] = tv1
+
+    def deactivate_tv(self) -> None:
+        if self.num_active_windows == 1:
+            return
+        self.demote_tv(self.selected_window)
+        self.num_active_windows -= 1
+        self.selected_window = W1
+        self.selected_window_has_distinct_border = True
+        if self.layout_mode == FULLSCREEN:
+            self.full_window = W1
+            if self.fullscreen_mode == FullscreenMode.PIP:
+                self.set_pip_window()
+        if self.num_active_windows == 1:
+            self.layout_mode = FULLSCREEN
+            self.fullscreen_mode = FULL
+            self.full_window = W1
+
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])
 
