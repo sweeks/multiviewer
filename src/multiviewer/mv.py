@@ -139,10 +139,6 @@ async def toggle_power(mv: Multiviewer) -> None:
             await power_off(mv)
 
 
-def toggle_mute(mv: Multiviewer) -> None:
-    mv.volume.toggle_mute()
-
-
 def adjust_volume(mv: Multiviewer, by: int) -> None:
     mv.volume.adjust_volume(mv.screen.selected_tv(), by)
 
@@ -196,7 +192,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.MULTIVIEWER:
                     screen.pressed_arrow(Arrow.W)
         case "Mute":
-            toggle_mute(mv)
+            mv.volume.toggle_mute()
         case "Play_pause":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
