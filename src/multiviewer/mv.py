@@ -238,7 +238,9 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
+    clock = mv.screen_state.clock
     mv.screen_state = MvScreenState()
+    mv.screen_state.clock = clock
     mv.last_arrow_press = None
     mv.last_remote_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()

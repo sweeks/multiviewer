@@ -11,3 +11,16 @@ fi
 
 "$ROOT/bin/format-code.sh"
 "$ROOT/bin/format-docs.sh"
+
+log="$(mktemp)"
+trap 'rm -f "$log"' EXIT
+
+# Run the test suite and fail the commit if any Expect/Actual mismatches appear.
+if ! "$ROOT/bin/test-all.sh" | tee "$log"; then
+  exit 1
+fi
+
+if grep -q "EXPECT:" "$log"; then
+  echo "Pre-commit: Expect/Actual mismatches detected. Fix tests before committing." >&2
+  exit 1
+fi
