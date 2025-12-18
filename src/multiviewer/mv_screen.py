@@ -9,7 +9,7 @@ from dataclasses_json import dataclass_json
 
 # Local package
 from .base import *
-from .atv import TV
+from .tv import TV
 from . import json_field
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Submode, Window

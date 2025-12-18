@@ -7,7 +7,8 @@ from pathlib import Path
 from dataclasses_json import dataclass_json
 
 # Local package
-from .atv import TV, ATVs
+from .atv import ATVs
+from .tv import TV
 from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
 from .jtech import Power
 from .jtech_manager import JtechManager

@@ -2,12 +2,7 @@
 
 # Local package
 from .base import *
-
-class TV(MyStrEnum):
-    TV1: TV
-    TV2: TV
-    TV3: TV
-    TV4: TV
+from .tv import TV
 
 class ATV:
     """ "A controller for a single Apple TV."""
