@@ -11,11 +11,6 @@ class Arrow:
     W: Arrow
     S: Arrow
 
-N: Arrow
-E: Arrow
-W: Arrow
-S: Arrow
-
 class RemoteMode:
     APPLE_TV: RemoteMode
     MULTIVIEWER: RemoteMode

@@ -12,16 +12,7 @@ from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
-from .mv_screen import (
-    E,
-    N,
-    MULTIVIEWER,
-    S,
-    W,
-    MvScreen,
-    RemoteMode,
-    VirtualClock,
-)
+from .mv_screen import Arrow, MULTIVIEWER, MvScreen, RemoteMode, VirtualClock
 from .volume import Volume
 
 
@@ -204,7 +195,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(S)
+                    screen.pressed_arrow(Arrow.S)
         case "Home":
             match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -220,7 +211,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(W)
+                    screen.pressed_arrow(Arrow.W)
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
@@ -246,7 +237,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(E)
+                    screen.pressed_arrow(Arrow.E)
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -264,7 +255,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(N)
+                    screen.pressed_arrow(Arrow.N)
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
