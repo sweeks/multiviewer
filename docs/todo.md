@@ -1,5 +1,3 @@
-# tests.py: some way so we don't have to wait to prevent double tap
-
 # screensaver should demote TV to last hidden window
 
 # it should never be a double tap if there is an intervening button
