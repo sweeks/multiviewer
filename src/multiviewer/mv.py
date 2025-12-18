@@ -40,7 +40,7 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
-    mv.screen = mv.screen.reset()
+    mv.screen.reset()
     mv.volume.reset()
 
 

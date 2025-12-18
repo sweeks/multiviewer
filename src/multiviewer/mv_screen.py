@@ -344,10 +344,24 @@ class MvScreen(Jsonable):
                 assert_(self.num_active_windows >= 2)
                 assert_(self.selected_window in v)
 
-    def reset(self) -> "MvScreen":
+    def reset(self) -> None:
         new = MvScreen()
+        # Preserve existing clock
         new.clock = self.clock
-        return new
+        self.window_tv = new.window_tv
+        self.layout_mode = new.layout_mode
+        self.num_active_windows = new.num_active_windows
+        self.multiview_submode = new.multiview_submode
+        self.fullscreen_mode = new.fullscreen_mode
+        self.full_window = new.full_window
+        self.pip_window = new.pip_window
+        self.pip_location_by_tv = new.pip_location_by_tv
+        self.selected_window = new.selected_window
+        self.selected_window_has_distinct_border = new.selected_window_has_distinct_border
+        self.remote_mode = new.remote_mode
+        self.clock = new.clock
+        self.last_arrow_press = None
+        self.last_remote_press = None
 
     def pressed_arrow(self, arrow: Arrow) -> None:
         match self.layout_mode:
