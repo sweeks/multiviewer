@@ -17,10 +17,6 @@ from .mv_screen import Arrow, MULTIVIEWER, MvScreen, RemoteMode
 from .volume import Volume
 
 
-def volume_deltas_zero():
-    return dict.fromkeys(TV.all(), 0)
-
-
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -28,7 +24,6 @@ class Multiviewer(Jsonable):
     # that the physical devices match it.
     power: Power = Power.ON
     screen: MvScreen = MvScreen.field()
-    volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
@@ -48,7 +43,6 @@ async def shutdown(mv: Multiviewer) -> None:
 
 def reset(mv: Multiviewer) -> None:
     mv.screen = mv.screen.reset()
-    mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
 
 
@@ -130,7 +124,7 @@ async def power_on(mv: Multiviewer) -> None:
     # user.  This causes the initial update_jtech_output to set the desired volume_delta
     # to zero, which in turn causes the Volume manager to set the actual volume_delta
     # to zero.
-    mv.volume_delta_by_tv = volume_deltas_zero()
+    mv.volume.reset()
     mv.screen.remote_mode = MULTIVIEWER
     # Waking TV1 turns on the LG via CEC.
     for tv in TV.all():
@@ -152,8 +146,7 @@ def toggle_mute(mv: Multiviewer) -> None:
 
 
 def adjust_volume(mv: Multiviewer, by: int) -> None:
-    mv.volume.unmute()
-    mv.volume_delta_by_tv[mv.screen.selected_tv()] += by
+    mv.volume.adjust_volume(mv.screen.selected_tv(), by)
 
 
 def describe_volume(mv: Multiviewer) -> str:
@@ -272,7 +265,7 @@ def render(mv: Multiviewer) -> JtechOutput:
 
 def update_jtech_output(mv: Multiviewer) -> None:
     mv.jtech_manager.set_output(render(mv))
-    mv.volume.set_volume_delta(mv.volume_delta_by_tv[selected_tv(mv)])
+    mv.volume.set_for_tv(mv.screen.selected_tv())
 
 
 async def do_command_and_update_jtech_output(mv: Multiviewer, args: list[str]) -> JSON:

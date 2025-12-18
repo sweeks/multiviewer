@@ -7,6 +7,8 @@ import dataclasses
 from . import wf2ir
 from .aio import Event, Task
 from .base import *
+from .json_field import json_dict
+from .tv import TV
 
 
 @dataclass_json
@@ -20,6 +22,10 @@ class Volume:
     synced_event: Event = Event.field()
     wake_event: Event = Event.field()
     worker_task: Task = Task.field()
+    volume_delta_by_tv: dict[TV, int] = dataclasses.field(
+        default_factory=lambda: dict.fromkeys(TV.all(), 0),
+        metadata=json_dict(TV, int),
+    )
 
     @classmethod
     def field(cls):
@@ -101,6 +107,17 @@ class Volume:
         self.desired_mute = False
         self.current_volume_delta = 0
         self.desired_volume_delta = 0
+        self.volume_delta_by_tv = dict.fromkeys(TV.all(), 0)
 
     def set_should_send_commands_to_device(self, b: bool) -> None:
         self.should_send_commands_to_device = b
+
+    def adjust_volume(self, tv: TV, by: int) -> None:
+        self.unmute()
+        self.volume_delta_by_tv[tv] += by
+
+    def set_for_tv(self, tv: TV) -> None:
+        self.set_volume_delta(self.volume_delta_by_tv[tv])
+
+    def volume_delta_for(self, tv: TV) -> int:
+        return self.volume_delta_by_tv[tv]
