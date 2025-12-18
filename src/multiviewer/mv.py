@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # Standard library
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 # Third-party
@@ -17,12 +17,18 @@ from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import JtechManager
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
 from .mv_screen_state import (
+    DOUBLE_TAP_MAX_DURATION,
+    Arrow,
+    E,
     FULL,
     FULLSCREEN,
+    N,
     MULTIVIEW,
     PIP,
     APPLE_TV,
     MULTIVIEWER,
+    S,
+    W,
     W1,
     W1_PROMINENT,
     W2,
@@ -42,9 +48,6 @@ from .mv_screen_state import (
 )
 from .volume import Volume
 
-DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
-
-
 H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3
@@ -53,22 +56,6 @@ H4 = Hdmi.H4
 
 def volume_deltas_zero():
     return dict.fromkeys(TV.all(), 0)
-
-
-def initial_pip_location_by_tv():
-    return dict.fromkeys(TV.all(), PipLocation.NE)
-
-
-def initial_window_tv():
-    return {W1: TV.TV1, W2: TV.TV2, W3: TV.TV3, W4: TV.TV4}
-
-
-@dataclass(slots=True)
-class ArrowPress:
-    at: datetime
-    arrow: Arrow
-    points_to: Window | None
-    selected_window: Window
 
 
 @dataclass(slots=True)
@@ -86,7 +73,6 @@ class Multiviewer(Jsonable):
     screen_state: MvScreenState = field(default_factory=MvScreenState)
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
-    last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
@@ -241,7 +227,6 @@ def reset(mv: Multiviewer) -> None:
     clock = mv.screen_state.clock
     mv.screen_state = MvScreenState()
     mv.screen_state.clock = clock
-    mv.last_arrow_press = None
     mv.last_remote_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
@@ -342,249 +327,6 @@ async def toggle_power(mv: Multiviewer) -> None:
             await power_off(mv)
 
 
-def window_is_prominent(mv: Multiviewer, w: Window) -> bool:
-    if w != W1:
-        return False
-    match mv.layout_mode:
-        case LayoutMode.FULLSCREEN:
-            return True
-        case LayoutMode.MULTIVIEW:
-            return mv.multiview_submode == W1_PROMINENT
-
-
-def swap_window_tvs(mv: Multiviewer, w1: Window, w2: Window) -> None:
-    if False:
-        debug_print(f"{w1} <-> {w2}")
-    window_tv = mv.window_tv
-    tv1 = window_tv[w1]
-    tv2 = window_tv[w2]
-    window_tv[w1] = tv2
-    window_tv[w2] = tv1
-
-
-class Arrow(MyStrEnum):
-    N = auto()
-    E = auto()
-    W = auto()
-    S = auto()
-
-
-N = Arrow.N
-E = Arrow.E
-W = Arrow.W
-S = Arrow.S
-
-_arrow_points_to = {
-    2: {W1: {E: W2}, W2: {W: W1}},
-    3: {
-        W1: {N: W2, S: W3},
-        W2: {W: W1, S: W3},
-        W3: {
-            N: W2,
-            W: W1,
-        },
-    },
-    (4, WINDOWS_SAME): {
-        W1: {E: W2, W: W4, S: W3},
-        W2: {E: W3, W: W1, S: W4},
-        W3: {N: W1, E: W4, W: W2},
-        W4: {
-            N: W2,
-            E: W1,
-            W: W3,
-        },
-    },
-    (4, W1_PROMINENT): {
-        W1: {N: W2, E: W3, S: W4},
-        W2: {W: W1, S: W3},
-        W3: {N: W2, W: W1, S: W4},
-        W4: {N: W3, W: W1},
-    },
-}
-
-
-def arrow_points_to(mv: Multiviewer, arrow: Arrow) -> Window | None:
-    if False:
-        debug_print(arrow)
-    match mv.num_active_windows:
-        case 2 | 3:
-            key = mv.num_active_windows
-        case 4:
-            key = (mv.num_active_windows, mv.multiview_submode)
-        case _:
-            fail("arrow_points_to invalid num_active_windows", mv.num_active_windows)
-    return _arrow_points_to[key][mv.selected_window].get(arrow)
-
-
-def pressed_arrow_in_full(mv: Multiviewer, arrow: Arrow) -> None:
-    match arrow:
-        case Arrow.N | Arrow.S:
-            pass
-        case Arrow.E:
-            mv.full_window = next_active_window(mv, mv.selected_window)
-            mv.selected_window = mv.full_window
-        case Arrow.W:
-            mv.full_window = prev_active_window(mv, mv.selected_window)
-            mv.selected_window = mv.full_window
-
-
-def rotate_pip_window(mv: Multiviewer, direction: Arrow) -> None:
-    if direction == Arrow.E:
-        w = next_active_window(mv, mv.pip_window)
-        if w == mv.full_window:
-            w = next_active_window(mv, w)
-    elif direction == Arrow.W:
-        w = prev_active_window(mv, mv.pip_window)
-        if w == mv.full_window:
-            w = prev_active_window(mv, w)
-    else:
-        fail("invalid rotate direction", direction)
-    mv.pip_window = w
-
-
-def from_pip_arrow_points_to(mv: Multiviewer, arrow: Arrow) -> PipLocation | None:
-    assert mv.layout_mode == FULLSCREEN and mv.fullscreen_mode == PIP
-    match (pip_location(mv), arrow):
-        case (PipLocation.NW, Arrow.E):
-            return PipLocation.NE
-        case (PipLocation.NW, Arrow.S):
-            return PipLocation.SW
-        case (PipLocation.NE, Arrow.W):
-            return PipLocation.NW
-        case (PipLocation.NE, Arrow.S):
-            return PipLocation.SE
-        case (PipLocation.SW, Arrow.N):
-            return PipLocation.NW
-        case (PipLocation.SW, Arrow.E):
-            return PipLocation.SE
-        case (PipLocation.SE, Arrow.N):
-            return PipLocation.NE
-        case (PipLocation.SE, Arrow.W):
-            return PipLocation.SW
-    return None
-
-
-def arrow_points_from_full_to_pip(mv: Multiviewer, arrow: Arrow) -> bool:
-    if arrow not in (Arrow.N, Arrow.S):
-        return False
-    loc = pip_location(mv)
-    return (loc in (PipLocation.NW, PipLocation.NE) and arrow == Arrow.N) or (
-        loc in (PipLocation.SW, PipLocation.SE) and arrow == Arrow.S
-    )
-
-
-def arrow_points_from_pip_to_full(mv: Multiviewer, arrow: Arrow) -> bool:
-    return arrow in (Arrow.N, Arrow.S) and not arrow_points_from_full_to_pip(mv, arrow)
-
-
-def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
-    snapshot_selected_window = mv.selected_window
-    at = mv.screen_state.clock.now()
-    last_press = mv.last_arrow_press
-    if (
-        last_press is not None
-        and arrow == last_press.arrow
-        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
-    ):
-        # Double tap -- undo single-tap effect and change PIP location.
-        mv.selected_window = last_press.selected_window
-        match arrow:
-            case Arrow.E:
-                rotate_pip_window(mv, Arrow.W)
-            case Arrow.W:
-                rotate_pip_window(mv, Arrow.E)
-            case Arrow.N | Arrow.S:
-                pass
-        pip_loc = from_pip_arrow_points_to(mv, arrow)
-        if pip_loc is not None:
-            mv.pip_location_by_tv[window_tv(mv, mv.full_window)] = pip_loc
-        mv.last_arrow_press = None
-        return
-    # Single tap
-    pip_is_selected = mv.selected_window == mv.pip_window
-    match arrow:
-        case Arrow.E:
-            rotate_pip_window(mv, Arrow.E)
-            if pip_is_selected:
-                mv.selected_window = mv.pip_window
-        case Arrow.W:
-            rotate_pip_window(mv, Arrow.W)
-            if pip_is_selected:
-                mv.selected_window = mv.pip_window
-        case Arrow.N | Arrow.S:
-            if pip_is_selected:
-                if arrow_points_from_pip_to_full(mv, arrow):
-                    mv.selected_window = mv.full_window
-            else:
-                if arrow_points_from_full_to_pip(mv, arrow):
-                    mv.selected_window = mv.pip_window
-    mv.last_arrow_press = ArrowPress(
-        arrow=arrow,
-        points_to=None,
-        at=at,
-        selected_window=snapshot_selected_window,
-    )
-
-
-def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
-    # If single tap, change the selected window to the pointed-to window. If double
-    # tap, swap the previously selected window with the previously pointed-to window.
-    mv.selected_window_has_distinct_border = True
-    last_press = mv.last_arrow_press
-    at = mv.screen_state.clock.now()
-    if (
-        last_press is not None
-        and arrow == last_press.arrow
-        and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
-    ):
-        # Double tap
-        assert last_press.points_to is not None
-        log_double_tap_duration(at - last_press.at)
-        mv.last_arrow_press = None
-        swap_window_tvs(mv, last_press.selected_window, last_press.points_to)
-        if window_is_prominent(mv, last_press.selected_window):
-            mv.selected_window = last_press.selected_window
-        else:
-            mv.selected_window = last_press.points_to
-    else:
-        points_to = arrow_points_to(mv, arrow)
-        if points_to is not None:
-            # Single tap
-            mv.last_arrow_press = ArrowPress(
-                arrow=arrow,
-                points_to=points_to,
-                at=at,
-                selected_window=mv.selected_window,
-            )
-            mv.selected_window = points_to
-
-
-def set_pip_window(mv: Multiviewer) -> None:
-    mv.pip_window = next_active_window(mv, mv.full_window)
-
-
-def enter_multiview(mv: Multiviewer) -> None:
-    if mv.num_active_windows >= 2:
-        mv.layout_mode = MULTIVIEW
-        mv.selected_window_has_distinct_border = True
-        if not is_visible(mv, mv.selected_window):
-            swap_window_tvs(mv, W1, mv.selected_window)
-            mv.selected_window = W1
-
-
-def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
-    if False:
-        debug_print(arrow)
-    match mv.layout_mode:
-        case LayoutMode.MULTIVIEW:
-            pressed_arrow_in_multiview(mv, arrow)
-        case LayoutMode.FULLSCREEN:
-            match mv.fullscreen_mode:
-                case FullscreenMode.FULL:
-                    pressed_arrow_in_full(mv, arrow)
-                case FullscreenMode.PIP:
-                    pressed_arrow_in_pip(mv, arrow)
-
 
 def toggle_mute(mv: Multiviewer) -> None:
     mv.volume.toggle_mute()
@@ -608,11 +350,6 @@ async def info(mv: Multiviewer) -> str:
     output = await describe_jtech_output(mv)
     volume = describe_volume(mv)
     return f"{output} {volume}"
-
-
-def log_double_tap_duration(d: timedelta) -> None:
-    ms = int(d.total_seconds() * 1000)
-    log(f"double-tap duration: {ms}ms")
 
 
 def remote(mv: Multiviewer, tv: TV) -> JSON:
@@ -660,7 +397,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_arrow(mv, S)
+                    screen_state.pressed_arrow(S)
         case "Home":
             match mv.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -676,7 +413,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_arrow(mv, W)
+                    screen_state.pressed_arrow(W)
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
@@ -702,7 +439,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_arrow(mv, E)
+                    screen_state.pressed_arrow(E)
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -720,7 +457,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_arrow(mv, N)
+                    screen_state.pressed_arrow(N)
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":

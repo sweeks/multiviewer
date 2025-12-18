@@ -15,6 +15,21 @@ from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Submode, Window
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
 
+DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
+
+
+class Arrow(MyStrEnum):
+    N = auto()
+    E = auto()
+    W = auto()
+    S = auto()
+
+
+N = Arrow.N
+E = Arrow.E
+W = Arrow.W
+S = Arrow.S
+
 
 class LayoutMode(MyStrEnum):
     MULTIVIEW = auto()
@@ -63,6 +78,34 @@ W1_PROMINENT = Submode.W1_PROMINENT
 max_num_windows = 4
 min_num_windows = 1
 
+_arrow_points_to = {
+    2: {W1: {E: W2}, W2: {W: W1}},
+    3: {
+        W1: {N: W2, S: W3},
+        W2: {W: W1, S: W3},
+        W3: {
+            N: W2,
+            W: W1,
+        },
+    },
+    (4, WINDOWS_SAME): {
+        W1: {E: W2, W: W4, S: W3},
+        W2: {E: W3, W: W1, S: W4},
+        W3: {N: W1, E: W4, W: W2},
+        W4: {
+            N: W2,
+            E: W1,
+            W: W3,
+        },
+    },
+    (4, W1_PROMINENT): {
+        W1: {N: W2, E: W3, S: W4},
+        W2: {W: W1, S: W3},
+        W3: {N: W2, W: W1, S: W4},
+        W4: {N: W3, W: W1},
+    },
+}
+
 
 def initial_pip_location_by_tv():
     return dict.fromkeys(TV.all(), PipLocation.NE)
@@ -104,6 +147,14 @@ class VirtualClock:
         self._now += timedelta(seconds=seconds)
 
 
+@dataclass(slots=True)
+class ArrowPress:
+    at: datetime
+    arrow: Arrow
+    points_to: Window | None
+    selected_window: Window
+
+
 @dataclass_json
 @dataclass(slots=True)
 class MvScreenState(Jsonable):
@@ -125,6 +176,9 @@ class MvScreenState(Jsonable):
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
     )
+    last_arrow_press: ArrowPress | None = field(
+        default=None, metadata=json_field.omit
+    )
 
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
@@ -135,6 +189,10 @@ class MvScreenState(Jsonable):
 
     def next_active_window(self, w: Window) -> Window:
         return Window.of_int(w.to_int() % self.num_active_windows + 1)
+
+    def prev_active_window(self, w: Window) -> Window:
+        n = self.num_active_windows
+        return Window.of_int(1 + ((w.to_int() + n - 2) % n))
 
     def set_pip_window(self) -> None:
         self.pip_window = self.next_active_window(self.full_window)
@@ -163,6 +221,15 @@ class MvScreenState(Jsonable):
         tv2 = self.window_tv[w2]
         self.window_tv[w1] = tv2
         self.window_tv[w2] = tv1
+
+    def window_is_prominent(self, w: Window) -> bool:
+        if w != W1:
+            return False
+        match self.layout_mode:
+            case LayoutMode.FULLSCREEN:
+                return True
+            case LayoutMode.MULTIVIEW:
+                return self.multiview_submode == W1_PROMINENT
 
     def deactivate_tv(self) -> None:
         if self.num_active_windows == 1:
@@ -222,6 +289,164 @@ class MvScreenState(Jsonable):
 
     def pip_location(self) -> PipLocation:
         return self.pip_location_by_tv[self.window_tv[self.full_window]]
+
+    def pressed_arrow(self, arrow: Arrow) -> None:
+        match self.layout_mode:
+            case LayoutMode.MULTIVIEW:
+                self.pressed_arrow_in_multiview(arrow)
+            case LayoutMode.FULLSCREEN:
+                match self.fullscreen_mode:
+                    case FullscreenMode.FULL:
+                        self.pressed_arrow_in_full(arrow)
+                    case FullscreenMode.PIP:
+                        self.pressed_arrow_in_pip(arrow)
+
+    def arrow_points_to(self, arrow: Arrow) -> Window | None:
+        match self.num_active_windows:
+            case 2 | 3:
+                key = self.num_active_windows
+            case 4:
+                key = (self.num_active_windows, self.multiview_submode)
+            case _:
+                fail("arrow_points_to invalid num_active_windows", self.num_active_windows)
+        return _arrow_points_to[key][self.selected_window].get(arrow)
+
+    def rotate_pip_window(self, direction: Arrow) -> None:
+        if direction == Arrow.E:
+            w = self.next_active_window(self.pip_window)
+            if w == self.full_window:
+                w = self.next_active_window(w)
+        elif direction == Arrow.W:
+            w = self.prev_active_window(self.pip_window)
+            if w == self.full_window:
+                w = self.prev_active_window(w)
+        else:
+            fail("invalid rotate direction", direction)
+        self.pip_window = w
+
+    def from_pip_arrow_points_to(self, arrow: Arrow) -> PipLocation | None:
+        assert self.layout_mode == FULLSCREEN and self.fullscreen_mode == PIP
+        match (self.pip_location(), arrow):
+            case (PipLocation.NW, Arrow.E):
+                return PipLocation.NE
+            case (PipLocation.NW, Arrow.S):
+                return PipLocation.SW
+            case (PipLocation.NE, Arrow.W):
+                return PipLocation.NW
+            case (PipLocation.NE, Arrow.S):
+                return PipLocation.SE
+            case (PipLocation.SW, Arrow.N):
+                return PipLocation.NW
+            case (PipLocation.SW, Arrow.E):
+                return PipLocation.SE
+            case (PipLocation.SE, Arrow.N):
+                return PipLocation.NE
+            case (PipLocation.SE, Arrow.W):
+                return PipLocation.SW
+        return None
+
+    def arrow_points_from_full_to_pip(self, arrow: Arrow) -> bool:
+        if arrow not in (Arrow.N, Arrow.S):
+            return False
+        loc = self.pip_location()
+        return (loc in (PipLocation.NW, PipLocation.NE) and arrow == Arrow.N) or (
+            loc in (PipLocation.SW, PipLocation.SE) and arrow == Arrow.S
+        )
+
+    def arrow_points_from_pip_to_full(self, arrow: Arrow) -> bool:
+        return arrow in (Arrow.N, Arrow.S) and not self.arrow_points_from_full_to_pip(arrow)
+
+    def pressed_arrow_in_full(self, arrow: Arrow) -> None:
+        match arrow:
+            case Arrow.N | Arrow.S:
+                pass
+            case Arrow.E:
+                self.full_window = self.next_active_window(self.selected_window)
+                self.selected_window = self.full_window
+            case Arrow.W:
+                self.full_window = self.prev_active_window(self.selected_window)
+                self.selected_window = self.full_window
+
+    def pressed_arrow_in_pip(self, arrow: Arrow) -> None:
+        snapshot_selected_window = self.selected_window
+        at = self.clock.now()
+        last_press = self.last_arrow_press
+        if (
+            last_press is not None
+            and arrow == last_press.arrow
+            and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+        ):
+            # Double tap -- undo single-tap effect and change PIP location.
+            self.selected_window = last_press.selected_window
+            match arrow:
+                case Arrow.E:
+                    self.rotate_pip_window(Arrow.W)
+                case Arrow.W:
+                    self.rotate_pip_window(Arrow.E)
+                case Arrow.N | Arrow.S:
+                    pass
+            pip_loc = self.from_pip_arrow_points_to(arrow)
+            if pip_loc is not None:
+                self.pip_location_by_tv[self.window_tv[self.full_window]] = pip_loc
+            self.last_arrow_press = None
+            return
+        # Single tap
+        pip_is_selected = self.selected_window == self.pip_window
+        match arrow:
+            case Arrow.E:
+                self.rotate_pip_window(Arrow.E)
+                if pip_is_selected:
+                    self.selected_window = self.pip_window
+            case Arrow.W:
+                self.rotate_pip_window(Arrow.W)
+                if pip_is_selected:
+                    self.selected_window = self.pip_window
+            case Arrow.N | Arrow.S:
+                if pip_is_selected:
+                    if self.arrow_points_from_pip_to_full(arrow):
+                        self.selected_window = self.full_window
+                else:
+                    if self.arrow_points_from_full_to_pip(arrow):
+                        self.selected_window = self.pip_window
+        self.last_arrow_press = ArrowPress(
+            arrow=arrow,
+            points_to=None,
+            at=at,
+            selected_window=snapshot_selected_window,
+        )
+
+    def pressed_arrow_in_multiview(self, arrow: Arrow) -> None:
+        # If single tap, change the selected window to the pointed-to window. If double
+        # tap, swap the previously selected window with the previously pointed-to window.
+        self.selected_window_has_distinct_border = True
+        last_press = self.last_arrow_press
+        at = self.clock.now()
+        if (
+            last_press is not None
+            and arrow == last_press.arrow
+            and at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+        ):
+            # Double tap
+            assert last_press.points_to is not None
+            ms = int((at - last_press.at).total_seconds() * 1000)
+            log(f"double-tap duration: {ms}ms")
+            self.last_arrow_press = None
+            self.swap_window_tvs(last_press.selected_window, last_press.points_to)
+            if self.window_is_prominent(last_press.selected_window):
+                self.selected_window = last_press.selected_window
+            else:
+                self.selected_window = last_press.points_to
+        else:
+            points_to = self.arrow_points_to(arrow)
+            if points_to is not None:
+                # Single tap
+                self.last_arrow_press = ArrowPress(
+                    arrow=arrow,
+                    points_to=points_to,
+                    at=at,
+                    selected_window=self.selected_window,
+                )
+                self.selected_window = points_to
 
     def render(self) -> JtechOutput:
         def window(
