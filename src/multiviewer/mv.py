@@ -100,7 +100,7 @@ async def power_off(mv: Multiviewer) -> None:
         debug_print(mv)
     log("turning off power")
     mv.power = Power.OFF
-    mv.jtech_manager.set_power(Power.OFF)
+    mv.jtech_manager.power_off()
     await mv.atvs.power_off()
     log("power is off")
 
@@ -110,7 +110,7 @@ async def power_on(mv: Multiviewer) -> None:
         debug_print(mv)
     log("turning on power")
     mv.power = Power.ON
-    mv.jtech_manager.set_power(Power.ON)
+    mv.jtech_manager.power_on()
     await mv.atvs.power_on()
     mv.screen.power_on()
     mv.volume.power_on()

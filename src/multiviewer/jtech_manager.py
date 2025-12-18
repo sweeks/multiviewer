@@ -56,6 +56,12 @@ class JtechManager:
             self.desired_output = desired_output
             self.desync()
 
+    def power_on(self) -> None:
+        self.set_power(Power.ON)
+
+    def power_off(self) -> None:
+        self.set_power(Power.OFF)
+
     def set_should_send_commands_to_device(self, b: bool) -> None:
         if self.should_send_commands_to_device != b:
             self.should_send_commands_to_device = b
