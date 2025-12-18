@@ -37,10 +37,8 @@ from .mv_screen_state import (
     WINDOWS_SAME,
     FullscreenMode,
     LayoutMode,
-    MvScreenState,
+    MvScreen,
     RemoteMode,
-    initial_pip_location_by_tv,
-    initial_window_tv,
     max_num_windows,
     min_num_windows,
     RealClock,
@@ -70,7 +68,7 @@ class Multiviewer(Jsonable):
     # power is the state of the virtual multiviewer.  During initialization, we ensure
     # that the physical devices match it.
     power: Power = Power.ON
-    screen_state: MvScreenState = field(default_factory=MvScreenState)
+    screen: MvScreen = field(default_factory=MvScreen)
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
@@ -79,91 +77,91 @@ class Multiviewer(Jsonable):
 
     @property
     def window_tv(self):
-        return self.screen_state.window_tv
+        return self.screen.window_tv
 
     @window_tv.setter
     def window_tv(self, v):
-        self.screen_state.window_tv = v
+        self.screen.window_tv = v
 
     @property
     def layout_mode(self):
-        return self.screen_state.layout_mode
+        return self.screen.layout_mode
 
     @layout_mode.setter
     def layout_mode(self, v):
-        self.screen_state.layout_mode = v
+        self.screen.layout_mode = v
 
     @property
     def num_active_windows(self):
-        return self.screen_state.num_active_windows
+        return self.screen.num_active_windows
 
     @num_active_windows.setter
     def num_active_windows(self, v):
-        self.screen_state.num_active_windows = v
+        self.screen.num_active_windows = v
 
     @property
     def multiview_submode(self):
-        return self.screen_state.multiview_submode
+        return self.screen.multiview_submode
 
     @multiview_submode.setter
     def multiview_submode(self, v):
-        self.screen_state.multiview_submode = v
+        self.screen.multiview_submode = v
 
     @property
     def fullscreen_mode(self):
-        return self.screen_state.fullscreen_mode
+        return self.screen.fullscreen_mode
 
     @fullscreen_mode.setter
     def fullscreen_mode(self, v):
-        self.screen_state.fullscreen_mode = v
+        self.screen.fullscreen_mode = v
 
     @property
     def full_window(self):
-        return self.screen_state.full_window
+        return self.screen.full_window
 
     @full_window.setter
     def full_window(self, v):
-        self.screen_state.full_window = v
+        self.screen.full_window = v
 
     @property
     def pip_window(self):
-        return self.screen_state.pip_window
+        return self.screen.pip_window
 
     @pip_window.setter
     def pip_window(self, v):
-        self.screen_state.pip_window = v
+        self.screen.pip_window = v
 
     @property
     def pip_location_by_tv(self):
-        return self.screen_state.pip_location_by_tv
+        return self.screen.pip_location_by_tv
 
     @pip_location_by_tv.setter
     def pip_location_by_tv(self, v):
-        self.screen_state.pip_location_by_tv = v
+        self.screen.pip_location_by_tv = v
 
     @property
     def selected_window(self):
-        return self.screen_state.selected_window
+        return self.screen.selected_window
 
     @selected_window.setter
     def selected_window(self, v):
-        self.screen_state.selected_window = v
+        self.screen.selected_window = v
 
     @property
     def selected_window_has_distinct_border(self):
-        return self.screen_state.selected_window_has_distinct_border
+        return self.screen.selected_window_has_distinct_border
 
     @selected_window_has_distinct_border.setter
     def selected_window_has_distinct_border(self, v):
-        self.screen_state.selected_window_has_distinct_border = v
+        self.screen.selected_window_has_distinct_border = v
 
     @property
     def remote_mode(self):
-        return self.screen_state.remote_mode
+        return self.screen.remote_mode
 
     @remote_mode.setter
     def remote_mode(self, v):
-        self.screen_state.remote_mode = v
+        self.screen.remote_mode = v
 
 
 def last_active_window(mv: Multiviewer) -> Window:
@@ -180,15 +178,15 @@ def next_active_window(mv: Multiviewer, w: Window) -> Window:
 
 
 def window_tv(mv: Multiviewer, w: Window) -> TV:
-    return mv.screen_state.window_tv[w]
+    return mv.screen.window_tv[w]
 
 
 def window_input(mv: Multiviewer, w: Window) -> Hdmi:
-    return mv.screen_state.window_input(w)
+    return mv.screen.window_input(w)
 
 
 def pip_location(mv: Multiviewer) -> PipLocation:
-    return mv.screen_state.pip_location()
+    return mv.screen.pip_location()
 
 
 def selected_tv(mv: Multiviewer) -> TV:
@@ -224,9 +222,9 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
-    clock = mv.screen_state.clock
-    mv.screen_state = MvScreenState()
-    mv.screen_state.clock = clock
+    clock = mv.screen.clock
+    mv.screen = MvScreen()
+    mv.screen.clock = clock
     mv.last_remote_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
@@ -239,11 +237,11 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 def use_virtual_clock(mv: Multiviewer) -> None:
-    mv.screen_state.clock = VirtualClock()
+    mv.screen.clock = VirtualClock()
 
 
 def advance_clock(mv: Multiviewer, seconds: float) -> None:
-    mv.screen_state.clock.advance(seconds)
+    mv.screen.clock.advance(seconds)
 
 
 async def initialize(mv: Multiviewer):
@@ -353,7 +351,7 @@ async def info(mv: Multiviewer) -> str:
 
 def remote(mv: Multiviewer, tv: TV) -> JSON:
     this_press = RemotePress(
-        at=mv.screen_state.clock.now(), selected_window=mv.selected_window
+        at=mv.screen.clock.now(), selected_window=mv.selected_window
     )
     last_press = mv.last_remote_press
     if (
@@ -364,12 +362,12 @@ def remote(mv: Multiviewer, tv: TV) -> JSON:
         # Double tap.  The shortcut will open the Remote app on TV <i>
         mv.last_remote_press = None
         # Flip again to cancel the single-tap mode change.
-        mv.screen_state.toggle_remote_mode()
+        mv.screen.toggle_remote_mode()
         return tv.to_int()
     else:
         # Single tap
         mv.last_remote_press = this_press
-        mv.screen_state.toggle_remote_mode()
+        mv.screen.toggle_remote_mode()
         return {}
 
 
@@ -381,7 +379,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         return {}
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
-    screen_state = mv.screen_state
+    screen_state = mv.screen
     match command:
         case "Activate_tv":
             screen_state.activate_tv()
@@ -469,7 +467,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
 
 
 def render(mv: Multiviewer) -> JtechOutput:
-    return mv.screen_state.render()
+    return mv.screen.render()
 
 
 def update_jtech_output(mv: Multiviewer) -> None:

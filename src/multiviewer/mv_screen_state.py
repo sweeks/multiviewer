@@ -157,7 +157,7 @@ class ArrowPress:
 
 @dataclass_json
 @dataclass(slots=True)
-class MvScreenState(Jsonable):
+class MvScreen(Jsonable):
     window_tv: dict[Window, TV] = field(
         default_factory=initial_window_tv, metadata=json_dict(Window, TV)
     )
