@@ -169,7 +169,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     if mv.power == Power.OFF and command not in ["Power", "Power_on"]:
         return {}
     screen = mv.screen
-    tv = screen.selected_tv()
+    tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
     match command:
         case "Activate_tv":
@@ -263,7 +263,7 @@ def render(mv: Multiviewer) -> JtechOutput:
 
 def update_jtech_output(mv: Multiviewer) -> None:
     mv.jtech_manager.set_output(render(mv))
-    mv.volume.set_for_tv(mv.screen.selected_tv())
+    mv.volume.set_for_tv(selected_tv(mv))
 
 
 async def do_command_and_update_jtech_output(mv: Multiviewer, args: list[str]) -> JSON:
