@@ -147,10 +147,6 @@ def adjust_volume(mv: Multiviewer, by: int) -> None:
     mv.volume.adjust_volume(mv.screen.selected_tv(), by)
 
 
-def describe_volume(mv: Multiviewer) -> str:
-    return mv.volume.describe_volume()
-
-
 async def describe_jtech_output(mv: Multiviewer) -> str:
     output = await mv.jtech_manager.current_output()
     return output.one_line_description()
@@ -158,7 +154,7 @@ async def describe_jtech_output(mv: Multiviewer) -> str:
 
 async def info(mv: Multiviewer) -> str:
     output = await describe_jtech_output(mv)
-    volume = describe_volume(mv)
+    volume = mv.volume.describe_volume()
     return f"{output} {volume}"
 
 
