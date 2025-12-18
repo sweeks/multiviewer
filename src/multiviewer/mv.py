@@ -74,109 +74,6 @@ class Multiviewer(Jsonable):
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
-
-    @property
-    def window_tv(self):
-        return self.screen.window_tv
-
-    @window_tv.setter
-    def window_tv(self, v):
-        self.screen.window_tv = v
-
-    @property
-    def layout_mode(self):
-        return self.screen.layout_mode
-
-    @layout_mode.setter
-    def layout_mode(self, v):
-        self.screen.layout_mode = v
-
-    @property
-    def num_active_windows(self):
-        return self.screen.num_active_windows
-
-    @num_active_windows.setter
-    def num_active_windows(self, v):
-        self.screen.num_active_windows = v
-
-    @property
-    def multiview_submode(self):
-        return self.screen.multiview_submode
-
-    @multiview_submode.setter
-    def multiview_submode(self, v):
-        self.screen.multiview_submode = v
-
-    @property
-    def fullscreen_mode(self):
-        return self.screen.fullscreen_mode
-
-    @fullscreen_mode.setter
-    def fullscreen_mode(self, v):
-        self.screen.fullscreen_mode = v
-
-    @property
-    def full_window(self):
-        return self.screen.full_window
-
-    @full_window.setter
-    def full_window(self, v):
-        self.screen.full_window = v
-
-    @property
-    def pip_window(self):
-        return self.screen.pip_window
-
-    @pip_window.setter
-    def pip_window(self, v):
-        self.screen.pip_window = v
-
-    @property
-    def pip_location_by_tv(self):
-        return self.screen.pip_location_by_tv
-
-    @pip_location_by_tv.setter
-    def pip_location_by_tv(self, v):
-        self.screen.pip_location_by_tv = v
-
-    @property
-    def selected_window(self):
-        return self.screen.selected_window
-
-    @selected_window.setter
-    def selected_window(self, v):
-        self.screen.selected_window = v
-
-    @property
-    def selected_window_has_distinct_border(self):
-        return self.screen.selected_window_has_distinct_border
-
-    @selected_window_has_distinct_border.setter
-    def selected_window_has_distinct_border(self, v):
-        self.screen.selected_window_has_distinct_border = v
-
-    @property
-    def remote_mode(self):
-        return self.screen.remote_mode
-
-    @remote_mode.setter
-    def remote_mode(self, v):
-        self.screen.remote_mode = v
-
-
-def last_active_window(mv: Multiviewer) -> Window:
-    return Window.of_int(mv.num_active_windows)
-
-
-def prev_active_window(mv: Multiviewer, w: Window) -> Window:
-    n = mv.num_active_windows
-    return Window.of_int(1 + ((w.to_int() + n - 2) % n))
-
-
-def next_active_window(mv: Multiviewer, w: Window) -> Window:
-    return Window.of_int(w.to_int() % mv.num_active_windows + 1)
-
-
 def window_tv(mv: Multiviewer, w: Window) -> TV:
     return mv.screen.window_tv[w]
 
@@ -190,11 +87,7 @@ def pip_location(mv: Multiviewer) -> PipLocation:
 
 
 def selected_tv(mv: Multiviewer) -> TV:
-    return window_tv(mv, mv.selected_window)
-
-
-def visible(mv: Multiviewer) -> list[Window]:
-    return [Window.of_int(i) for i in range(1, 1 + mv.num_active_windows)]
+    return window_tv(mv, mv.screen.selected_window)
 
 
 def validate(mv: Multiviewer) -> None:
@@ -293,7 +186,7 @@ async def power_on(mv: Multiviewer) -> None:
     # to zero, which in turn causes the Volume manager to set the actual volume_delta
     # to zero.
     mv.volume_delta_by_tv = volume_deltas_zero()
-    mv.remote_mode = MULTIVIEWER
+    mv.screen.remote_mode = MULTIVIEWER
     # Waking TV1 turns on the LG via CEC.
     for tv in TV.all():
         mv.atvs.atv(tv).wake()
@@ -334,7 +227,9 @@ async def info(mv: Multiviewer) -> str:
 
 
 def remote(mv: Multiviewer, tv: TV) -> JSON:
-    this_press = RemotePress(at=mv.screen.clock.now(), selected_window=mv.selected_window)
+    this_press = RemotePress(
+        at=mv.screen.clock.now(), selected_window=mv.screen.selected_window
+    )
     last_press = mv.last_remote_press
     if (
         last_press is not None
@@ -366,19 +261,19 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Activate_tv":
             screen_state.activate_tv()
         case "Back":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
                     screen_state.pressed_back()
         case "Down" | "S":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
                     screen_state.pressed_arrow(S)
         case "Home":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
@@ -388,7 +283,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Launch":
             atv.launch(args[1])
         case "Left" | "W":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
@@ -396,14 +291,14 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Mute":
             toggle_mute(mv)
         case "Play_pause":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
                     screen_state.pressed_play_pause()
         case "Power_on":
             if mv.power == Power.OFF:
-                mv.selected_window_has_distinct_border = True
+                mv.screen.selected_window_has_distinct_border = True
                 await power_on(mv)
         case "Power":
             await toggle_power(mv)
@@ -414,7 +309,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Reset":
             reset(mv)
         case "Right" | "E":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
@@ -422,7 +317,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Screensaver":
             atv.screensaver()
         case "Select":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
@@ -432,7 +327,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Test":
             pass
         case "Up" | "N":
-            match mv.remote_mode:
+            match mv.screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
