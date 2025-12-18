@@ -298,6 +298,12 @@ class MvScreen(Jsonable):
     def selected_tv(self) -> TV:
         return self.window_tv[self.selected_window]
 
+    def use_virtual_clock(self) -> None:
+        self.clock = VirtualClock()
+
+    def advance_clock(self, seconds: float) -> None:
+        self.clock.advance(seconds)
+
     def remote(self, tv: TV) -> JSON:
         this_press = RemotePress(
             at=self.clock.now(), selected_window=self.selected_window
@@ -333,6 +339,11 @@ class MvScreen(Jsonable):
             case LayoutMode.MULTIVIEW:
                 assert_(self.num_active_windows >= 2)
                 assert_(self.selected_window in v)
+
+    def reset(self) -> "MvScreen":
+        new = MvScreen()
+        new.clock = self.clock
+        return new
 
     def pressed_arrow(self, arrow: Arrow) -> None:
         match self.layout_mode:

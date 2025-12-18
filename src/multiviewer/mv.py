@@ -13,7 +13,7 @@ from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
-from .mv_screen import Arrow, MULTIVIEWER, MvScreen, RemoteMode, VirtualClock
+from .mv_screen import Arrow, MULTIVIEWER, MvScreen, RemoteMode
 from .volume import Volume
 
 
@@ -47,9 +47,7 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
-    clock = mv.screen.clock
-    mv.screen = MvScreen()
-    mv.screen.clock = clock
+    mv.screen = mv.screen.reset()
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
 
@@ -61,11 +59,11 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 def use_virtual_clock(mv: Multiviewer) -> None:
-    mv.screen.clock = VirtualClock()
+    mv.screen.use_virtual_clock()
 
 
 def advance_clock(mv: Multiviewer, seconds: float) -> None:
-    mv.screen.clock.advance(seconds)
+    mv.screen.advance_clock(seconds)
 
 
 async def initialize(mv: Multiviewer):
