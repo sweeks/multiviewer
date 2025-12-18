@@ -16,7 +16,7 @@ from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Power, Submode, Window
 from .jtech_manager import JtechManager
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
-from .mv_screen_state import (
+from .mv_screen import (
     DOUBLE_TAP_MAX_DURATION,
     Arrow,
     E,
