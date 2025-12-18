@@ -15,8 +15,6 @@ class RemoteMode:
     APPLE_TV: RemoteMode
     MULTIVIEWER: RemoteMode
 
-MULTIVIEWER: RemoteMode
-
 class MvScreen:
     @classmethod
     def field(cls) -> MvScreen: ...
