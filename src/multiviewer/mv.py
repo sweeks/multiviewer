@@ -611,10 +611,6 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
                     pressed_arrow_in_pip(mv, arrow)
 
 
-def pressed_play_pause(mv: Multiviewer) -> None:
-    mv.selected_window_has_distinct_border = not mv.selected_window_has_distinct_border
-
-
 def toggle_mute(mv: Multiviewer) -> None:
     mv.volume.toggle_mute()
 
@@ -718,7 +714,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_play_pause(mv)
+                    screen_state.pressed_play_pause()
         case "Power_on":
             if mv.power == Power.OFF:
                 mv.selected_window_has_distinct_border = True

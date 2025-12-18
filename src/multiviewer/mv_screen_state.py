@@ -162,6 +162,9 @@ class MvScreenState(Jsonable):
         if self.layout_mode == LayoutMode.FULLSCREEN and self.num_active_windows > 1:
             self.layout_mode = MULTIVIEW
 
+    def pressed_play_pause(self) -> None:
+        self.selected_window_has_distinct_border = not self.selected_window_has_distinct_border
+
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])
 
