@@ -216,7 +216,8 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Power":
             await toggle_power(mv)
         case "Remote":
-            return mv.screen.remote(tv) or tv.to_int()
+            mv.screen.remote(tv)
+            return tv.to_int()
         case "Deactivate_tv":
             screen.deactivate_tv()
         case "Reset":
