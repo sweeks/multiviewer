@@ -189,6 +189,10 @@ class MvScreen(Jsonable):
     def field(cls) -> "MvScreen":
         return field(default_factory=MvScreen)
 
+    def power_on(self) -> None:
+        self.remote_mode = MULTIVIEWER
+        self.selected_window_has_distinct_border = True
+
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
             self.num_active_windows += 1

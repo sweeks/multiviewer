@@ -13,7 +13,7 @@ from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
-from .mv_screen import Arrow, MULTIVIEWER, MvScreen, RemoteMode
+from .mv_screen import Arrow, MvScreen, RemoteMode
 from .volume import Volume
 
 
@@ -118,12 +118,12 @@ async def power_on(mv: Multiviewer) -> None:
         debug_print(mv)
     log("turning on power")
     set_power(mv, Power.ON)
+    mv.screen.power_on()
     # We reset all the volume deltas to zero, because this is a new TV session for the
     # user.  This causes the initial update_jtech_output to set the desired volume_delta
     # to zero, which in turn causes the Volume manager to set the actual volume_delta
     # to zero.
     mv.volume.reset()
-    mv.screen.remote_mode = MULTIVIEWER
     # Waking TV1 turns on the LG via CEC.
     for tv in TV.all():
         mv.atvs.atv(tv).wake()
@@ -212,7 +212,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                     screen.pressed_play_pause()
         case "Power_on":
             if mv.power == Power.OFF:
-                mv.screen.selected_window_has_distinct_border = True
                 await power_on(mv)
         case "Power":
             await toggle_power(mv)
