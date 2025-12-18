@@ -9,7 +9,7 @@ from dataclasses_json import dataclass_json
 # Local package
 from .atv import ATVs
 from .tv import TV
-from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
+from .base import JSON, Jsonable, dataclass, debug_print, fail, log
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
@@ -131,14 +131,6 @@ async def power_on(mv: Multiviewer) -> None:
     log("power is on")
 
 
-async def toggle_power(mv: Multiviewer) -> None:
-    match mv.power:
-        case Power.OFF:
-            await power_on(mv)
-        case Power.ON:
-            await power_off(mv)
-
-
 def adjust_volume(mv: Multiviewer, by: int) -> None:
     mv.volume.adjust_volume(mv.screen.selected_tv(), by)
 
@@ -203,7 +195,11 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             if mv.power == Power.OFF:
                 await power_on(mv)
         case "Power":
-            await toggle_power(mv)
+            match mv.power:
+                case Power.OFF:
+                    await power_on(mv)
+                case Power.ON:
+                    await power_off(mv)
         case "Remote":
             screen.remote(tv)
             return tv.to_int()
