@@ -1,0 +1,43 @@
+from __future__ import annotations
+
+# Local package
+from .atv import TV
+from .base import JSON
+from .jtech_output import JtechOutput
+
+class Arrow:
+    N: Arrow
+    E: Arrow
+    W: Arrow
+    S: Arrow
+
+N: Arrow
+E: Arrow
+W: Arrow
+S: Arrow
+
+class RemoteMode:
+    APPLE_TV: RemoteMode
+    MULTIVIEWER: RemoteMode
+
+MULTIVIEWER: RemoteMode
+
+class VirtualClock:
+    def now(self): ...
+    def advance(self, seconds: float) -> None: ...
+
+class MvScreen:
+    remote_mode: RemoteMode
+    selected_window_has_distinct_border: bool
+    clock: VirtualClock
+    def selected_tv(self) -> TV: ...
+    def validate(self) -> None: ...
+    def activate_tv(self) -> None: ...
+    def pressed_back(self) -> None: ...
+    def pressed_arrow(self, arrow: Arrow) -> None: ...
+    def toggle_submode(self) -> None: ...
+    def pressed_play_pause(self) -> None: ...
+    def deactivate_tv(self) -> None: ...
+    def pressed_select(self) -> None: ...
+    def render(self) -> JtechOutput: ...
+    def remote(self, tv: TV) -> JSON: ...
