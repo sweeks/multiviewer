@@ -18,6 +18,7 @@ from multiviewer.mv import Multiviewer
 RunMode.set(RunMode.Testing)
 
 _the_mv: None | Multiviewer = None
+_mismatch_count = 0
 
 
 def the_mv() -> Multiviewer:
@@ -27,7 +28,9 @@ def the_mv() -> Multiviewer:
 
 
 def expect(actual, expected, frame_index=2):
+    global _mismatch_count
     if actual != expected:
+        _mismatch_count += 1
         frame = inspect.stack()[frame_index]
         lineno = frame.lineno
         print(f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}")
@@ -99,7 +102,9 @@ def parse_selection(arg):
 
 
 async def run(selected):
+    global _mismatch_count
     total = passed = 0
+    _mismatch_count = 0
     for line, label, fn in sorted(tests):
         if selected and line not in selected:
             continue
@@ -116,7 +121,7 @@ async def run(selected):
             elapsed = time.perf_counter() - start
             print(f"  FAILED ({elapsed:.1f}s)")
             traceback.print_exc()
-    print(f"{passed}/{total} passed")
+    print(f"{_mismatch_count} expectation mismatches")
 
 
 # ---------------------------------------------------------------------
