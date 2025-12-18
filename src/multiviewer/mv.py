@@ -258,21 +258,11 @@ async def shutdown(mv: Multiviewer) -> None:
 
 
 def reset(mv: Multiviewer) -> None:
-    mv.num_active_windows = max_num_windows
-    mv.multiview_submode = W1_PROMINENT
-    mv.layout_mode = MULTIVIEW
-    mv.fullscreen_mode = FULL
-    mv.full_window = W1
-    mv.pip_window = W2
-    mv.pip_location_by_tv = initial_pip_location_by_tv()
-    mv.selected_window = W1
-    mv.selected_window_has_distinct_border = True
-    mv.remote_mode = MULTIVIEWER
+    mv.screen_state = MvScreenState()
     mv.last_arrow_press = None
     mv.last_remote_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
-    mv.window_tv = initial_window_tv()
 
 
 def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
