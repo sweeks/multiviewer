@@ -197,24 +197,8 @@ def visible(mv: Multiviewer) -> list[Window]:
     return [Window.of_int(i) for i in range(1, 1 + mv.num_active_windows)]
 
 
-def is_visible(mv: Multiviewer, w: Window) -> bool:
-    return w in visible(mv)
-
-
 def validate(mv: Multiviewer) -> None:
-    assert_equal(set(mv.window_tv.keys()), set(Mode.QUAD.windows()))
-    assert_equal(len(set(mv.window_tv.values())), len(mv.window_tv))
-    assert_(min_num_windows <= mv.num_active_windows <= max_num_windows)
-    if mv.num_active_windows == 1:
-        assert_(mv.layout_mode == FULLSCREEN)
-        assert_(mv.fullscreen_mode == FULL)
-    v = visible(mv)
-    match mv.layout_mode:
-        case LayoutMode.FULLSCREEN:
-            pass
-        case LayoutMode.MULTIVIEW:
-            assert_(mv.num_active_windows >= 2)
-            assert_(mv.selected_window in v)
+    mv.screen.validate()
 
 
 async def shutdown(mv: Multiviewer) -> None:
