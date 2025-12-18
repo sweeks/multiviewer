@@ -176,9 +176,7 @@ class MvScreenState(Jsonable):
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
     )
-    last_arrow_press: ArrowPress | None = field(
-        default=None, metadata=json_field.omit
-    )
+    last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
 
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
@@ -308,7 +306,9 @@ class MvScreenState(Jsonable):
             case 4:
                 key = (self.num_active_windows, self.multiview_submode)
             case _:
-                fail("arrow_points_to invalid num_active_windows", self.num_active_windows)
+                fail(
+                    "arrow_points_to invalid num_active_windows", self.num_active_windows
+                )
         return _arrow_points_to[key][self.selected_window].get(arrow)
 
     def rotate_pip_window(self, direction: Arrow) -> None:
@@ -354,7 +354,9 @@ class MvScreenState(Jsonable):
         )
 
     def arrow_points_from_pip_to_full(self, arrow: Arrow) -> bool:
-        return arrow in (Arrow.N, Arrow.S) and not self.arrow_points_from_full_to_pip(arrow)
+        return arrow in (Arrow.N, Arrow.S) and not self.arrow_points_from_full_to_pip(
+            arrow
+        )
 
     def pressed_arrow_in_full(self, arrow: Arrow) -> None:
         match arrow:

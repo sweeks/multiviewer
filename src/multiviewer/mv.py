@@ -327,7 +327,6 @@ async def toggle_power(mv: Multiviewer) -> None:
             await power_off(mv)
 
 
-
 def toggle_mute(mv: Multiviewer) -> None:
     mv.volume.toggle_mute()
 
