@@ -95,18 +95,12 @@ def save(mv: Multiviewer, path: Path) -> None:
     tmp.replace(path)
 
 
-def set_power(mv: Multiviewer, p: Power) -> None:
-    if False:
-        debug_print(p)
-    mv.power = p
-    mv.jtech_manager.set_power(p)
-
-
 async def power_off(mv: Multiviewer) -> None:
     if False:
         debug_print(mv)
     log("turning off power")
-    set_power(mv, Power.OFF)
+    mv.power = Power.OFF
+    mv.jtech_manager.set_power(Power.OFF)
     for tv in TV.all():
         mv.atvs.atv(tv).sleep()
     await mv.atvs.synced()
@@ -117,7 +111,8 @@ async def power_on(mv: Multiviewer) -> None:
     if False:
         debug_print(mv)
     log("turning on power")
-    set_power(mv, Power.ON)
+    mv.power = Power.ON
+    mv.jtech_manager.set_power(Power.ON)
     await mv.atvs.power_on()
     mv.screen.power_on()
     mv.volume.power_on()
