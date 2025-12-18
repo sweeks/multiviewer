@@ -56,12 +56,6 @@ def volume_deltas_zero():
     return dict.fromkeys(TV.all(), 0)
 
 
-@dataclass(slots=True)
-class RemotePress:
-    at: datetime
-    selected_window: Window
-
-
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -71,7 +65,6 @@ class Multiviewer(Jsonable):
     screen: MvScreen = field(default_factory=MvScreen)
     volume_delta_by_tv: dict[TV, int] = field(default_factory=volume_deltas_zero)
     volume: Volume = Volume.field()
-    last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
 
@@ -92,7 +85,6 @@ def reset(mv: Multiviewer) -> None:
     clock = mv.screen.clock
     mv.screen = MvScreen()
     mv.screen.clock = clock
-    mv.last_remote_press = None
     mv.volume_delta_by_tv = volume_deltas_zero()
     mv.volume.reset()
 
@@ -216,26 +208,6 @@ async def info(mv: Multiviewer) -> str:
     return f"{output} {volume}"
 
 
-def remote(mv: Multiviewer, tv: TV):
-    this_press = RemotePress(
-        at=mv.screen.clock.now(), selected_window=mv.screen.selected_window
-    )
-    last_press = mv.last_remote_press
-    if (
-        last_press is not None
-        and last_press.selected_window == this_press.selected_window
-        and this_press.at - last_press.at <= DOUBLE_TAP_MAX_DURATION
-    ):
-        # Double tap.  The shortcut will open the Remote app on TV <i>
-        mv.last_remote_press = None
-        # Flip again to cancel the single-tap mode change.
-        mv.screen.toggle_remote_mode()
-    else:
-        # Single tap
-        mv.last_remote_press = this_press
-        mv.screen.toggle_remote_mode()
-
-
 async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     if False:
         debug_print(args)
@@ -291,8 +263,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         case "Power":
             await toggle_power(mv)
         case "Remote":
-            remote(mv, tv)
-            return tv.to_int()
+            return mv.screen.remote(tv) or tv.to_int()
         case "Deactivate_tv":
             screen.deactivate_tv()
         case "Reset":

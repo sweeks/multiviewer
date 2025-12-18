@@ -155,6 +155,12 @@ class ArrowPress:
     selected_window: Window
 
 
+@dataclass(slots=True)
+class RemotePress:
+    at: datetime
+    selected_window: Window
+
+
 @dataclass_json
 @dataclass(slots=True)
 class MvScreen(Jsonable):
@@ -177,6 +183,7 @@ class MvScreen(Jsonable):
         default_factory=RealClock, metadata=json_field.omit
     )
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
+    last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
 
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
@@ -290,6 +297,25 @@ class MvScreen(Jsonable):
 
     def selected_tv(self) -> TV:
         return self.window_tv[self.selected_window]
+
+    def remote(self, tv: TV) -> JSON:
+        this_press = RemotePress(at=self.clock.now(), selected_window=self.selected_window)
+        last_press = self.last_remote_press
+        if (
+            last_press is not None
+            and last_press.selected_window == this_press.selected_window
+            and this_press.at - last_press.at <= DOUBLE_TAP_MAX_DURATION
+        ):
+            # Double tap.  The shortcut will open the Remote app on TV <i>
+            self.last_remote_press = None
+            # Flip again to cancel the single-tap mode change.
+            self.toggle_remote_mode()
+            return tv.to_int()
+        else:
+            # Single tap
+            self.last_remote_press = this_press
+            self.toggle_remote_mode()
+            return {}
 
     def validate(self) -> None:
         assert_equal(set(self.window_tv.keys()), set(Mode.QUAD.windows()))
