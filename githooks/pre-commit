@@ -12,6 +12,12 @@ fi
 "$ROOT/bin/format-code.sh"
 "$ROOT/bin/format-docs.sh"
 
+# Fail if formatters modified files.
+if ! git diff --quiet --exit-code; then
+  echo "Pre-commit: formatting changed files. Please review/stage them and re-run." >&2
+  exit 1
+fi
+
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
 
