@@ -597,21 +597,6 @@ def enter_fullscreen(mv: Multiviewer) -> None:
         set_pip_window(mv)
 
 
-def toggle_submode(mv: Multiviewer) -> None:
-    match mv.layout_mode:
-        case LayoutMode.MULTIVIEW:
-            mv.multiview_submode = mv.multiview_submode.flip()
-        case LayoutMode.FULLSCREEN:
-            if mv.num_active_windows >= 2:
-                match mv.fullscreen_mode:
-                    case FullscreenMode.FULL:
-                        mv.fullscreen_mode = PIP
-                        set_pip_window(mv)
-                    case FullscreenMode.PIP:
-                        mv.fullscreen_mode = FULL
-                        mv.selected_window = mv.full_window
-
-
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if False:
         debug_print(arrow)
@@ -720,7 +705,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
-                    toggle_submode(mv)
+                    screen_state.toggle_submode()
         case "Info":
             return await info(mv)
         case "Launch":

@@ -144,6 +144,20 @@ class MvScreenState(Jsonable):
             self.fullscreen_mode = FULL
             self.full_window = W1
 
+    def toggle_submode(self) -> None:
+        match self.layout_mode:
+            case LayoutMode.MULTIVIEW:
+                self.multiview_submode = self.multiview_submode.flip()
+            case LayoutMode.FULLSCREEN:
+                if self.num_active_windows >= 2:
+                    match self.fullscreen_mode:
+                        case FullscreenMode.FULL:
+                            self.fullscreen_mode = PIP
+                            self.set_pip_window()
+                        case FullscreenMode.PIP:
+                            self.fullscreen_mode = FULL
+                            self.selected_window = self.full_window
+
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])
 
