@@ -214,8 +214,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
                     screen.pressed_select()
-        case "Sleep":
-            atv.sleep()
         case "Test":
             pass
         case "Up" | "N":
@@ -228,8 +226,6 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
             adjust_volume(mv, -1)
         case "Volume_up":
             adjust_volume(mv, 1)
-        case "Wake":
-            atv.wake()
         case _:
             fail("invalid command", command)
     return {}
