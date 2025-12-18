@@ -20,8 +20,6 @@ from .volume import Volume
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
-    # power is the state of the virtual multiviewer.  During initialization, we ensure
-    # that the physical devices match it.
     power: Power = Power.ON
     screen: MvScreen = MvScreen.field()
     atvs: ATVs = ATVs.field()
