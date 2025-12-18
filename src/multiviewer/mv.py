@@ -231,13 +231,17 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     return {}
 
 
+def update_devices(mv: Multiviewer):
+    mv.jtech_manager.set_output(mv.screen.render())
+    mv.volume.set_for_tv(selected_tv(mv))
+
+
 async def do_command_and_update_devices(mv: Multiviewer, args: list[str]) -> JSON:
     if False:
         debug_print(args, mv)
     result = await do_command(mv, args)
     validate(mv)
-    mv.jtech_manager.set_output(mv.screen.render())
-    mv.volume.set_for_tv(selected_tv(mv))
+    update_devices(mv)
     return result
 
 

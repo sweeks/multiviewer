@@ -18,6 +18,12 @@ if ! git diff --quiet --exit-code; then
   exit 1
 fi
 
+# Run pyright to ensure type checks pass.
+if ! "$ROOT/.venv/bin/pyright" ; then
+  echo "Pre-commit: pyright reported type errors." >&2
+  exit 1
+fi
+
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
 
