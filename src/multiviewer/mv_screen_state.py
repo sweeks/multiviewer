@@ -115,6 +115,18 @@ class MvScreenState(Jsonable):
     def set_pip_window(self) -> None:
         self.pip_window = self.next_active_window(self.full_window)
 
+    def enter_fullscreen(self) -> None:
+        self.layout_mode = FULLSCREEN
+        self.full_window = self.selected_window
+        if self.fullscreen_mode == FullscreenMode.PIP:
+            self.set_pip_window()
+
+    def swap_full_and_pip_windows(self) -> None:
+        old_full = self.full_window
+        self.full_window = self.pip_window
+        self.pip_window = old_full
+        self.selected_window = self.full_window
+
     def demote_tv(self, w1: Window) -> None:
         last = self.last_active_window()
         while w1 != last:
@@ -169,6 +181,17 @@ class MvScreenState(Jsonable):
 
     def toggle_remote_mode(self) -> None:
         self.remote_mode = self.remote_mode.flip()
+
+    def pressed_select(self) -> None:
+        match self.layout_mode:
+            case LayoutMode.MULTIVIEW:
+                self.enter_fullscreen()
+            case LayoutMode.FULLSCREEN:
+                match self.fullscreen_mode:
+                    case FullscreenMode.FULL:
+                        pass
+                    case FullscreenMode.PIP:
+                        self.swap_full_and_pip_windows()
 
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])

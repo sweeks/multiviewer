@@ -590,13 +590,6 @@ def enter_multiview(mv: Multiviewer) -> None:
             mv.selected_window = W1
 
 
-def enter_fullscreen(mv: Multiviewer) -> None:
-    mv.layout_mode = FULLSCREEN
-    mv.full_window = mv.selected_window
-    if mv.fullscreen_mode == FullscreenMode.PIP:
-        set_pip_window(mv)
-
-
 def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
     if False:
         debug_print(arrow)
@@ -658,13 +651,6 @@ def remote(mv: Multiviewer, tv: TV) -> JSON:
         mv.last_remote_press = this_press
         mv.screen_state.toggle_remote_mode()
         return {}
-
-
-def swap_full_and_pip_windows(mv: Multiviewer) -> None:
-    old_full = mv.full_window
-    mv.full_window = mv.pip_window
-    mv.pip_window = old_full
-    mv.selected_window = mv.full_window
 
 
 async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
@@ -740,15 +726,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
-                    match mv.layout_mode:
-                        case LayoutMode.MULTIVIEW:
-                            enter_fullscreen(mv)
-                        case LayoutMode.FULLSCREEN:
-                            match mv.fullscreen_mode:
-                                case FullscreenMode.FULL:
-                                    pass
-                                case FullscreenMode.PIP:
-                                    swap_full_and_pip_windows(mv)
+                    screen_state.pressed_select()
         case "Sleep":
             atv.sleep()
         case "Test":
