@@ -252,6 +252,12 @@ class ATVs:
         for atv in self.by_tv.values():
             atv.atv.should_send_commands_to_device = b
 
+    async def power_on(self) -> None:
+        # Waking TV1 turns on the LG via CEC.
+        for tv in TV.all():
+            self.atv(tv).wake()
+        await self.synced()
+
     async def shutdown(self):
         await self.synced()
         await aio.gather(*(atv.close() for atv in self.by_tv.values()))

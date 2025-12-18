@@ -118,12 +118,9 @@ async def power_on(mv: Multiviewer) -> None:
         debug_print(mv)
     log("turning on power")
     set_power(mv, Power.ON)
+    await mv.atvs.power_on()
     mv.screen.power_on()
     mv.volume.power_on()
-    # Waking TV1 turns on the LG via CEC.
-    for tv in TV.all():
-        mv.atvs.atv(tv).wake()
-    await mv.atvs.synced()
     log("power is on")
 
 
