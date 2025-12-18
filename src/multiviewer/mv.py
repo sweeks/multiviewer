@@ -24,9 +24,9 @@ class Multiviewer(Jsonable):
     # that the physical devices match it.
     power: Power = Power.ON
     screen: MvScreen = MvScreen.field()
-    volume: Volume = Volume.field()
-    jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
+    jtech_manager: JtechManager = JtechManager.field()
+    volume: Volume = Volume.field()
 
 
 def selected_tv(mv: Multiviewer) -> TV:
