@@ -611,11 +611,6 @@ def pressed_arrow(mv: Multiviewer, arrow: Arrow) -> None:
                     pressed_arrow_in_pip(mv, arrow)
 
 
-def pressed_back(mv: Multiviewer, tv: TV) -> None:
-    if mv.layout_mode == LayoutMode.FULLSCREEN and mv.num_active_windows > 1:
-        enter_multiview(mv)
-
-
 def pressed_play_pause(mv: Multiviewer) -> None:
     mv.selected_window_has_distinct_border = not mv.selected_window_has_distinct_border
 
@@ -693,7 +688,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
-                    pressed_back(mv, tv)
+                    screen_state.pressed_back()
         case "Down" | "S":
             match mv.remote_mode:
                 case RemoteMode.APPLE_TV:
