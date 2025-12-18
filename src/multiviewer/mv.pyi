@@ -12,7 +12,6 @@ inputs, and do commands from the user.
 """
 
 # Standard library
-from datetime import datetime
 from pathlib import Path
 
 # Local package
@@ -23,15 +22,10 @@ class Power:
     ON: Power
     OFF: Power
 
-class Clock:
-    def now(self) -> datetime: ...
-    def advance(self, seconds: float) -> None: ...
-
 class Multiviewer:
     def __init__(self) -> NoReturn:
         """Undefined. Use create()"""
     jtech_manager: JtechManager
-    clock: Clock
 
 async def create() -> Multiviewer: ...
 async def shutdown(mv: Multiviewer) -> None: ...

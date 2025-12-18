@@ -37,29 +37,12 @@ from .mv_screen_state import (
     initial_window_tv,
     max_num_windows,
     min_num_windows,
+    RealClock,
+    VirtualClock,
 )
 from .volume import Volume
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
-
-
-class RealClock:
-    def now(self) -> datetime:
-        return datetime.now()
-
-    def advance(self, _: float) -> None:
-        pass
-
-
-class VirtualClock:
-    def __init__(self) -> None:
-        self._now = datetime.now()
-
-    def now(self) -> datetime:
-        return self._now
-
-    def advance(self, seconds: float) -> None:
-        self._now += timedelta(seconds=seconds)
 
 
 H1 = Hdmi.H1
@@ -105,9 +88,6 @@ class Multiviewer(Jsonable):
     volume: Volume = Volume.field()
     last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
-    clock: RealClock | VirtualClock = field(
-        default_factory=RealClock, metadata=json_field.omit
-    )
     jtech_manager: JtechManager = JtechManager.field()
     atvs: ATVs = ATVs.field()
 
@@ -272,11 +252,11 @@ def set_should_send_commands_to_device(mv: Multiviewer, b: bool) -> None:
 
 
 def use_virtual_clock(mv: Multiviewer) -> None:
-    mv.clock = VirtualClock()
+    mv.screen_state.clock = VirtualClock()
 
 
 def advance_clock(mv: Multiviewer, seconds: float) -> None:
-    mv.clock.advance(seconds)
+    mv.screen_state.clock.advance(seconds)
 
 
 async def initialize(mv: Multiviewer):
@@ -497,7 +477,7 @@ def arrow_points_from_pip_to_full(mv: Multiviewer, arrow: Arrow) -> bool:
 
 def pressed_arrow_in_pip(mv: Multiviewer, arrow: Arrow) -> None:
     snapshot_selected_window = mv.selected_window
-    at = mv.clock.now()
+    at = mv.screen_state.clock.now()
     last_press = mv.last_arrow_press
     if (
         last_press is not None
@@ -549,7 +529,7 @@ def pressed_arrow_in_multiview(mv: Multiviewer, arrow: Arrow) -> None:
     # tap, swap the previously selected window with the previously pointed-to window.
     mv.selected_window_has_distinct_border = True
     last_press = mv.last_arrow_press
-    at = mv.clock.now()
+    at = mv.screen_state.clock.now()
     if (
         last_press is not None
         and arrow == last_press.arrow
@@ -634,7 +614,9 @@ def log_double_tap_duration(d: timedelta) -> None:
 
 
 def remote(mv: Multiviewer, tv: TV) -> JSON:
-    this_press = RemotePress(at=mv.clock.now(), selected_window=mv.selected_window)
+    this_press = RemotePress(
+        at=mv.screen_state.clock.now(), selected_window=mv.selected_window
+    )
     last_press = mv.last_remote_press
     if (
         last_press is not None

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 # Standard library
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 
 # Third-party
@@ -9,6 +10,7 @@ from dataclasses_json import dataclass_json
 # Local package
 from .base import *
 from .atv import TV
+from . import json_field
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Submode, Window
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
@@ -83,6 +85,25 @@ def tv2hdmi(tv: TV) -> Hdmi:
     raise AssertionError
 
 
+class RealClock:
+    def now(self) -> datetime:
+        return datetime.now()
+
+    def advance(self, _: float) -> None:
+        pass
+
+
+class VirtualClock:
+    def __init__(self) -> None:
+        self._now = datetime.now()
+
+    def now(self) -> datetime:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += timedelta(seconds=seconds)
+
+
 @dataclass_json
 @dataclass(slots=True)
 class MvScreenState(Jsonable):
@@ -101,6 +122,9 @@ class MvScreenState(Jsonable):
     selected_window: Window = W1
     selected_window_has_distinct_border: bool = True
     remote_mode: RemoteMode = MULTIVIEWER
+    clock: RealClock | VirtualClock = field(
+        default_factory=RealClock, metadata=json_field.omit
+    )
 
     def activate_tv(self) -> None:
         if self.num_active_windows < max_num_windows:
