@@ -38,11 +38,22 @@ async def tv_do(s, e=None):
         debug_print(s)
     commands = [part.split() for part in s.split(";") if part.strip()]
     last = None
-    for c in commands:
+    for parts in commands:
+        mv_obj = the_mv()
         if False:
-            debug_print(c)
-        j = await mv.do_command_and_update_jtech_output(the_mv(), c)
-        last = json.dumps(j)
+            debug_print(parts)
+        if parts[0] == "Double":
+            if len(parts) < 2:
+                fail("Double command requires an inner command")
+            result = None
+            for _ in range(2):
+                result = await mv.do_command_and_update_jtech_output(mv_obj, parts[1:])
+            last = json.dumps(result)
+            mv.advance_clock(mv_obj, 1.0)
+        else:
+            j = await mv.do_command_and_update_jtech_output(mv_obj, parts)
+            last = json.dumps(j)
+            mv.advance_clock(mv_obj, 1.0)
     if e is not None:
         expect(last, e)
 
@@ -245,44 +256,44 @@ async def _():
 async def _():
     await tv_do("Reset; Select; Home")
     await tv_is("PIP(NE) A1 H1 [H2]A")
-    await tv_do("W; W")
+    await tv_do("Double W")
     await tv_is("PIP(NW) A1 H1 [H2]A")
-    await tv_do("S; S")
+    await tv_do("Double S")
     await tv_is("PIP(SW) A1 H1 [H2]A")
-    await tv_do("E; E")
+    await tv_do("Double E")
     await tv_is("PIP(SE) A1 H1 [H2]A")
-    await tv_do("N; N")
+    await tv_do("Double N")
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
 
 @test("Change PIP location from PIP")
 async def _():
     await tv_do("Reset; Select; Home; N")
-    await tv_do("W; W")
+    await tv_do("Double W")
     await tv_is("PIP(NW) A2 H1 [H2]G")
-    await tv_do("S; S")
+    await tv_do("Double S")
     await tv_is("PIP(SW) A2 H1 [H2]G")
-    await tv_do("E; E")
+    await tv_do("Double E")
     await tv_is("PIP(SE) A2 H1 [H2]G")
-    await tv_do("N; N")
+    await tv_do("Double N")
     await tv_is("PIP(NE) A2 H1 [H2]G")
-    await tv_do("S; S")
+    await tv_do("Double S")
     await tv_is("PIP(SE) A2 H1 [H2]G")
-    await tv_do("W; W")
+    await tv_do("Double W")
     await tv_is("PIP(SW) A2 H1 [H2]G")
-    await tv_do("N; N")
+    await tv_do("Double N")
     await tv_is("PIP(NW) A2 H1 [H2]G")
-    await tv_do("E; E")
+    await tv_do("Double E")
     await tv_is("PIP(NE) A2 H1 [H2]G")
 
 
 @test("PIP location follows TV")
 async def _():
-    await tv_do("Reset; Select; Home; W; W")
+    await tv_do("Reset; Select; Home; Double W")
     await tv_is("PIP(NW) A1 H1 [H2]A")
     await tv_do("Select")
     await tv_is("PIP(NE) A2 H2 [H1]A")
-    await tv_do("S; S")
+    await tv_do("Double S")
     await tv_is("PIP(SE) A2 H2 [H1]A")
     await tv_do("Select")
     await tv_is("PIP(NW) A1 H1 [H2]A")
@@ -292,15 +303,15 @@ async def _():
 async def _():
     await tv_do("Reset; Select; Home; E")
     await tv_is("PIP(NE) A1 H1 [H3]A")
-    await tv_do("Wait 0.4; E")
+    await tv_do("E")
     await tv_is("PIP(NE) A1 H1 [H4]A")
-    await tv_do("Wait 0.4; E")
+    await tv_do("E")
     await tv_is("PIP(NE) A1 H1 [H2]A")
     await tv_do("W")
     await tv_is("PIP(NE) A1 H1 [H4]A")
-    await tv_do("Wait 0.4; W")
+    await tv_do("W")
     await tv_is("PIP(NE) A1 H1 [H3]A")
-    await tv_do("Wait 0.4; W")
+    await tv_do("W")
     await tv_is("PIP(NE) A1 H1 [H2]A")
 
 
@@ -338,9 +349,7 @@ async def _():
 
 @test("Home does nothing when only one active")
 async def _():
-    await tv_do(
-        "Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv; Wait 0.4; Deactivate_tv"
-    )
+    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv; Deactivate_tv")
     await tv_is("FULL A2 H2")
     await tv_do("Home")
     await tv_is("FULL A2 H2")
@@ -350,9 +359,9 @@ async def _():
 async def _():
     await tv_do("Reset; S; Deactivate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
-    await tv_do("Wait 0.4; S; Deactivate_tv")
+    await tv_do("S; Deactivate_tv")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
-    await tv_do("Wait 0.4; Deactivate_tv")
+    await tv_do("Deactivate_tv")
     await tv_is("FULL A2 H2")
 
 
@@ -378,7 +387,7 @@ async def _():
 
 @test("Activate_tv adds window")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv")
+    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
     await tv_do("Activate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
@@ -424,31 +433,26 @@ async def _():
 
 @test("Back does nothing when only one active")
 async def _():
-    await tv_do(
-        "Reset; S; Deactivate_tv; Wait 0.4; S; Deactivate_tv; Wait 0.4; Deactivate_tv"
-    )
+    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv; Deactivate_tv")
     await tv_is("FULL A2 H2")
-    await tv_do("Wait 0.4; Back")
+    await tv_do("Back")
     await tv_is("FULL A2 H2")
 
 
 @test("Home")
 async def _():
-    await tv_do("Reset; Remote; Wait 0.3; Home; Wait 1")
+    await tv_do("Reset; Remote; Home")
 
 
 @test("Home Right Down Left Up")
 async def _():
-    await tv_do("Reset; Remote; Wait 0.3")
-    await tv_do(
-        "Home; Wait 1; Home; Wait 1; Right; Wait 1; Down; Wait 1; Left; Wait 1; "
-        "Up; Wait 1"
-    )
+    await tv_do("Reset; Remote")
+    await tv_do("Home; Home; Right; Down; Left; Up")
 
 
 @test("Play_pause")
 async def _():
-    await tv_do("Reset; Remote; Wait 0.3; Play_pause; Wait 2; Play_pause")
+    await tv_do("Reset; Remote; Play_pause; Play_pause")
 
 
 @test("Screensaver")
@@ -509,8 +513,8 @@ async def _():
 
 @test("Remote double tap")
 async def _():
-    await tv_do("Reset; Remote; Remote", "1")
-    await tv_do("E; Remote; Remote", "3")
+    await tv_do("Reset; Double Remote", "1")
+    await tv_do("E; Double Remote", "3")
 
 
 @test("Info")
@@ -522,7 +526,7 @@ async def _():
 async def _():
     # We do a state change before turning off to make sure it is preserved.
     # We do a state change after turning on to make sure that we can.
-    await tv_do("Reset; E; Power; Wait 10; Power; S")
+    await tv_do("Reset; E; Power; Power; S")
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
 
 
@@ -531,6 +535,7 @@ async def main():
     arg = sys.argv[1] if len(sys.argv) > 1 else "all"
     the_mv = await mv.create()
     _the_mv = the_mv
+    mv.use_virtual_clock(the_mv)
     # mv.save(mv, Path("TEST_MV.json").resolve())
     mv.set_should_send_commands_to_device(the_mv, False)
     await mv.power_on(the_mv)
