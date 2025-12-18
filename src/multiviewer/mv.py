@@ -651,12 +651,12 @@ def remote(mv: Multiviewer, tv: TV) -> JSON:
         # Double tap.  The shortcut will open the Remote app on TV <i>
         mv.last_remote_press = None
         # Flip again to cancel the single-tap mode change.
-        mv.remote_mode = mv.remote_mode.flip()
+        mv.screen_state.toggle_remote_mode()
         return tv.to_int()
     else:
         # Single tap
         mv.last_remote_press = this_press
-        mv.remote_mode = mv.remote_mode.flip()
+        mv.screen_state.toggle_remote_mode()
         return {}
 
 

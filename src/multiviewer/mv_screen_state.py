@@ -165,6 +165,9 @@ class MvScreenState(Jsonable):
     def pressed_play_pause(self) -> None:
         self.selected_window_has_distinct_border = not self.selected_window_has_distinct_border
 
+    def toggle_remote_mode(self) -> None:
+        self.remote_mode = self.remote_mode.flip()
+
     def window_input(self, w: Window) -> Hdmi:
         return tv2hdmi(self.window_tv[w])
 
