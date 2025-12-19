@@ -4,4 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Reject files that have both staged and unstaged changes
+staged="$(git diff --name-only --cached)"
+unstaged="$(git diff --name-only)"
+both_changed="$(comm -12 <(printf '%s\n' "$staged" | sort) <(printf '%s\n' "$unstaged" | sort))"
+if [[ -n "$both_changed" ]]; then
+  echo "pre-commit: files have both staged and unstaged changes; restage before committing:" >&2
+  echo "$both_changed" >&2
+  exit 1
+fi
+
 "$ROOT/bin/validate-repo.sh"
