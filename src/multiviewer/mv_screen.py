@@ -1,16 +1,13 @@
 from __future__ import annotations
 
+import copy
+from collections import deque
 from dataclasses import dataclass, field
-
-# Standard library
 from datetime import timedelta
 
-# Third-party
 from dataclasses_json import dataclass_json
 
 from . import json_field
-
-# Local package
 from .base import *
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Submode, Window
@@ -79,6 +76,37 @@ class Button(MyStrEnum):
     ARROW_E = auto()
     ARROW_W = auto()
     ARROW_S = auto()
+
+
+@dataclass(frozen=True)
+class FsmState:
+    layout_mode: LayoutMode
+    num_active_windows: int
+    multiview_submode: Submode
+    fullscreen_mode: FullscreenMode
+    full_window: Window
+    pip_window: Window
+    selected_window: Window
+    selected_window_has_distinct_border: bool
+    remote_mode: RemoteMode
+    last_button: Button | None
+    last_selected_window: Window
+
+    @classmethod
+    def from_screen(cls, screen: MvScreen) -> FsmState:
+        return cls(
+            layout_mode=screen.layout_mode,
+            num_active_windows=screen.num_active_windows,
+            multiview_submode=screen.multiview_submode,
+            fullscreen_mode=screen.fullscreen_mode,
+            full_window=screen.full_window,
+            pip_window=screen.pip_window,
+            selected_window=screen.selected_window,
+            selected_window_has_distinct_border=screen.selected_window_has_distinct_border,
+            remote_mode=screen.remote_mode,
+            last_button=screen.last_button,
+            last_selected_window=screen.last_selected_window,
+        )
 
 
 H1 = Hdmi.H1
@@ -502,6 +530,52 @@ class MvScreen(Jsonable):
             case _:
                 fail("invalid button", button)
         return result
+
+    def fsm_key(self) -> FsmState:
+        return FsmState.from_screen(self)
+
+    def explore_fsm(
+        self,
+        max_states: int = 500_000,
+        validate: bool = True,
+        report_powers_of_two: bool = False,
+    ) -> tuple[int, int, bool]:
+        """Breadth-first exploration of reachable FSM states.
+
+        Returns (num_states, num_transitions, complete) where complete=False if the
+        search hit max_states and stopped early.
+        """
+        start = copy.deepcopy(self)
+        queue: deque[MvScreen] = deque([start])
+        seen: set[FsmState] = {FsmState.from_screen(start)}
+        transitions = 0
+        next_report = 1
+
+        buttons = list(Button)
+        while queue:
+            screen = queue.popleft()
+            for button in buttons:
+                for maybe_double_tap in (False, True):
+                    next_screen: MvScreen = copy.deepcopy(screen)
+                    next_screen.pressed(button, maybe_double_tap=maybe_double_tap)
+                    if validate:
+                        next_screen.validate()
+                    key = FsmState.from_screen(next_screen)
+                    transitions += 1
+                    if key not in seen:
+                        seen.add(key)
+                        if report_powers_of_two and len(seen) >= next_report:
+                            while next_report <= len(seen):
+                                print(
+                                    f"states={len(seen)} transitions={transitions}",
+                                    flush=True,
+                                )
+                                next_report *= 2
+                        if len(seen) >= max_states:
+                            return (len(seen), transitions, False)
+                        queue.append(next_screen)
+
+        return (len(seen), transitions, True)
 
     def render(self) -> JtechOutput:
         def window(
