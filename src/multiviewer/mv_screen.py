@@ -64,6 +64,21 @@ class RemoteMode(MyStrEnum):
 APPLE_TV = RemoteMode.APPLE_TV
 MULTIVIEWER = RemoteMode.MULTIVIEWER
 
+
+class Button(MyStrEnum):
+    REMOTE = auto()
+    SELECT = auto()
+    BACK = auto()
+    PLAY_PAUSE = auto()
+    ACTIVATE_TV = auto()
+    DEACTIVATE_TV = auto()
+    TOGGLE_SUBMODE = auto()
+    ARROW_N = auto()
+    ARROW_E = auto()
+    ARROW_W = auto()
+    ARROW_S = auto()
+
+
 H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3
@@ -491,6 +506,33 @@ class MvScreen(Jsonable):
                     selected_window=self.selected_window,
                 )
                 self.selected_window = points_to
+
+    def pressed(self, button: Button, *, tv: TV, at: datetime) -> None:
+        match button:
+            case Button.ARROW_N:
+                self.pressed_arrow(Arrow.N, at=at)
+            case Button.ARROW_E:
+                self.pressed_arrow(Arrow.E, at=at)
+            case Button.ARROW_W:
+                self.pressed_arrow(Arrow.W, at=at)
+            case Button.ARROW_S:
+                self.pressed_arrow(Arrow.S, at=at)
+            case Button.REMOTE:
+                self.remote(tv=tv, at=at)
+            case Button.SELECT:
+                self.pressed_select()
+            case Button.BACK:
+                self.pressed_back()
+            case Button.PLAY_PAUSE:
+                self.pressed_play_pause()
+            case Button.ACTIVATE_TV:
+                self.activate_tv()
+            case Button.DEACTIVATE_TV:
+                self.deactivate_tv()
+            case Button.TOGGLE_SUBMODE:
+                self.toggle_submode()
+            case _:
+                fail("invalid button", button)
 
     def render(self) -> JtechOutput:
         def window(

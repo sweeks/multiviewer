@@ -15,7 +15,7 @@ from .base import JSON, Jsonable, dataclass, debug_print, fail, log, field
 from .jtech import Power
 from .jtech_manager import JtechManager
 from .jtech_output import JtechOutput
-from .mv_screen import Arrow, MvScreen, RemoteMode
+from .mv_screen import Arrow, Button, MvScreen, RemoteMode
 from .volume import Volume
 
 
@@ -175,27 +175,27 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     atv = mv.atvs.atv(tv)
     match command:
         case "Activate_tv":
-            screen.activate_tv()
+            screen.pressed(Button.ACTIVATE_TV, tv=tv, at=now(mv))
         case "Back":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_back()
+                    screen.pressed(Button.BACK, tv=tv, at=now(mv))
         case "Deactivate_tv":
-            screen.deactivate_tv()
+            screen.pressed(Button.DEACTIVATE_TV, tv=tv, at=now(mv))
         case "Down" | "S":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.S, at=now(mv))
+                    screen.pressed(Button.ARROW_S, tv=tv, at=now(mv))
         case "Home":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
-                    screen.toggle_submode()
+                    screen.pressed(Button.TOGGLE_SUBMODE, tv=tv, at=now(mv))
         case "Info":
             return await info(mv)
         case "Launch":
@@ -205,7 +205,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.W, at=now(mv))
+                    screen.pressed(Button.ARROW_W, tv=tv, at=now(mv))
         case "Mute":
             mv.volume.toggle_mute()
         case "Play_pause":
@@ -213,7 +213,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_play_pause()
+                    screen.pressed(Button.PLAY_PAUSE, tv=tv, at=now(mv))
         case "Power_on":
             if mv.power == Power.OFF:
                 await power_on(mv)
@@ -224,7 +224,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case Power.ON:
                     await power_off(mv)
         case "Remote":
-            screen.remote(tv, at=now(mv))
+            screen.pressed(Button.REMOTE, tv=tv, at=now(mv))
             return tv.to_int()
         case "Reset":
             reset(mv)
@@ -233,7 +233,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.E, at=now(mv))
+                    screen.pressed(Button.ARROW_E, tv=tv, at=now(mv))
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -241,7 +241,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_select()
+                    screen.pressed(Button.SELECT, tv=tv, at=now(mv))
         case "Test":
             pass
         case "Up" | "N":
@@ -249,7 +249,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed_arrow(Arrow.N, at=now(mv))
+                    screen.pressed(Button.ARROW_N, tv=tv, at=now(mv))
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
