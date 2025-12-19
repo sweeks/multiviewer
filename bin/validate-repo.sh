@@ -11,13 +11,13 @@ if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
   exit 1
 fi
 
-# Code formatting (check-only)
-if ! "$ROOT/.venv/bin/black" --check --quiet src tests; then
-  echo "Black formatting issues found. Run bin/format-code.sh to fix." >&2
+# Code formatting (auto-fix)
+if ! "$ROOT/.venv/bin/black" src tests; then
+  echo "Black formatting failed." >&2
   exit 1
 fi
 
-# Docs formatting (check-only)
+# Docs formatting (auto-fix)
 mdformat_bin=""
 if command -v mdformat >/dev/null 2>&1; then
   mdformat_bin=$(command -v mdformat)
@@ -32,8 +32,8 @@ doc_paths=(README.md)
 while IFS= read -r -d '' p; do
   doc_paths+=("$p")
 done < <(find docs -name '*.md' -print0)
-if ! "$mdformat_bin" --check --wrap 90 "${doc_paths[@]}" >/dev/null; then
-  echo "mdformat issues found. Run bin/format-docs.sh to fix." >&2
+if ! "$mdformat_bin" --wrap 90 "${doc_paths[@]}"; then
+  echo "mdformat failed." >&2
   exit 1
 fi
 
