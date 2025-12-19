@@ -4,35 +4,4 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
-  echo "Missing .venv/. Activate or create it before committing." >&2
-  exit 1
-fi
-
-"$ROOT/bin/format-code.sh"
-"$ROOT/bin/format-docs.sh"
-
-# Fail if formatters modified files.
-if ! git diff --quiet --exit-code; then
-  echo "Pre-commit: formatting changed files. Please review/stage them and re-run." >&2
-  exit 1
-fi
-
-# Run pyright to ensure type checks pass.
-if ! "$ROOT/.venv/bin/pyright" ; then
-  echo "Pre-commit: pyright reported type errors." >&2
-  exit 1
-fi
-
-log="$(mktemp)"
-trap 'rm -f "$log"' EXIT
-
-# Run the test suite and fail the commit if any Expect/Actual mismatches appear.
-if ! "$ROOT/bin/test-all.sh" | tee "$log"; then
-  exit 1
-fi
-
-if grep -q "EXPECT:" "$log"; then
-  echo "Pre-commit: Expect/Actual mismatches detected. Fix tests before committing." >&2
-  exit 1
-fi
+"$ROOT/bin/validate-repo.sh"
