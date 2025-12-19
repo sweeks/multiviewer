@@ -11,11 +11,21 @@ if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
   exit 1
 fi
 
+# Run a command quietly; on failure, show its output and exit.
+run_quiet() {
+  local log
+  log="$(mktemp)"
+  trap 'rm -f "$log"' RETURN
+  if ! "$@" >"$log" 2>&1; then
+    cat "$log" >&2
+    exit 1
+  fi
+  rm -f "$log"
+  trap - RETURN
+}
+
 # Code formatting (auto-fix)
-if ! "$ROOT/.venv/bin/black" src tests; then
-  echo "Black formatting failed." >&2
-  exit 1
-fi
+run_quiet "$ROOT/.venv/bin/black" --quiet src tests
 
 # Docs formatting (auto-fix)
 mdformat_bin=""
@@ -32,30 +42,16 @@ doc_paths=(README.md)
 while IFS= read -r -d '' p; do
   doc_paths+=("$p")
 done < <(find docs -name '*.md' -print0)
-if ! "$mdformat_bin" --wrap 90 "${doc_paths[@]}"; then
-  echo "mdformat failed." >&2
-  exit 1
-fi
+run_quiet "$mdformat_bin" --wrap 90 "${doc_paths[@]}"
 
 # Ruff (configured in pyproject)
-if ! "$ROOT/.venv/bin/ruff" check src tests >/dev/null; then
-  echo "Ruff reported issues." >&2
-  exit 1
-fi
+run_quiet "$ROOT/.venv/bin/ruff" check src tests
 
 # Type checking
-if ! pyright_out="$(PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" 2>&1 >/dev/null)"; then
-  echo "Pyright reported type errors." >&2
-  echo "$pyright_out" >&2
-  exit 1
-fi
+run_quiet env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"
 
 # Stub/runtime consistency
-if ! verify_out="$(PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" --verifytypes multiviewer --ignoreexternal 2>&1 >/dev/null)"; then
-  echo "Pyright verifytypes reported inconsistencies." >&2
-  echo "$verify_out" >&2
-  exit 1
-fi
+run_quiet env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" --verifytypes multiviewer --ignoreexternal
 
 log="$(mktemp)"
 trap 'rm -f "$log"' EXIT
