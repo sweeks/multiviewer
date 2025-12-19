@@ -51,6 +51,7 @@ class RemotePressInfo:
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
 
+
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -62,7 +63,9 @@ class Multiviewer(Jsonable):
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
     )
-    last_arrow_press: ArrowPressInfo | None = field(default=None, metadata=json_field.omit)
+    last_arrow_press: ArrowPressInfo | None = field(
+        default=None, metadata=json_field.omit
+    )
     last_remote_press: RemotePressInfo | None = field(
         default=None, metadata=json_field.omit
     )
@@ -213,7 +216,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                         and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
                     )
                     screen.pressed(Button.ARROW_S, double_tap=double_tap)
-                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.S, at)
+                    mv.last_arrow_press = (
+                        None if double_tap else ArrowPressInfo(Arrow.S, at)
+                    )
         case "Home":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
@@ -236,7 +241,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                         and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
                     )
                     screen.pressed(Button.ARROW_W, double_tap=double_tap)
-                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.W, at)
+                    mv.last_arrow_press = (
+                        None if double_tap else ArrowPressInfo(Arrow.W, at)
+                    )
         case "Mute":
             mv.volume.toggle_mute()
         case "Play_pause":
@@ -277,7 +284,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                         and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
                     )
                     screen.pressed(Button.ARROW_E, double_tap=double_tap)
-                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.E, at)
+                    mv.last_arrow_press = (
+                        None if double_tap else ArrowPressInfo(Arrow.E, at)
+                    )
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -300,7 +309,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                         and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
                     )
                     screen.pressed(Button.ARROW_N, double_tap=double_tap)
-                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.N, at)
+                    mv.last_arrow_press = (
+                        None if double_tap else ArrowPressInfo(Arrow.N, at)
+                    )
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
