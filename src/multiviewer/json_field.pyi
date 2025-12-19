@@ -10,7 +10,7 @@ Used to specify json serialization in fields of class declarations that look lik
 # Local package
 from .base import *
 
-Metadata = dict[str, dict]
+Metadata = dict[str, dict[str, Any]]
 
 omit: Metadata  # Elide the field from json
 

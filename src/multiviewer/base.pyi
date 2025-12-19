@@ -37,7 +37,7 @@ List = list
 Tuple = tuple
 
 class Jsonable:
-    def to_json(self, *args, **kwargs) -> str: ...
+    def to_json(self, *args: Any, **kwargs: Any) -> str: ...
     @classmethod
     def from_json(cls, _: str) -> Self: ...
 
@@ -87,7 +87,7 @@ def assert_equal(a: Any, b: Any, *args: object) -> None:
 def debug_print(*args: Any) -> None:
     """pretty prints the supplied arguments"""
 
-def log(event: str, **fields) -> None:
+def log(event: str, **fields: Any) -> None:
     """outputs a timestamped line and the supplied fields"""
 
 def log_exc(e: Exception) -> None: ...

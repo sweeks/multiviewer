@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+
 if [[ ! -x "$ROOT/.venv/bin/python3" ]]; then
   echo "Missing .venv/. Activate or create it before validating." >&2
   exit 1
@@ -36,9 +38,16 @@ if ! "$mdformat_bin" --check --wrap 90 "${doc_paths[@]}" >/dev/null; then
 fi
 
 # Type checking
-if ! pyright_out="$("$ROOT/.venv/bin/pyright" 2>&1 >/dev/null)"; then
+if ! pyright_out="$(PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" 2>&1 >/dev/null)"; then
   echo "Pyright reported type errors." >&2
   echo "$pyright_out" >&2
+  exit 1
+fi
+
+# Stub/runtime consistency
+if ! verify_out="$(PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" --verifytypes multiviewer --ignoreexternal 2>&1 >/dev/null)"; then
+  echo "Pyright verifytypes reported inconsistencies." >&2
+  echo "$verify_out" >&2
   exit 1
 fi
 

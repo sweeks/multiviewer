@@ -88,7 +88,7 @@ class Jtech:
     """
 
     @classmethod
-    def field(cls): ...
+    def field(cls) -> Jtech: ...
     async def reset(self) -> None:
         """Reset the internal state and reconnect to the J-Tech."""
 
