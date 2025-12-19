@@ -51,7 +51,6 @@ class Multiviewer(Jsonable):
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
     )
-    last_command: str = field(default="", metadata=json_field.omit)
     last_command_at: datetime = field(
         default_factory=lambda: datetime.fromtimestamp(0), metadata=json_field.omit
     )
@@ -175,22 +174,16 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
         debug_print(args)
     command = args[0]
     at = now(mv)
-    double_tap = mv.last_command == command and (
-        at - mv.last_command_at <= DOUBLE_TAP_MAX_DURATION
-    )
-    mv.last_command = command
-    if double_tap:
-        mv.last_command_at = datetime.fromtimestamp(0)
-    else:
-        mv.last_command_at = at
+    maybe_double_tap = at - mv.last_command_at <= DOUBLE_TAP_MAX_DURATION
+    mv.last_command_at = at
     if mv.power == Power.OFF and command not in ["Power", "Power_on"]:
         return {}
     screen = mv.screen
     tv = selected_tv(mv)
     atv = mv.atvs.atv(tv)
 
-    def pressed(button: Button) -> None:
-        screen.pressed(button, double_tap=double_tap)
+    def pressed(button: Button) -> JSON:
+        return screen.pressed(button, maybe_double_tap=maybe_double_tap)
 
     match command:
         case "Activate_tv":
@@ -243,11 +236,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case Power.ON:
                     await power_off(mv)
         case "Remote":
-            pressed(Button.REMOTE)
-            if double_tap:
-                return tv.to_int()
-            else:
-                return {}
+            return pressed(Button.REMOTE)
         case "Reset":
             reset(mv)
         case "Right" | "E":

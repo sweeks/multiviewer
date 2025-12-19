@@ -294,12 +294,13 @@ class MvScreen(Jsonable):
     def selected_tv(self) -> TV:
         return self.window_tv[self.selected_window]
 
-    def remote(self, *, double_tap: bool = False) -> None:
+    def remote(self, *, double_tap: bool = False) -> JSON:
         if double_tap:
             # Double tap.  The shortcut will open the Remote app on TV <i>
             self.last_button_press = None
             # Flip again to cancel the single-tap mode change.
             self.toggle_remote_mode()
+            return self.selected_tv().to_int()
         else:
             # Single tap
             self.last_button_press = ButtonPress(
@@ -309,6 +310,7 @@ class MvScreen(Jsonable):
                 selected_window=self.selected_window,
             )
             self.toggle_remote_mode()
+            return {}
 
     def validate(self) -> None:
         assert_equal(set(self.window_tv.keys()), set(Mode.QUAD.windows()))
@@ -492,12 +494,13 @@ class MvScreen(Jsonable):
                     case FullscreenMode.PIP:
                         self.pressed_arrow_in_pip(arrow, double_tap=double_tap)
 
-    def pressed(self, button: Button, *, double_tap: bool = False) -> None:
+    def pressed(self, button: Button, *, maybe_double_tap: bool = False) -> JSON:
         double_tap = (
-            double_tap
+            maybe_double_tap
             and self.last_button_press is not None
             and self.last_button_press.button == button
         )
+        result: JSON = {}
         match button:
             case Button.ARROW_N:
                 self.pressed_arrow(Arrow.N, double_tap=double_tap)
@@ -508,7 +511,7 @@ class MvScreen(Jsonable):
             case Button.ARROW_S:
                 self.pressed_arrow(Arrow.S, double_tap=double_tap)
             case Button.REMOTE:
-                self.remote(double_tap=double_tap)
+                result = self.remote(double_tap=double_tap)
             case Button.SELECT:
                 self.pressed_select()
             case Button.BACK:
@@ -523,6 +526,7 @@ class MvScreen(Jsonable):
                 self.toggle_submode()
             case _:
                 fail("invalid button", button)
+        return result
 
     def render(self) -> JtechOutput:
         def window(
