@@ -341,17 +341,6 @@ class MvScreen(Jsonable):
         self.last_arrow_press = None
         self.last_remote_press = None
 
-    def pressed_arrow(self, arrow: Arrow, *, double_tap: bool) -> None:
-        match self.layout_mode:
-            case LayoutMode.MULTIVIEW:
-                self.pressed_arrow_in_multiview(arrow, double_tap=double_tap)
-            case LayoutMode.FULLSCREEN:
-                match self.fullscreen_mode:
-                    case FullscreenMode.FULL:
-                        self.pressed_arrow_in_full(arrow)
-                    case FullscreenMode.PIP:
-                        self.pressed_arrow_in_pip(arrow, double_tap=double_tap)
-
     def arrow_points_to(self, arrow: Arrow) -> Window | None:
         match self.num_active_windows:
             case 2 | 3:
@@ -488,6 +477,17 @@ class MvScreen(Jsonable):
                     selected_window=self.selected_window,
                 )
                 self.selected_window = points_to
+
+    def pressed_arrow(self, arrow: Arrow, *, double_tap: bool) -> None:
+        match self.layout_mode:
+            case LayoutMode.MULTIVIEW:
+                self.pressed_arrow_in_multiview(arrow, double_tap=double_tap)
+            case LayoutMode.FULLSCREEN:
+                match self.fullscreen_mode:
+                    case FullscreenMode.FULL:
+                        self.pressed_arrow_in_full(arrow)
+                    case FullscreenMode.PIP:
+                        self.pressed_arrow_in_pip(arrow, double_tap=double_tap)
 
     def pressed(self, button: Button, *, double_tap: bool = False) -> None:
         match button:
