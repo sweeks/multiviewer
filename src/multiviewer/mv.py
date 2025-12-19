@@ -10,12 +10,11 @@ from dataclasses_json import dataclass_json
 # Local package
 from . import json_field
 from .atv import ATVs
-from .tv import TV
-from .base import JSON, Jsonable, dataclass, debug_print, fail, log, field
+from .base import JSON, Jsonable, dataclass, debug_print, fail, field, log
 from .jtech import Power
 from .jtech_manager import JtechManager
-from .jtech_output import JtechOutput
-from .mv_screen import Arrow, Button, MvScreen, RemoteMode
+from .mv_screen import Button, MvScreen, RemoteMode
+from .tv import TV
 from .volume import Volume
 
 

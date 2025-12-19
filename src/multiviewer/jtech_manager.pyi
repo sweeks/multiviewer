@@ -4,7 +4,6 @@ Manage the jtech device, by continually syncing the desired power and output.
 
 # Local package
 from .base import *
-from .jtech import Power
 from .jtech_output import JtechOutput
 
 class JtechManager:

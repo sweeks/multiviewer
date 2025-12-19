@@ -14,8 +14,7 @@ from . import aio, config, json_field
 
 # Local package
 from .base import *
-from .tv import TV, validate_tv
-
+from .tv import TV
 
 tv_ips = {
     TV.TV1: config.TV1_IP,

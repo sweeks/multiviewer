@@ -37,6 +37,12 @@ if ! "$mdformat_bin" --check --wrap 90 "${doc_paths[@]}" >/dev/null; then
   exit 1
 fi
 
+# Ruff (configured in pyproject)
+if ! "$ROOT/.venv/bin/ruff" check src tests >/dev/null; then
+  echo "Ruff reported issues." >&2
+  exit 1
+fi
+
 # Type checking
 if ! pyright_out="$(PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" 2>&1 >/dev/null)"; then
   echo "Pyright reported type errors." >&2

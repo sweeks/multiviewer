@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-# Standard library
-from datetime import datetime, timedelta
 from dataclasses import dataclass, field
+
+# Standard library
+from datetime import timedelta
 
 # Third-party
 from dataclasses_json import dataclass_json
 
+from . import json_field
+
 # Local package
 from .base import *
-from .tv import TV
-from . import json_field
 from .json_field import json_dict
 from .jtech import Color, Hdmi, Mode, PipLocation, Submode, Window
 from .jtech_output import Full, JtechOutput, Pbp, Pip, Quad, Triple, WindowContents
+from .tv import TV
 
 DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
 
@@ -177,7 +179,7 @@ class MvScreen(Jsonable):
     last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
 
     @classmethod
-    def field(cls) -> "MvScreen":
+    def field(cls) -> MvScreen:
         return field(default_factory=MvScreen)
 
     def power_on(self) -> None:
