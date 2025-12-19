@@ -34,15 +34,6 @@ run_quiet pyright env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"
 # Stub/runtime consistency
 run_quiet pyright-verify env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" --verifytypes multiviewer --ignoreexternal
 
-tests_log="$ROOT/var/tests.log"
-if ! "$ROOT/bin/test-all.sh" >"$tests_log" 2>&1; then
-  echo "validate-repo: tests failed (see ${tests_log})" >&2
-  exit 1
-fi
-
-if grep -q "EXPECT:" "$tests_log"; then
-  echo "validate-repo: Expect/Actual mismatches (see ${tests_log})" >&2
-  exit 1
-fi
+run_quiet tests "$ROOT/bin/test-all.sh"
 
 echo "validate-repo: ok"
