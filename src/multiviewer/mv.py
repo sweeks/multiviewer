@@ -244,7 +244,10 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                     await power_off(mv)
         case "Remote":
             pressed(Button.REMOTE)
-            return tv.to_int()
+            if double_tap:
+                return tv.to_int()
+            else:
+                return {}
         case "Reset":
             reset(mv)
         case "Right" | "E":

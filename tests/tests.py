@@ -522,6 +522,11 @@ async def _():
     await tv_do("E; Double Remote", "3")
 
 
+@test("Remote single tap returns nothing")
+async def _():
+    await tv_do("Reset; Remote", "{}")
+
+
 @test("Info")
 async def _():
     await tv_do("Reset; Info", '"QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A V+0"')
