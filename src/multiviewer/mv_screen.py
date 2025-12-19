@@ -146,14 +146,10 @@ def tv2hdmi(tv: TV) -> Hdmi:
 
 
 @dataclass(slots=True)
-class ArrowPress:
-    arrow: Arrow
+class ButtonPress:
+    button: Button
+    arrow: Arrow | None
     points_to: Window | None
-    selected_window: Window
-
-
-@dataclass(slots=True)
-class RemotePress:
     selected_window: Window
 
 
@@ -175,8 +171,7 @@ class MvScreen(Jsonable):
     selected_window: Window = W1
     selected_window_has_distinct_border: bool = True
     remote_mode: RemoteMode = MULTIVIEWER
-    last_arrow_press: ArrowPress | None = field(default=None, metadata=json_field.omit)
-    last_remote_press: RemotePress | None = field(default=None, metadata=json_field.omit)
+    last_button_press: ButtonPress | None = field(default=None, metadata=json_field.omit)
 
     @classmethod
     def field(cls) -> MvScreen:
@@ -300,14 +295,19 @@ class MvScreen(Jsonable):
         return self.window_tv[self.selected_window]
 
     def remote(self, *, double_tap: bool = False) -> None:
-        if double_tap and self.last_remote_press is not None:
+        if double_tap:
             # Double tap.  The shortcut will open the Remote app on TV <i>
-            self.last_remote_press = None
+            self.last_button_press = None
             # Flip again to cancel the single-tap mode change.
             self.toggle_remote_mode()
         else:
             # Single tap
-            self.last_remote_press = RemotePress(selected_window=self.selected_window)
+            self.last_button_press = ButtonPress(
+                button=Button.REMOTE,
+                arrow=None,
+                points_to=None,
+                selected_window=self.selected_window,
+            )
             self.toggle_remote_mode()
 
     def validate(self) -> None:
@@ -338,8 +338,7 @@ class MvScreen(Jsonable):
         self.selected_window = new.selected_window
         self.selected_window_has_distinct_border = new.selected_window_has_distinct_border
         self.remote_mode = new.remote_mode
-        self.last_arrow_press = None
-        self.last_remote_press = None
+        self.last_button_press = None
 
     def arrow_points_to(self, arrow: Arrow) -> Window | None:
         match self.num_active_windows:
@@ -413,8 +412,9 @@ class MvScreen(Jsonable):
 
     def pressed_arrow_in_pip(self, arrow: Arrow, *, double_tap: bool) -> None:
         snapshot_selected_window = self.selected_window
-        last_press = self.last_arrow_press
-        if double_tap and last_press is not None and arrow == last_press.arrow:
+        last_press = self.last_button_press
+        if double_tap:
+            assert last_press is not None
             # Double tap -- undo single-tap effect and change PIP location.
             self.selected_window = last_press.selected_window
             match arrow:
@@ -427,7 +427,7 @@ class MvScreen(Jsonable):
             pip_loc = self.from_pip_arrow_points_to(arrow)
             if pip_loc is not None:
                 self.pip_location_by_tv[self.window_tv[self.full_window]] = pip_loc
-            self.last_arrow_press = None
+            self.last_button_press = None
             return
         # Single tap
         pip_is_selected = self.selected_window == self.pip_window
@@ -447,7 +447,8 @@ class MvScreen(Jsonable):
                 else:
                     if self.arrow_points_from_full_to_pip(arrow):
                         self.selected_window = self.pip_window
-        self.last_arrow_press = ArrowPress(
+        self.last_button_press = ButtonPress(
+            button=Button(f"ARROW_{arrow.name}"),
             arrow=arrow,
             points_to=None,
             selected_window=snapshot_selected_window,
@@ -457,11 +458,12 @@ class MvScreen(Jsonable):
         # If single tap, change the selected window to the pointed-to window. If double
         # tap, swap the previously selected window with the previously pointed-to window.
         self.selected_window_has_distinct_border = True
-        last_press = self.last_arrow_press
-        if double_tap and last_press is not None and arrow == last_press.arrow:
+        last_press = self.last_button_press
+        if double_tap:
+            assert last_press is not None
             # Double tap
             assert last_press.points_to is not None
-            self.last_arrow_press = None
+            self.last_button_press = None
             self.swap_window_tvs(last_press.selected_window, last_press.points_to)
             if self.window_is_prominent(last_press.selected_window):
                 self.selected_window = last_press.selected_window
@@ -471,7 +473,8 @@ class MvScreen(Jsonable):
             points_to = self.arrow_points_to(arrow)
             if points_to is not None:
                 # Single tap
-                self.last_arrow_press = ArrowPress(
+                self.last_button_press = ButtonPress(
+                    button=Button(f"ARROW_{arrow.name}"),
                     arrow=arrow,
                     points_to=points_to,
                     selected_window=self.selected_window,
@@ -490,6 +493,11 @@ class MvScreen(Jsonable):
                         self.pressed_arrow_in_pip(arrow, double_tap=double_tap)
 
     def pressed(self, button: Button, *, double_tap: bool = False) -> None:
+        double_tap = (
+            double_tap
+            and self.last_button_press is not None
+            and self.last_button_press.button == button
+        )
         match button:
             case Button.ARROW_N:
                 self.pressed_arrow(Arrow.N, double_tap=double_tap)
