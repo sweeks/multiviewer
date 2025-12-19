@@ -38,6 +38,19 @@ class VirtualClock:
         self._now += timedelta(seconds=seconds)
 
 
+@dataclass(slots=True)
+class ArrowPressInfo:
+    arrow: Arrow
+    at: datetime
+
+
+@dataclass(slots=True)
+class RemotePressInfo:
+    at: datetime
+
+
+DOUBLE_TAP_MAX_DURATION = timedelta(seconds=0.3)
+
 @dataclass_json
 @dataclass(slots=True)
 class Multiviewer(Jsonable):
@@ -48,6 +61,10 @@ class Multiviewer(Jsonable):
     volume: Volume = Volume.field()
     clock: RealClock | VirtualClock = field(
         default_factory=RealClock, metadata=json_field.omit
+    )
+    last_arrow_press: ArrowPressInfo | None = field(default=None, metadata=json_field.omit)
+    last_remote_press: RemotePressInfo | None = field(
+        default=None, metadata=json_field.omit
     )
 
 
@@ -175,27 +192,34 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
     atv = mv.atvs.atv(tv)
     match command:
         case "Activate_tv":
-            screen.pressed(Button.ACTIVATE_TV, tv=tv, at=now(mv))
+            screen.pressed(Button.ACTIVATE_TV, double_tap=False)
         case "Back":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.menu()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.BACK, tv=tv, at=now(mv))
+                    screen.pressed(Button.BACK, double_tap=False)
         case "Deactivate_tv":
-            screen.pressed(Button.DEACTIVATE_TV, tv=tv, at=now(mv))
+            screen.pressed(Button.DEACTIVATE_TV, double_tap=False)
         case "Down" | "S":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.down()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.ARROW_S, tv=tv, at=now(mv))
+                    at = now(mv)
+                    double_tap = (
+                        mv.last_arrow_press is not None
+                        and mv.last_arrow_press.arrow == Arrow.S
+                        and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
+                    )
+                    screen.pressed(Button.ARROW_S, double_tap=double_tap)
+                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.S, at)
         case "Home":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:
                     atv.home()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.TOGGLE_SUBMODE, tv=tv, at=now(mv))
+                    screen.pressed(Button.TOGGLE_SUBMODE, double_tap=False)
         case "Info":
             return await info(mv)
         case "Launch":
@@ -205,7 +229,14 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.left()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.ARROW_W, tv=tv, at=now(mv))
+                    at = now(mv)
+                    double_tap = (
+                        mv.last_arrow_press is not None
+                        and mv.last_arrow_press.arrow == Arrow.W
+                        and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
+                    )
+                    screen.pressed(Button.ARROW_W, double_tap=double_tap)
+                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.W, at)
         case "Mute":
             mv.volume.toggle_mute()
         case "Play_pause":
@@ -213,7 +244,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.play_pause()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.PLAY_PAUSE, tv=tv, at=now(mv))
+                    screen.pressed(Button.PLAY_PAUSE, double_tap=False)
         case "Power_on":
             if mv.power == Power.OFF:
                 await power_on(mv)
@@ -224,7 +255,13 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case Power.ON:
                     await power_off(mv)
         case "Remote":
-            screen.pressed(Button.REMOTE, tv=tv, at=now(mv))
+            at = now(mv)
+            double_tap = (
+                mv.last_remote_press is not None
+                and at - mv.last_remote_press.at <= DOUBLE_TAP_MAX_DURATION
+            )
+            screen.pressed(Button.REMOTE, double_tap=double_tap)
+            mv.last_remote_press = None if double_tap else RemotePressInfo(at)
             return tv.to_int()
         case "Reset":
             reset(mv)
@@ -233,7 +270,14 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.right()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.ARROW_E, tv=tv, at=now(mv))
+                    at = now(mv)
+                    double_tap = (
+                        mv.last_arrow_press is not None
+                        and mv.last_arrow_press.arrow == Arrow.E
+                        and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
+                    )
+                    screen.pressed(Button.ARROW_E, double_tap=double_tap)
+                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.E, at)
         case "Screensaver":
             atv.screensaver()
         case "Select":
@@ -241,7 +285,7 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.select()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.SELECT, tv=tv, at=now(mv))
+                    screen.pressed(Button.SELECT, double_tap=False)
         case "Test":
             pass
         case "Up" | "N":
@@ -249,7 +293,14 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.APPLE_TV:
                     atv.up()
                 case RemoteMode.MULTIVIEWER:
-                    screen.pressed(Button.ARROW_N, tv=tv, at=now(mv))
+                    at = now(mv)
+                    double_tap = (
+                        mv.last_arrow_press is not None
+                        and mv.last_arrow_press.arrow == Arrow.N
+                        and at - mv.last_arrow_press.at <= DOUBLE_TAP_MAX_DURATION
+                    )
+                    screen.pressed(Button.ARROW_N, double_tap=double_tap)
+                    mv.last_arrow_press = None if double_tap else ArrowPressInfo(Arrow.N, at)
         case "Volume_down":
             adjust_volume(mv, -1)
         case "Volume_up":
