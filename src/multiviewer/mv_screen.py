@@ -289,9 +289,11 @@ class MvScreen(Jsonable):
                             self.selected_window = self.full_window
 
     def pressed_back(self) -> None:
-        if self.layout_mode == LayoutMode.FULLSCREEN and self.num_active_windows > 1:
-            self.entered_w1_prominent()
+        if self.layout_mode == LayoutMode.FULLSCREEN:
+            if self.num_active_windows == 1:
+                self.activate_tv()
             self.layout_mode = MULTIVIEW
+            self.entered_w1_prominent()
 
     def pressed_play_pause(self) -> None:
         self.selected_window_has_distinct_border = (

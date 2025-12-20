@@ -456,12 +456,12 @@ async def _():
     await tv_is("TRIPLE(2) A2 [H2]G [H3]A [H4]A")
 
 
-@test("Back does nothing when only one active")
+@test("Back activates a TV when only one active")
 async def _():
     await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv; Deactivate_tv")
     await tv_is("FULL A2 H2")
     await tv_do("Back")
-    await tv_is("FULL A2 H2")
+    await tv_is("PBP(2) A2 [H2]G [H1]A")
 
 
 @test("Home")
