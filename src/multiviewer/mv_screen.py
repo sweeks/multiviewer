@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -545,22 +544,50 @@ class MvScreen(Jsonable):
         Returns (num_states, num_transitions, complete) where complete=False if the
         search hit max_states and stopped early.
         """
-        start = copy.deepcopy(self)
-        queue: deque[MvScreen] = deque([start])
-        seen: set[FsmState] = {FsmState.from_screen(start)}
+        base = MvScreen()
+        queue: deque[FsmState] = deque([FsmState.from_screen(base)])
+        seen: set[FsmState] = set(queue)
         transitions = 0
         next_report = 1
 
         buttons = list(Button)
+
+        def hydrate(state: FsmState) -> None:
+            # Fields not tracked in FSM state: reset to defaults.
+            wt = base.window_tv
+            wt.clear()
+            wt[W1] = TV.TV1
+            wt[W2] = TV.TV2
+            wt[W3] = TV.TV3
+            wt[W4] = TV.TV4
+            pl = base.pip_location_by_tv
+            pl.clear()
+            for tv in TV.all():
+                pl[tv] = PipLocation.NE
+            # Overwrite tracked fields from FSM state.
+            base.layout_mode = state.layout_mode
+            base.num_active_windows = state.num_active_windows
+            base.multiview_submode = state.multiview_submode
+            base.fullscreen_mode = state.fullscreen_mode
+            base.full_window = state.full_window
+            base.pip_window = state.pip_window
+            base.selected_window = state.selected_window
+            base.selected_window_has_distinct_border = (
+                state.selected_window_has_distinct_border
+            )
+            base.remote_mode = state.remote_mode
+            base.last_button = state.last_button
+            base.last_selected_window = state.last_selected_window
+
         while queue:
-            screen = queue.popleft()
+            state = queue.popleft()
             for button in buttons:
                 for maybe_double_tap in (False, True):
-                    next_screen: MvScreen = copy.deepcopy(screen)
-                    next_screen.pressed(button, maybe_double_tap=maybe_double_tap)
+                    hydrate(state)
+                    base.pressed(button, maybe_double_tap=maybe_double_tap)
                     if validate:
-                        next_screen.validate()
-                    key = FsmState.from_screen(next_screen)
+                        base.validate()
+                    key = FsmState.from_screen(base)
                     transitions += 1
                     if key not in seen:
                         seen.add(key)
@@ -573,7 +600,7 @@ class MvScreen(Jsonable):
                                 next_report *= 2
                         if len(seen) >= max_states:
                             return (len(seen), transitions, False)
-                        queue.append(next_screen)
+                        queue.append(key)
 
         return (len(seen), transitions, True)
 
