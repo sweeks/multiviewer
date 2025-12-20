@@ -390,6 +390,12 @@ async def _():
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 
+@test("Triple Right points to W2")
+async def _():
+    await tv_do("Reset; S; Deactivate_tv; E")
+    await tv_is("TRIPLE(2) A2 [H1]A [H2]G [H3]A")
+
+
 @test("Activate_tv adds window")
 async def _():
     await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv")

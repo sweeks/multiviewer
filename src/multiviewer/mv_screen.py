@@ -125,7 +125,7 @@ min_num_windows = 1
 _arrow_points_to = {
     2: {W1: {E: W2}, W2: {W: W1}},
     3: {
-        W1: {N: W2, S: W3},
+        W1: {N: W2, E: W2, S: W3},
         W2: {W: W1, S: W3},
         W3: {
             N: W2,
