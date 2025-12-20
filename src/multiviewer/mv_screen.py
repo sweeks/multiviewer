@@ -268,10 +268,16 @@ class MvScreen(Jsonable):
             self.fullscreen_mode = FULL
             self.full_window = W1
 
+    def entered_w1_prominent(self) -> None:
+        if self.multiview_submode == W1_PROMINENT and self.selected_window != W1:
+            self.swap_window_tvs(W1, self.selected_window)
+            self.selected_window = W1
+
     def toggle_submode(self) -> None:
         match self.layout_mode:
             case LayoutMode.MULTIVIEW:
                 self.multiview_submode = self.multiview_submode.flip()
+                self.entered_w1_prominent()
             case LayoutMode.FULLSCREEN:
                 if self.num_active_windows >= 2:
                     match self.fullscreen_mode:
@@ -284,6 +290,7 @@ class MvScreen(Jsonable):
 
     def pressed_back(self) -> None:
         if self.layout_mode == LayoutMode.FULLSCREEN and self.num_active_windows > 1:
+            self.entered_w1_prominent()
             self.layout_mode = MULTIVIEW
 
     def pressed_play_pause(self) -> None:

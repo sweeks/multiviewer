@@ -163,7 +163,21 @@ async def _():
 @test("Select+Back preserves audio")
 async def _():
     await tv_do("Reset; Select; E; Back")
-    await tv_is("QUAD(2) A2 [H1]A [H2]G [H3]A [H4]A")
+    await tv_is("QUAD(2) A2 [H2]G [H1]A [H3]A [H4]A")
+
+
+@test("Back to prominent swaps selected TV into W1")
+async def _():
+    await tv_do("Reset; Select; E; Back")
+    await tv_is("QUAD(2) A2 [H2]G [H1]A [H3]A [H4]A")
+
+
+@test("Home to W1 prominent swaps selected TV into W1")
+async def _():
+    await tv_do("Reset; Home")
+    await tv_do("E")
+    await tv_do("Home")
+    await tv_is("QUAD(2) A2 [H2]G [H1]A [H3]A [H4]A")
 
 
 @test("NEWS in QUAD(2)")
@@ -226,7 +240,7 @@ async def _():
     await tv_do("Reset; E; Select; Home")
     await tv_is("PIP(NE) A3 H3 [H4]A")
     await tv_do("Back")
-    await tv_is("QUAD(2) A3 [H1]A [H2]A [H3]G [H4]A")
+    await tv_is("QUAD(2) A3 [H3]G [H2]A [H1]A [H4]A")
 
 
 @test("PIP from FULL after rotating")
@@ -240,7 +254,7 @@ async def _():
     await tv_do("Reset; Select; Home; N")
     await tv_is("PIP(NE) A2 H1 [H2]G")
     await tv_do("Back")
-    await tv_is("QUAD(2) A2 [H1]A [H2]G [H3]A [H4]A")
+    await tv_is("QUAD(2) A2 [H2]G [H1]A [H3]A [H4]A")
 
 
 @test("Swap full and PIP windows")
