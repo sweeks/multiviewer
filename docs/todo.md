@@ -4,8 +4,6 @@
 
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
 
-# tests.py: volume delta across power off+on
-
 # rework remote-contorl-user-guide.md
 
 # add docs/developer-guide.md
