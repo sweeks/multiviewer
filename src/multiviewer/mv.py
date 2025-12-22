@@ -246,7 +246,9 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.MULTIVIEWER:
                     pressed(Button.ARROW_E)
         case "Screensaver":
-            atv.screensaver()
+            if screen.remote_mode == RemoteMode.APPLE_TV:
+                atv.screensaver()
+                screen.remote_mode = RemoteMode.MULTIVIEWER
         case "Select":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:

@@ -484,6 +484,9 @@ async def _():
 async def _():
     await tv_do("Reset; Screensaver")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
+    await tv_do("Remote")
+    await tv_do("Screensaver")
+    await tv_is("QUAD(2) A1 [H1]G [H2]A [H3]A [H4]A")
 
 
 @test("Volume")
