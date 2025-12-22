@@ -569,10 +569,11 @@ async def _():
 
 @test("Power")
 async def _():
-    # We do a state change before turning off to make sure it is preserved.
-    # We do a state change after turning on to make sure that we can.
-    await tv_do("Reset; E; Power; Power; S")
+    # Change state before turning off, verify it survives power cycle, and that
+    # volume delta resets.
+    await tv_do("Reset; Volume_up; E; Power; Power; S")
     await tv_is("QUAD(2) A4 [H1]A [H2]A [H3]A [H4]G")
+    await vol_is("V+0")
 
 
 async def main():
