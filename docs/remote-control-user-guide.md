@@ -4,6 +4,13 @@ This guide is for people using the iPhone remote (home screen buttons) to drive 
 multiviewer. No code knowledge required. The remote controls four Apple TVs, the J-Tech
 multiviewer, and soundbar/TV volume.
 
+In fullscreen, **Right** and **Left** cycle the fullscreen window through the TVs visible
+in multiview. The **TV** button toggles the visibility of a PIP (picture-in-picture)
+window. In PIP, pressing **Right** or **Left** cycles the PIP window through the TVs
+visible in multiview (except for the fullscreen TV). **Select** swaps the PIP and
+fullscreen windows. Pressing **Up** or **Down** toward the PIP window selects it. Double
+tapping arrows moves the PIP window around the corners.
+
 **Borders show the current target:**
 
 - **Green border**: multiview controls (layout/selection/PIP).

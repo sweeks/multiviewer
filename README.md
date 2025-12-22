@@ -15,45 +15,29 @@ i.e. the TV currently displayed in the selected window.
 # Remote Control
 
 The remote control is an iPhone 13 Mini, which has a home screen with buttons that control
-the J-Tech, the Apple TVs, and the volume. Here is the home screen:
+the J-Tech, the Apple TVs, and the volume:
 
 <img src="remote-control/home-screen.png" width="300">
 
-The **Power** button toggles on/off the power of all the hardware in the system, including
-Apple TVs, Jtech, soundbar, and TV. The **Sports** and **TV** apps are the ordinary iOS
-apps, and are handy for choosing what to watch. From the **TV** app, you can share a show
-to start it playing on the selected TV -- unfortunately, this only works reliably for
-shows, and not for most sports streams, so far.
+The heart of the remote control is nine buttons arranged like a keypad on an Apple TV
+remote: **Up**, **Down**, **Left**, **Right**, **Select**, **Back**, **TV**,
+**Play/Pause**, plus a **Remote** button, which toggles the other eight so that they act
+as an Apple TV remote or as a multiviewer remote. In `Apple TV` mode, the eight buttons
+send the corresponding command to the selected Apple TV. Double tapping **Remote** brings
+up the iOS Remote app for the selected TV. In `Multiviewer` mode, the arrow buttons change
+the selected window, and double tap moves the selected TV, swapping it with the TV the
+arrow points to. **Select** makes the selected TV fullscreen; from there, **Back** returns
+to multiview. **Deactivate TV** hides the selected TV offscreen.  **Activate TV** button
+adds a window displaying the most recently deactivated TV. 
 
-The next nine buttons are like a keypad on an Apple TV remote (**Up**, **Down**, **Left**,
-**Right**, **Select**, **Back**, **TV**, **Play/Pause**), plus a **Remote** button.
-**Remote** toggles the other eight so that they can act as an Apple TV remote or as a
-multiviewer remote.
-
-In Apple TV mode, the selected window has a red border, and the eight buttons behave like
-an Apple TV remote on the selected Apple TV. Double tapping **Remote** brings up the iOS
-Remote app for the selected TV.
-
-In multiview mode, the selected window has a green border. The arrow buttons change the
-selected window, and double tap moves the selected TV, swapping it with the TV the arrow
-points to. **Select** makes the selected TV fullscreen; from there, **Back** returns to
-multiview. In multiview, some of the TVs are visible, and some are hidden (when multiview
-shows fewer than four windows). If there are hidden TVs, the **TV** button adds a window
-displaying one. If there are two or more visible TVs, the **Back** button hides the
-selected TV and removes its window. Double tapping **Back** hides the selected TV and
-starts its screensaver. Finally, **Play/Pause** toggles visibility of the selected
-window's border.
-
-In fullscreen, **Right** and **Left** cycle the fullscreen window through the TVs visible
-in multiview. The **TV** button toggles the visibility of a PIP (picture-in-picture)
-window. In PIP, pressing **Right** or **Left** cycles the PIP window through the TVs
-visible in multiview (except for the fullscreen TV). **Select** swaps the PIP and
-fullscreen windows. Pressing **Up** or **Down** toward the PIP window selects it. Double
-tapping arrows moves the PIP window around the corners.
-
-The bottom row of buttons (**Mute**, **Volume Up**, **Volume Down**) control the volume.
-The multiviewer has a different volume setting for each TV, and automatically adjusts
-volume when switching TVs. Mute is shared across all TVs.
+The lesser-used buttons are at the top. **Power** toggles on/off the power of all the
+hardware in the system, including Apple TVs, Jtech, soundbar, and TV. The **Sports** and
+**TV** apps are the ordinary iOS apps, and are handy for choosing what to watch. From the
+**TV** app, you can share a show to start it playing on the selected TV -- unfortunately,
+this only works reliably for shows, and not for most sports streams, so far. The bottom
+row of buttons (**Mute**, **Volume Up**, **Volume Down**) control the volume. The
+multiviewer has a different volume setting for each TV, and automatically adjusts volume
+when switching TVs. Mute is shared across all TVs.
 
 # Implementation
 
