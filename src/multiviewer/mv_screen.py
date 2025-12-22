@@ -69,7 +69,8 @@ class Button(MyStrEnum):
     BACK = auto()
     PLAY_PAUSE = auto()
     ACTIVATE_TV = auto()
-    DEACTIVATE_TV = auto()
+    DEACTIVATE_TV_FIRST = auto()
+    DEACTIVATE_TV_LAST = auto()
     TOGGLE_SUBMODE = auto()
     ARROW_N = auto()
     ARROW_E = auto()
@@ -252,10 +253,20 @@ class MvScreen(Jsonable):
             case LayoutMode.MULTIVIEW:
                 return self.multiview_submode == W1_PROMINENT
 
-    def deactivate_tv(self) -> None:
+    def deactivate_tv(self, *, place_first_in_inactive: bool = True) -> None:
         if self.num_active_windows == 1:
             return
-        self.demote_tv(self.selected_window)
+        windows = Window.all()
+        tv = self.window_tv[self.selected_window]
+        if place_first_in_inactive:
+            insert_at = self.num_active_windows - 1
+        else:
+            insert_at = len(windows) - 1
+        i = windows.index(self.selected_window)
+        while i < insert_at:
+            self.window_tv[windows[i]] = self.window_tv[windows[i + 1]]
+            i += 1
+        self.window_tv[windows[insert_at]] = tv
         self.num_active_windows -= 1
         self.selected_window = W1
         self.selected_window_has_distinct_border = True
@@ -531,8 +542,10 @@ class MvScreen(Jsonable):
                 self.pressed_play_pause()
             case Button.ACTIVATE_TV:
                 self.activate_tv()
-            case Button.DEACTIVATE_TV:
-                self.deactivate_tv()
+            case Button.DEACTIVATE_TV_FIRST:
+                self.deactivate_tv(place_first_in_inactive=True)
+            case Button.DEACTIVATE_TV_LAST:
+                self.deactivate_tv(place_first_in_inactive=False)
             case Button.TOGGLE_SUBMODE:
                 self.toggle_submode()
             case _:

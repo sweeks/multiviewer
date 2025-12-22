@@ -21,7 +21,8 @@ class Button:
     BACK: Button
     PLAY_PAUSE: Button
     ACTIVATE_TV: Button
-    DEACTIVATE_TV: Button
+    DEACTIVATE_TV_FIRST: Button
+    DEACTIVATE_TV_LAST: Button
     TOGGLE_SUBMODE: Button
     ARROW_N: Button
     ARROW_E: Button

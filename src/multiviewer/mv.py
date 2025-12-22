@@ -195,7 +195,10 @@ async def do_command(mv: Multiviewer, args: list[str]) -> JSON:
                 case RemoteMode.MULTIVIEWER:
                     pressed(Button.BACK)
         case "Deactivate_tv":
-            pressed(Button.DEACTIVATE_TV)
+            if mv.atvs.atv(tv).is_in_screensaver():
+                pressed(Button.DEACTIVATE_TV_LAST)
+            else:
+                pressed(Button.DEACTIVATE_TV_FIRST)
         case "Down" | "S":
             match screen.remote_mode:
                 case RemoteMode.APPLE_TV:

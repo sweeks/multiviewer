@@ -153,6 +153,7 @@ class ATV:
     atv: AtvConnection
     queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
     task: Task = field(init=False, repr=False)
+    in_screensaver: bool = False
 
     def __post_init__(self) -> None:
         self.task = aio.Task.create(type(self).__name__, self.process_queue_forever())
@@ -177,10 +178,14 @@ class ATV:
     async def close(self) -> None:
         await self.atv.close()
 
-    def enqueue(self, a: Awaitable[None]) -> None:
+    def enqueue(self, a: Awaitable[None], *, mark_screensaver: bool = False) -> None:
+        self.in_screensaver = mark_screensaver
         if False:
             debug_print("enqueue")
         self.queue.put_nowait(a)
+
+    def is_in_screensaver(self) -> bool:
+        return self.in_screensaver
 
     def down(self):
         self.enqueue(self.atv.down())
@@ -210,7 +215,7 @@ class ATV:
         self.enqueue(self.atv.right())
 
     def screensaver(self):
-        self.enqueue(self.atv.screensaver())
+        self.enqueue(self.atv.screensaver(), mark_screensaver=True)
 
     def select(self):
         self.enqueue(self.atv.select())

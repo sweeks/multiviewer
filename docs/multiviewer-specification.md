@@ -323,10 +323,11 @@ the dual-use buttons behave as follows:
   will be available for cycling.
 
 - **Deactivate TV**: if `num_active_windows > 1`, this decrements `num_active_windows` and
-  demotes the selected TV to become the first inactive TV, promoting the active TVs in
-  higher numbered windows (this changes `window_tv`). Afterwards, the selected window is
-  `W1` and `selected_window_has_distinct_border == True`. If `num_active_windows == 1`,
-  then `layout_mode == FULLSCREEN` and `fullscreen_mode == FULL`.
+  demotes the selected TV, promoting the active TVs in higher numbered windows (this
+  changes `window_tv`). If the demoted TV is in screensaver, it becomes the last inactive
+  TV; otherwise, it becomes the first inactive TV. Afterwards, the selected window is `W1`
+  and `selected_window_has_distinct_border == True`. If `num_active_windows == 1`, then
+  `layout_mode == FULLSCREEN` and `fullscreen_mode == FULL`.
 
 - **Screensaver**: sends commands to the selected Apple TV to take it to screensaver.
 

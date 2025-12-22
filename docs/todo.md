@@ -1,7 +1,5 @@
 # screensaver should demote TV to last hidden window
 
-# it should never be a double tap if there is an intervening button
-
 # pylance: turn on strict type checking
 
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes

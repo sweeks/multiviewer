@@ -455,6 +455,16 @@ async def _():
     await tv_do("Reset; Deactivate_tv")
     await tv_is("TRIPLE(2) A2 [H2]G [H3]A [H4]A")
 
+@test("Deactivate_tv places next inactive first when not in screensaver")
+async def _():
+    await tv_do("Reset; Deactivate_tv; Deactivate_tv; Activate_tv")
+    await tv_is("TRIPLE(2) A3 [H3]G [H4]A [H2]A")
+
+@test("Deactivate_tv places next inactive last when in screensaver")
+async def _():
+    await tv_do("Reset; Deactivate_tv; Remote; Screensaver; Deactivate_tv; Activate_tv")
+    await tv_is("TRIPLE(2) A3 [H3]G [H4]A [H1]A")
+
 
 @test("Back activates a TV when only one active")
 async def _():
