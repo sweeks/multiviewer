@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# pre-commit fails if validate-repo fails or if validate-repo modifies any staged file.
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# Reject files that have both staged and unstaged changes
-staged="$(git diff --name-only --cached)"
-unstaged="$(git diff --name-only)"
-both_changed="$(comm -12 <(printf '%s\n' "$staged" | sort) <(printf '%s\n' "$unstaged" | sort))"
-if [[ -n "$both_changed" ]]; then
-  echo "pre-commit: files have both staged and unstaged changes; restage before committing:" >&2
-  echo "$both_changed" >&2
-  exit 1
-fi
+staged_files="$(git diff --cached --name-only)"
+pre_ix_hash="$(git diff --cached --no-color | git hash-object --stdin)"
 
 "$ROOT/bin/validate-repo.sh"
+
+post_ix_hash="$(git diff --cached --no-color | git hash-object --stdin)"
+if [[ "$pre_ix_hash" != "$post_ix_hash" ]]; then
+  echo "pre-commit: validation modified staged files; review/stage and re-run" >&2
+  exit 1
+fi
