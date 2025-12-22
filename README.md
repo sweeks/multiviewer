@@ -27,8 +27,8 @@ send the corresponding command to the selected Apple TV. Double tapping **Remote
 up the iOS Remote app for the selected TV. In `Multiviewer` mode, the arrow buttons change
 the selected window, and double tap moves the selected TV, swapping it with the TV the
 arrow points to. **Select** makes the selected TV fullscreen; from there, **Back** returns
-to multiview. **Deactivate TV** hides the selected TV offscreen.  **Activate TV** button
-adds a window displaying the most recently deactivated TV. 
+to multiview. **Deactivate TV** hides the selected TV offscreen. **Activate TV** button
+adds a window displaying the most recently deactivated TV.
 
 The lesser-used buttons are at the top. **Power** toggles on/off the power of all the
 hardware in the system, including Apple TVs, Jtech, soundbar, and TV. The **Sports** and
