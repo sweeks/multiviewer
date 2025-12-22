@@ -1,5 +1,3 @@
-# screensaver should demote TV to last hidden window
-
 # pylance: turn on strict type checking
 
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
