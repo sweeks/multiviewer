@@ -3,6 +3,18 @@
   "venvPath": ".",
   "venv": ".venv",
   "extraPaths": ["src"],
-  "typeCheckingMode": "standard",
-  "exclude": ["build", ".venv"]
+  "include": ["src"],
+  "typeCheckingMode": "strict",
+  "exclude": ["build", ".venv", "cruft"],
+  "reportUnknownArgumentType": "none",
+  "reportUnknownVariableType": "none",
+  "reportUnknownMemberType": "none",
+  "reportUnknownParameterType": "none",
+  "reportUnknownLambdaType": "none",
+  "reportMissingParameterType": "none",
+  "reportMissingTypeArgument": "none",
+  "reportUntypedFunctionDecorator": "none",
+  "reportMatchNotExhaustive": "none",
+  "reportUnnecessaryComparison": "none",
+  "reportUnusedFunction": "none"
 }
