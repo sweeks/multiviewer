@@ -7,8 +7,7 @@
   "typeCheckingMode": "strict",
   "exclude": ["build", ".venv", "cruft"],
   "reportMatchNotExhaustive": "error",
-  "reportMissingParameterType": "none", // tried, but too noisy
-  "reportMissingReturnType": "none",
+  "reportMissingParameterType": "none", // tried before; too noisy
   "reportMissingTypeArgument": "none",
   "reportUnknownArgumentType": "none",
   "reportUnknownLambdaType": "none",
