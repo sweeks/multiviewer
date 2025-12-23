@@ -198,6 +198,12 @@ class MvScreen(Jsonable):
     def field(cls) -> MvScreen:
         return field(default_factory=MvScreen)
 
+    def tv_window(self, tv: TV) -> Window:
+        for w, tv2 in self.window_tv.items():
+            if tv2 == tv:
+                return w
+        raise AssertionError(f"tv_window: TV {tv} not found")
+
     def power_on(self) -> None:
         self.remote_mode = MULTIVIEWER
         self.selected_window_has_distinct_border = True
@@ -258,6 +264,8 @@ class MvScreen(Jsonable):
             return
         windows = Window.all()
         tv = self.window_tv[self.selected_window]
+        full_tv = self.window_tv[self.full_window]
+        pip_tv = self.window_tv[self.pip_window]
         if place_first_in_inactive:
             insert_at = self.num_active_windows - 1
         else:
@@ -268,16 +276,25 @@ class MvScreen(Jsonable):
             i += 1
         self.window_tv[windows[insert_at]] = tv
         self.num_active_windows -= 1
-        self.selected_window = W1
         self.selected_window_has_distinct_border = True
-        if self.layout_mode == FULLSCREEN:
-            self.full_window = W1
-            if self.fullscreen_mode == FullscreenMode.PIP:
-                self.set_pip_window()
+        if self.selected_window.to_int() > self.num_active_windows:
+            self.selected_window = Window.of_int(self.num_active_windows)
         if self.num_active_windows == 1:
             self.layout_mode = FULLSCREEN
             self.fullscreen_mode = FULL
-            self.full_window = W1
+        if self.layout_mode == LayoutMode.FULLSCREEN:
+            match self.fullscreen_mode:
+                case FullscreenMode.FULL:
+                    self.full_window = self.selected_window
+                case FullscreenMode.PIP:
+                    if self.selected_window == self.full_window:
+                        self.pip_window = self.tv_window(pip_tv)
+                        self.full_window = self.next_active_window(self.pip_window)
+                        self.selected_window = self.full_window
+                    else:
+                        self.full_window = self.tv_window(full_tv)
+                        self.pip_window = self.next_active_window(self.full_window)
+                        self.selected_window = self.pip_window
 
     def entered_w1_prominent(self) -> None:
         if self.multiview_submode == W1_PROMINENT and self.selected_window != W1:

@@ -368,17 +368,17 @@ async def _():
 
 @test("Home does nothing when only one active")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv; Deactivate_tv")
-    await tv_is("FULL A2 H2")
+    await tv_do("Reset; S; Deactivate_tv; Deactivate_tv; Deactivate_tv")
+    await tv_is("FULL A1 H1")
     await tv_do("Home")
-    await tv_is("FULL A2 H2")
+    await tv_is("FULL A1 H1")
 
 
 @test("Deactivate_tv removes window")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv")
+    await tv_do("Reset; S; Deactivate_tv; W")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
-    await tv_do("S; Deactivate_tv")
+    await tv_do("S; Deactivate_tv; W")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
     await tv_do("Deactivate_tv")
     await tv_is("FULL A2 H2")
@@ -389,30 +389,30 @@ async def _():
     await tv_do("Reset; S; Select")
     await tv_is("FULL A4 H4")
     await tv_do("Deactivate_tv")
-    await tv_is("FULL A1 H1")
+    await tv_is("FULL A3 H3")
 
 
 @test("Deactivate_tv preserves submode")
 async def _():
-    await tv_do("Reset; Home; S; Deactivate_tv")
+    await tv_do("Reset; Home; S; Deactivate_tv; W")
     await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H4]A")
 
 
 @test("Deactivate_tv switches selected window to W1")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv")
+    await tv_do("Reset; S; Deactivate_tv; W")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
 
 
 @test("Triple Right points to W2")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv; E")
+    await tv_do("Reset; S; Deactivate_tv; W; E")
     await tv_is("TRIPLE(2) A2 [H1]A [H2]G [H3]A")
 
 
 @test("Activate_tv adds window")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv")
+    await tv_do("Reset; S; Deactivate_tv; W; S; Deactivate_tv; W")
     await tv_is("PBP(2) A1 [H1]G [H2]A")
     await tv_do("Activate_tv")
     await tv_is("TRIPLE(2) A1 [H1]G [H2]A [H3]A")
@@ -444,9 +444,9 @@ async def _():
 
 @test("Adding and removing windows preserve submode")
 async def _():
-    await tv_do("Reset; Home; S; Deactivate_tv")
+    await tv_do("Reset; Home; S; Deactivate_tv; W; W; W")
     await tv_is("TRIPLE(1) A1 [H1]G [H2]A [H4]A")
-    await tv_do("Home; Activate_tv; Activate_tv")
+    await tv_do("Home; Activate_tv; Activate_tv; W; W; W")
     await tv_is("QUAD(2) A1 [H1]G [H2]A [H4]A [H3]A")
 
 
@@ -470,10 +470,10 @@ async def _():
 
 @test("Back activates a TV when only one active")
 async def _():
-    await tv_do("Reset; S; Deactivate_tv; S; Deactivate_tv; Deactivate_tv")
+    await tv_do("Reset; Deactivate_tv; E; Deactivate_tv; Deactivate_tv")
     await tv_is("FULL A2 H2")
     await tv_do("Back")
-    await tv_is("PBP(2) A2 [H2]G [H1]A")
+    await tv_is("PBP(2) A2 [H2]G [H4]A")
 
 
 @test("Home")

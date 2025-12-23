@@ -220,6 +220,20 @@ remote app for the selected Apple TV, and does not change `remote_mode`.
 - **Volume Up**. This increments the volume delta of the selected TV.
 - **Volume Down**. This decrements the volume delta of the selected TV.
 
+# Deactivating a TV in fullscreen
+
+When a TV is deactivated while in a fullscreen layout:
+
+- If only one active TV remains, switch to `FULLSCREEN/FULL`, set `selected_window = W1`,
+  and show that remaining TV in `W1`.
+- Otherwise, the selected window stays selected. Its slot will show whichever TV shifted
+  into it after removal. The other fullscreen window keeps showing the same TV as before
+  by following that TV to its new window:
+  - If the full window was selected, it remains the full window; the pip window moves to
+    the window that now holds the old pip TV.
+  - If the pip window was selected, it remains the pip window; the full window moves to
+    the window that now holds the old full TV.
+
 # Dual-use Buttons for Apple TV
 
 When `remote_mode == APPLE_TV`, the dual-use buttons behave exactly like the
@@ -322,12 +336,16 @@ the dual-use buttons behave as follows:
   on screen. If `layout_mode == FULLSCREEN`, the newly active window will not appear, but
   will be available for cycling.
 
-- **Deactivate TV**: if `num_active_windows > 1`, this decrements `num_active_windows` and
-  demotes the selected TV, promoting the active TVs in higher numbered windows (this
+- **Deactivate TV**: If `num_active_windows == 1`, this does nothing. If
+  `num_active_windows > 1`, this decrements `num_active_windows` and demotes the selected
+  TV, making it inactive and promoting the active TVs in higher numbered windows (this
   changes `window_tv`). If the demoted TV is in screensaver, it becomes the last inactive
-  TV; otherwise, it becomes the first inactive TV. Afterwards, the selected window is `W1`
-  and `selected_window_has_distinct_border == True`. If `num_active_windows == 1`, then
-  `layout_mode == FULLSCREEN` and `fullscreen_mode == FULL`.
+  TV; otherwise, it becomes the first inactive TV. Afterwards, if
+  `num_active_windows == 1`, then `layout_mode == FULLSCREEN`, `fullscreen_mode == FULL`,
+  and `W1` is selected. If the selected window becomes inactive, then it moves to the last
+  active window. In `PIP`, the selected window stays selected; its slot shows whichever TV
+  shifted into it after removal. The other window keeps showing the same TV it had before
+  deactivation.
 
 - **Screensaver**: sends commands to the selected Apple TV to take it to screensaver.
 
