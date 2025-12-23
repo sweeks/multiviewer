@@ -10,6 +10,8 @@
   is truly unused; keep it fast and automated rather than guessing.
 - Rule: always run `pyright` after code changes (in addition to tests) to catch type
   errors early; mention any pyright findings in your response.
+- Rule: use repo tools from the `.venv`: e.g., run pyright via `.venv/bin/pyright` (or
+  `bin/validate-repo.sh`), and prefer helper scripts over ad-hoc commands.
 - Reading note: when asked to "read for-codex", do not summarize—it's just to refresh your
   context.
 - Project: multiviewer remote-control daemon for J-Tech MV41A + four Apple TVs + LG
