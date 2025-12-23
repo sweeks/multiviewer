@@ -392,6 +392,30 @@ async def _():
     await tv_is("FULL A3 H3")
 
 
+@test("Deactivate_tv in FULL clamps selection to last active")
+async def _():
+    await tv_do("Reset; S; Select")
+    await tv_is("FULL A4 H4")
+    await tv_do("Deactivate_tv")
+    await tv_is("FULL A3 H3")
+
+
+@test("Deactivate_tv in PIP keeps pip TV")
+async def _():
+    await tv_do("Reset; E; Select; Home")
+    await tv_is("PIP(NE) A3 H3 [H4]A")
+    await tv_do("Deactivate_tv")
+    await tv_is("PIP(NE) A1 H1 [H4]A")
+
+
+@test("Deactivate_tv in PIP with pip selected keeps full TV")
+async def _():
+    await tv_do("Reset; E; Select; Home; Select")
+    await tv_is("PIP(NE) A4 H4 [H3]A")
+    await tv_do("Deactivate_tv")
+    await tv_is("PIP(NE) A2 H4 [H2]G")
+
+
 @test("Deactivate_tv preserves submode")
 async def _():
     await tv_do("Reset; Home; S; Deactivate_tv; W")
