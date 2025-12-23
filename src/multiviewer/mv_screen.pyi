@@ -1,33 +1,35 @@
 from __future__ import annotations
 
+from enum import StrEnum, auto
+
 # Local package
 from .atv import TV
 from .base import JSON
 from .jtech_output import JtechOutput
 
-class Arrow:
-    N: Arrow
-    E: Arrow
-    W: Arrow
-    S: Arrow
+class Arrow(StrEnum):
+    N = auto()
+    E = auto()
+    W = auto()
+    S = auto()
 
-class RemoteMode:
-    APPLE_TV: RemoteMode
-    MULTIVIEWER: RemoteMode
+class RemoteMode(StrEnum):
+    APPLE_TV = auto()
+    MULTIVIEWER = auto()
 
-class Button:
-    REMOTE: Button
-    SELECT: Button
-    BACK: Button
-    PLAY_PAUSE: Button
-    ACTIVATE_TV: Button
-    DEACTIVATE_TV_FIRST: Button
-    DEACTIVATE_TV_LAST: Button
-    TOGGLE_SUBMODE: Button
-    ARROW_N: Button
-    ARROW_E: Button
-    ARROW_W: Button
-    ARROW_S: Button
+class Button(StrEnum):
+    REMOTE = auto()
+    SELECT = auto()
+    BACK = auto()
+    PLAY_PAUSE = auto()
+    ACTIVATE_TV = auto()
+    DEACTIVATE_TV_FIRST = auto()
+    DEACTIVATE_TV_LAST = auto()
+    TOGGLE_SUBMODE = auto()
+    ARROW_N = auto()
+    ARROW_E = auto()
+    ARROW_W = auto()
+    ARROW_S = auto()
 
 class MvScreen:
     @classmethod

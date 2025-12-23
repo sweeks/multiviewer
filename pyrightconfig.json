@@ -6,7 +6,7 @@
   "include": ["src"],
   "typeCheckingMode": "strict",
   "exclude": ["build", ".venv", "cruft"],
-  "reportMatchNotExhaustive": "none",
+  "reportMatchNotExhaustive": "error",
   "reportMissingParameterType": "none",
   "reportMissingTypeArgument": "none",
   "reportUnknownArgumentType": "none",

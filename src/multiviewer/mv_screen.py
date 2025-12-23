@@ -423,7 +423,8 @@ class MvScreen(Jsonable):
                 return PipLocation.NE
             case (PipLocation.SE, Arrow.W):
                 return PipLocation.SW
-        return None
+            case _:
+                return None
 
     def arrow_points_from_full_to_pip(self, arrow: Arrow) -> bool:
         if arrow not in (Arrow.N, Arrow.S):

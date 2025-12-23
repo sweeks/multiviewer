@@ -6,25 +6,25 @@ This module has all the classes for describing and controlling the J-Tech device
 from .base import *
 
 class Power(MyStrEnum):
-    ON: Power
-    OFF: Power
+    ON = auto()
+    OFF = auto()
 
 class Mute(MyStrEnum):
-    MUTED: Mute
-    UNMUTED: Mute
+    MUTED = auto()
+    UNMUTED = auto()
 
 class Color(MyStrEnum):
     """The names of the border colors."""
 
-    BLACK: Color
-    RED: Color
-    GREEN: Color
-    BLUE: Color
-    YELLOW: Color
-    MAGENTA: Color
-    CYAN: Color
-    WHITE: Color
-    GRAY: Color
+    BLACK = auto()
+    RED = auto()
+    GREEN = auto()
+    BLUE = auto()
+    YELLOW = auto()
+    MAGENTA = auto()
+    CYAN = auto()
+    WHITE = auto()
+    GRAY = auto()
 
     def letter(self) -> str: ...
     @staticmethod
@@ -37,19 +37,19 @@ class Border:
 class Hdmi(MyStrEnum):
     """The names of the HDMI inputs to the J-Tech."""
 
-    H1: Hdmi
-    H2: Hdmi
-    H3: Hdmi
-    H4: Hdmi
+    H1 = auto()
+    H2 = auto()
+    H3 = auto()
+    H4 = auto()
 
 class Mode(MyStrEnum):
     """The layout of the on-screen windows."""
 
-    FULL: Mode
-    PIP: Mode
-    PBP: Mode
-    TRIPLE: Mode
-    QUAD: Mode
+    FULL = auto()
+    PIP = auto()
+    PBP = auto()
+    TRIPLE = auto()
+    QUAD = auto()
 
     def num_windows(self) -> int: ...
     def windows(self) -> list[Window]: ...
@@ -58,10 +58,10 @@ class Mode(MyStrEnum):
 class Window(MyStrEnum):
     """The names of the on-screen windwows."""
 
-    W1: Window
-    W2: Window
-    W3: Window
-    W4: Window
+    W1 = auto()
+    W2 = auto()
+    W3 = auto()
+    W4 = auto()
 
 class Submode(MyStrEnum):
     """
@@ -69,16 +69,16 @@ class Submode(MyStrEnum):
     or W1 is prominent.
     """
 
-    WINDOWS_SAME: Submode
-    W1_PROMINENT: Submode
+    WINDOWS_SAME = auto()
+    W1_PROMINENT = auto()
 
     def flip(self) -> Submode: ...
 
 class PipLocation(MyStrEnum):
-    NW: PipLocation
-    NE: PipLocation
-    SW: PipLocation
-    SE: PipLocation
+    NW = auto()
+    NE = auto()
+    SW = auto()
+    SE = auto()
 
 class Jtech:
     """

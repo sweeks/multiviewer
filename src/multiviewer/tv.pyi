@@ -4,9 +4,9 @@ from __future__ import annotations
 from .base import *
 
 class TV(MyStrEnum):
-    TV1: TV
-    TV2: TV
-    TV3: TV
-    TV4: TV
+    TV1 = auto()
+    TV2 = auto()
+    TV3 = auto()
+    TV4 = auto()
 
 def validate_tv(x: TV) -> None: ...

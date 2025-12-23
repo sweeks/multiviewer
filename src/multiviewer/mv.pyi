@@ -18,9 +18,9 @@ from pathlib import Path
 from .base import *
 from .jtech_manager import JtechManager
 
-class Power:
-    ON: Power
-    OFF: Power
+class Power(MyStrEnum):
+    ON = auto()
+    OFF = auto()
 
 class Multiviewer:
     def __init__(self) -> NoReturn:
