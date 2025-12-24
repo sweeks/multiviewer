@@ -83,7 +83,7 @@ def file_and_line(max_steps: int = 50) -> str:
         del f
 
 
-def log(event: str, **fields) -> None:
+def log(event: str, **fields: object) -> None:
     if RunMode.get() != RunMode.Daemon:
         return
     now = datetime.datetime.now()

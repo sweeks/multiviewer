@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # Standard library
 import inspect
+from collections.abc import Iterable
 from enum import Enum
 from typing import cast
 
@@ -71,7 +72,7 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
     return _identity_codec()
 
 
-def json_dict(key_t_or_codec: Any, val_t_or_codec: Any):
+def json_dict(key_t_or_codec: Any, val_t_or_codec: Any) -> dict[str, Any]:
     """
     Create a dataclasses_json field that encodes a Python dict[K,V] as
     a JSON list of [key_json, value_json] pairs.
@@ -89,7 +90,9 @@ def json_dict(key_t_or_codec: Any, val_t_or_codec: Any):
     def encoder(d: dict[K, V]) -> list[list[Any]]:
         return [[k_enc(k), v_enc(v)] for k, v in d.items()]
 
-    def decoder(pairs: Any) -> dict[object, object]:
+    def decoder(
+        pairs: Iterable[tuple[Any, Any]] | dict[Any, Any],
+    ) -> dict[object, object]:
         # Accept both the intended list-of-pairs and a legacy JSON object for resilience.
         it = pairs.items() if isinstance(pairs, dict) else pairs
         return {k_dec(k): v_dec(v) for k, v in it}

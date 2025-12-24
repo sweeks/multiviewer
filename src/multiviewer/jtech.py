@@ -56,7 +56,10 @@ W3 = Window.W3
 W4 = Window.W4
 
 
-def window_dict(f):
+T = TypeVar("T")
+
+
+def window_dict(f: Callable[[Window], T]) -> dict[Window, T]:
     return {w: f(w) for w in Window.all()}
 
 
