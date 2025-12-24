@@ -20,14 +20,14 @@ class JtechManager:
     synced_event: Event = Event.field()
     # A background task that is constantly trying to make the jtech match desired_power
     # and desired_output.
-    task: Task[object] = Task.field()
+    task: Task[None] = Task.field()
 
     @classmethod
     def field(cls):
         return dataclasses.field(default_factory=JtechManager, metadata=json_field.omit)
 
     def __post_init__(self) -> None:
-        self.task = aio.Task.create(type(self).__name__, self.sync_forever())
+        self.task = Task[None].create(type(self).__name__, self.sync_forever())
 
     async def synced(self) -> None:
         await self.synced_event.wait()
@@ -112,7 +112,7 @@ class JtechManager:
 
     # The call to self.sync in sync_forever is the only code that sends commands to the
     # device.  That ensures sequential communication.
-    async def sync_forever(self):
+    async def sync_forever(self) -> NoReturn:
         while True:  # Loop forever
             try:
                 self.desynced_event.clear()

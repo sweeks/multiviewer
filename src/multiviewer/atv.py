@@ -3,8 +3,7 @@
 # Standard library
 import dataclasses
 import time
-from asyncio import Queue, Task
-from typing import cast
+from asyncio import Queue
 
 # Third-party
 import pyatv
@@ -12,6 +11,7 @@ from pyatv.interface import AppleTV
 from pyatv.storage.file_storage import FileStorage
 
 from . import aio, config, json_field
+from .aio import Task
 
 # Local package
 from .base import *
@@ -63,7 +63,8 @@ class AtvConnection:
         if self.apple_tv is not None:
             apple_tv = self.apple_tv
             self.apple_tv = None
-            await aio.gather(*cast(set[Task[None]], apple_tv.close()))
+            tasks = apple_tv.close()  # pyright: ignore[reportUnknownMemberType]
+            await aio.gather(*tasks)  # pyright: ignore[reportUnknownArgumentType]
 
     async def do_command(self, command: str, args: list[str]):
         if not self.should_send_commands_to_device:
@@ -153,11 +154,13 @@ class AtvConnection:
 class ATV:
     atv: AtvConnection
     queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
-    task: Task[None] = field(init=False, repr=False)
+    task: Task[NoReturn] = field(init=False, repr=False)
     in_screensaver: bool = False
 
     def __post_init__(self) -> None:
-        self.task = aio.Task.create(type(self).__name__, self.process_queue_forever())
+        self.task = Task[NoReturn].create(
+            type(self).__name__, self.process_queue_forever()
+        )
 
     async def process_queue_forever(self) -> NoReturn:
         while True:
@@ -272,7 +275,7 @@ class ATVs:
         await self.synced()
         await aio.gather(*(atv.close() for atv in self.by_tv.values()))
 
-    def atv(self, tv):
+    def atv(self, tv: TV) -> ATV:
         return self.by_tv[tv]
 
     async def synced(self) -> None:

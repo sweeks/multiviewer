@@ -335,7 +335,7 @@ class Jtech:
         self.__post_init__()
         await self.disconnect()
 
-    def mode_screen(self, mode) -> ModeScreen:
+    def mode_screen(self, mode: Mode) -> ModeScreen:
         return self.mode_screens[mode]
 
     def get_submode(self, mode: Mode) -> Submode | None:
@@ -402,7 +402,7 @@ class Jtech:
             connection = self.connection
         return connection
 
-    async def sync_connection(self, connection) -> None:
+    async def sync_connection(self, connection: Connection) -> None:
         # To sync the connection, we send "r power!" to request the power state.  We
         # ignore any existing unconsumed output by reading unti we see the jtech's
         # response: "power on" or "power off".

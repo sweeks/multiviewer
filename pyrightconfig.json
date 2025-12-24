@@ -11,7 +11,7 @@
   "reportMissingTypeArgument": "error",
   "reportUnknownArgumentType": "error",
   "reportUnknownLambdaType": "error",
-  "reportUnknownMemberType": "none",
+  "reportUnknownMemberType": "error",
   "reportUnknownParameterType": "none",
   "reportUnknownVariableType": "none",
   "reportUnnecessaryComparison": "none",

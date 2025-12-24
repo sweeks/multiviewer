@@ -61,7 +61,7 @@ class StreamWriter(asyncio.StreamWriter):
         return "<StreamWriter>"
 
 
-class Task(asyncio.Task[Any]):
+class Task(asyncio.Task[T]):
     @classmethod
     def field(cls):
         return dataclasses.field(init=False, metadata=json_field.omit)
@@ -80,8 +80,8 @@ class Task(asyncio.Task[Any]):
             debug_print("task raised", exc)
 
     @classmethod
-    def create(cls, name: str, coro: Coroutine[Any, Any, T]) -> Task:
-        task = Task(coro)
+    def create(cls: type[Task[T]], name: str, coro: Coroutine[Any, Any, T]) -> Task[T]:
+        task = cls(coro)
         task.set_name(name)
         task.add_done_callback(lambda task: task.log_done())
         return task

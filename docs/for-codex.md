@@ -5,6 +5,11 @@
 - Rule: never change code unless explicitly instructed to do so; discuss designs and agree
   on them before writing any code; only start coding after I explicitly say "code it".
 - Rule: keep changes minimal and focused on the current goal; avoid unrelated rewrites.
+- Rationale: off-scope edits make diffs noisy, slow reviews, and hide the intent of the
+  requested change; only touch code needed for the current task or to fix the resulting
+  errors.
+- Rule: make only narrow, task-relevant edits; don't “improve” nearby code unless it is
+  part of the requested task or needed to fix a resulting error.
 - Rule: when cleaning unused imports, use the static analyzer (Pyright/Pylance) or a quick
   AST-based check (e.g., `.venv/bin/python - <<'PY' ...`) to identify and remove only what
   is truly unused; keep it fast and automated rather than guessing.

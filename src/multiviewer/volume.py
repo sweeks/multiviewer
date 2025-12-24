@@ -32,7 +32,7 @@ class Volume:
         return dataclasses.field(default_factory=Volume)
 
     def __post_init__(self) -> None:
-        self.worker_task = Task.create(type(self).__name__, self.sync_forever())
+        self.worker_task = Task[None].create(type(self).__name__, self.sync_forever())
 
     def describe_volume(self) -> str:
         if self.current_mute:
@@ -90,7 +90,7 @@ class Volume:
             await wf2ir.volume_down()
             return
 
-    async def sync_forever(self):
+    async def sync_forever(self) -> NoReturn:
         while True:
             if self.is_synced():
                 self.synced_event.set()

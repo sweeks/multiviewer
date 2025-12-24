@@ -29,3 +29,9 @@ import from `typing`—just pull it from `base`.
 We avoid leading underscores on helper functions; to keep interfaces clean, hide internal
 details in the `.pyi` stubs instead of prefixing names. This keeps the runtime code more
 readable while still controlling what’s exported.
+
+## Pyright ignores vs casts
+
+When only the type checker needs help (e.g., upstream stubs are incomplete), prefer a
+targeted `# pyright: ignore[...]` over adding runtime casts. This keeps runtime behavior
+unchanged and makes the intent explicit to readers.

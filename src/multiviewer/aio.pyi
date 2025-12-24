@@ -22,7 +22,9 @@ class Task(asyncio.Task[T]):
     @classmethod
     def field(cls) -> Task[Any]: ...
     @classmethod
-    def create(cls, name: str, coro: Coroutine[Any, Any, T]) -> Task[T]: ...
+    def create(
+        cls: type[Task[T]], name: str, coro: Coroutine[Any, Any, T]
+    ) -> Task[T]: ...
 
 event_loop: asyncio.AbstractEventLoop
 
