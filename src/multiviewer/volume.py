@@ -21,7 +21,7 @@ class Volume:
     desired_volume_delta: int = 0
     synced_event: Event = Event.field()
     wake_event: Event = Event.field()
-    worker_task: Task = Task.field()
+    worker_task: Task[None] = Task.field()
     volume_delta_by_tv: dict[TV, int] = dataclasses.field(
         default_factory=lambda: dict.fromkeys(TV.all(), 0),
         metadata=json_dict(TV, int),

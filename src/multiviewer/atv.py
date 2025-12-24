@@ -152,7 +152,7 @@ class AtvConnection:
 class ATV:
     atv: AtvConnection
     queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
-    task: Task = field(init=False, repr=False)
+    task: Task[None] = field(init=False, repr=False)
     in_screensaver: bool = False
 
     def __post_init__(self) -> None:

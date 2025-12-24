@@ -20,7 +20,7 @@ class JtechManager:
     synced_event: Event = Event.field()
     # A background task that is constantly trying to make the jtech match desired_power
     # and desired_output.
-    task: Task = Task.field()
+    task: Task[object] = Task.field()
 
     @classmethod
     def field(cls):

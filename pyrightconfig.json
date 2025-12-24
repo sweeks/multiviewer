@@ -8,7 +8,7 @@
   "exclude": ["build", ".venv", "cruft"],
   "reportMatchNotExhaustive": "error",
   "reportMissingParameterType": "none", // tried before; too noisy
-  "reportMissingTypeArgument": "none",
+  "reportMissingTypeArgument": "error",
   "reportUnknownArgumentType": "none",
   "reportUnknownLambdaType": "none",
   "reportUnknownMemberType": "none",

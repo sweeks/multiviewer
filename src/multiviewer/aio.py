@@ -60,7 +60,7 @@ class StreamWriter(asyncio.StreamWriter):
         return "<StreamWriter>"
 
 
-class Task(asyncio.Task):
+class Task(asyncio.Task[Any]):
     @classmethod
     def field(cls):
         return dataclasses.field(init=False, metadata=json_field.omit)
