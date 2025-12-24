@@ -13,7 +13,7 @@
   "reportUnknownLambdaType": "error",
   "reportUnknownMemberType": "error",
   "reportUnknownParameterType": "error",
-  "reportUnknownVariableType": "none",
+  "reportUnknownVariableType": "error",
   "reportUnnecessaryComparison": "none",
   "reportUntypedFunctionDecorator": "none",
   "reportUnusedFunction": "none"

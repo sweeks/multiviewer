@@ -1,9 +1,11 @@
 # atv.py — persistent Apple TV control with synchronous API
 
 # Standard library
+import asyncio
 import dataclasses
 import time
 from asyncio import Queue
+from typing import cast
 
 # Third-party
 import pyatv
@@ -63,8 +65,11 @@ class AtvConnection:
         if self.apple_tv is not None:
             apple_tv = self.apple_tv
             self.apple_tv = None
-            tasks = apple_tv.close()  # pyright: ignore[reportUnknownMemberType]
-            await aio.gather(*tasks)  # pyright: ignore[reportUnknownArgumentType]
+            tasks = cast(
+                set[asyncio.Task[Any]],
+                apple_tv.close(),  # pyright: ignore[reportUnknownMemberType]
+            )
+            await aio.gather(*tasks)
 
     async def do_command(self, command: str, args: list[str]):
         if not self.should_send_commands_to_device:
@@ -153,7 +158,9 @@ class AtvConnection:
 @dataclass(slots=True)
 class ATV:
     atv: AtvConnection
-    queue: Queue[Awaitable[None]] = field(default_factory=Queue, repr=False)
+    queue: Queue[Awaitable[None]] = field(
+        default_factory=lambda: Queue[Awaitable[None]](), repr=False
+    )
     task: Task[NoReturn] = field(init=False, repr=False)
     in_screensaver: bool = False
 

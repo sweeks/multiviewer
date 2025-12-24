@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import cast
 
-from dataclasses_json import config
+import dataclasses_json
 
 # Local package
 from .base import *
@@ -15,6 +15,11 @@ K = TypeVar("K")
 V = TypeVar("V")
 
 Codec = Tuple[Callable[[Any], Any], Callable[[Any], Any]]
+ConfigFn = Callable[..., dict[str, Any]]
+config: ConfigFn = cast(
+    ConfigFn,
+    dataclasses_json.config,  # pyright: ignore[reportUnknownMemberType]
+)
 
 
 def omit_encoder(_: object) -> None:
@@ -43,7 +48,7 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
     """
     # Already a codec pair
     if isinstance(t_or_codec, tuple):
-        enc_dec: tuple[Any, Any] = t_or_codec
+        enc_dec = cast(tuple[Any, Any], t_or_codec)
         if len(enc_dec) == 2:
             enc, dec = enc_dec
             if callable(enc) and callable(dec):
@@ -94,7 +99,11 @@ def json_dict(key_t_or_codec: Any, val_t_or_codec: Any) -> dict[str, Any]:
         pairs: Iterable[tuple[Any, Any]] | dict[Any, Any],
     ) -> dict[object, object]:
         # Accept both the intended list-of-pairs and a legacy JSON object for resilience.
-        it = pairs.items() if isinstance(pairs, dict) else pairs
+        it: Iterable[tuple[Any, Any]]
+        if isinstance(pairs, dict):
+            it = cast(Iterable[tuple[Any, Any]], pairs.items())
+        else:
+            it = pairs
         return {k_dec(k): v_dec(v) for k, v in it}
 
     return config(encoder=encoder, decoder=decoder)
