@@ -15,6 +15,7 @@ V = TypeVar("V")
 
 Codec = Tuple[Callable[[Any], Any], Callable[[Any], Any]]
 
+
 def omit_encoder(_: object) -> None:
     return None
 
