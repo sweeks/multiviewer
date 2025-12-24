@@ -10,6 +10,7 @@ import json
 import sys
 import time
 import traceback
+from typing import no_type_check
 
 from multiviewer import aio, mv
 from multiviewer.base import *
@@ -18,7 +19,7 @@ from multiviewer.mv import Multiviewer
 RunMode.set(RunMode.Testing)
 
 _the_mv: None | Multiviewer = None
-_mismatch_count = 0
+_mismatch_count: int = 0
 
 
 def the_mv() -> Multiviewer:
@@ -27,7 +28,7 @@ def the_mv() -> Multiviewer:
     return _the_mv
 
 
-def expect(actual, expected, frame_index=2):
+def expect(actual: Any, expected: Any, frame_index: int = 2) -> None:
     global _mismatch_count
     if actual != expected:
         _mismatch_count += 1
@@ -36,7 +37,7 @@ def expect(actual, expected, frame_index=2):
         print(f"State mismatch at line {lineno}:\n EXPECT: {expected}\n ACTUAL: {actual}")
 
 
-async def tv_do(s, e=None):
+async def tv_do(s: str, e: str | None = None) -> None:
     if False:
         debug_print(s)
     commands = [part.split() for part in s.split(";") if part.strip()]
@@ -61,37 +62,40 @@ async def tv_do(s, e=None):
         expect(last, e)
 
 
-async def tv_is(expected):
+async def tv_is(expected: str) -> None:
     await mv.synced(the_mv())
     expect(await mv.describe_jtech_output(the_mv()), expected)
 
 
-async def vol_is(expected):
+async def vol_is(expected: str) -> None:
     await mv.synced(the_mv())
     expect(mv.describe_volume(the_mv()), expected)
 
 
-tests = []
+tests: list[tuple[int, str | None, Callable[[], Awaitable[None]]]] = []
 
 
-def test(label=None):
+@no_type_check
+def test(label: str | Callable[[], Awaitable[None]] | None = None):
     """Decorator to register test functions with optional label."""
-
-    def decorator(fn):
-        tests.append((fn.__code__.co_firstlineno, label, fn))
-        return fn
 
     if callable(label):  # bare @test
         fn = label
         tests.append((fn.__code__.co_firstlineno, None, fn))
         return fn
+
+    def decorator(fn: Callable[[], Awaitable[None]]):
+        lbl: str | None = label if isinstance(label, str) else None
+        tests.append((fn.__code__.co_firstlineno, lbl, fn))
+        return fn
+
     return decorator
 
 
-def parse_selection(arg):
+def parse_selection(arg: str | None):
     if not arg or arg == "all":
         return None
-    sel = set()
+    sel: set[int] = set()
     for part in arg.split(","):
         if "-" in part:
             a, b = map(int, part.split("-", 1))
@@ -101,7 +105,7 @@ def parse_selection(arg):
     return sel
 
 
-async def run(selected):
+async def run(selected: set[int] | None):
     global _mismatch_count
     total = passed = 0
     _mismatch_count = 0
