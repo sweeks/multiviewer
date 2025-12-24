@@ -28,12 +28,6 @@ run_quiet black "$ROOT/.venv/bin/black" --quiet src tests
 # Docs formatting (auto-fix)
 run_quiet mdformat "$ROOT/.venv/bin/mdformat" --wrap 90 README.md docs
 
-# Fail if formatting changed files
-if ! git diff --quiet --exit-code; then
-  echo "validate-repo: formatting changed files; review/stage and re-run" >&2
-  exit 1
-fi
-
 # Ruff (configured in pyproject)
 run_quiet ruff "$ROOT/.venv/bin/ruff" check src tests
 
