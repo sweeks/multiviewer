@@ -6,12 +6,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 staged_files="$(git diff --cached --name-only)"
-pre_ix_hash="$(git diff --cached --no-color | git hash-object --stdin)"
-
 "$ROOT/bin/validate-repo.sh"
 
-post_ix_hash="$(git diff --cached --no-color | git hash-object --stdin)"
-if [[ "$pre_ix_hash" != "$post_ix_hash" ]]; then
-  echo "pre-commit: validation modified staged files; review/stage and re-run" >&2
-  exit 1
+# Fail if validate-repo left unstaged changes in any staged file.
+if [[ -n "$staged_files" ]]; then
+  dirty_staged="$(git diff --name-only -- $staged_files)"
+  if [[ -n "$dirty_staged" ]]; then
+    echo "pre-commit: validation modified staged files in working tree; review/stage and re-run" >&2
+    echo "$dirty_staged" >&2
+    exit 1
+  fi
 fi
