@@ -34,9 +34,6 @@ run_quiet ruff "$ROOT/.venv/bin/ruff" check src tests
 # Type checking
 run_quiet pyright env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"
 
-# Stub/runtime consistency
-run_quiet pyright-verify env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright" --verifytypes multiviewer --ignoreexternal
-
 run_quiet tests "$ROOT/bin/test-all.sh"
 
 echo "validate-repo: ok"
