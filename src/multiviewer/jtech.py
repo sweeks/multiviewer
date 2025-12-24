@@ -430,9 +430,6 @@ class Jtech:
             log(f"jtech<<< {command}")
         connection = await self.get_connection()
         response = await connection.send_command(command)
-        if response is None:
-            log(f"jtech did not respond to: {command}")
-            fail("jtech is nonresponsive")
         if expected_response is not None and response != expected_response:
             self.unexpected_response(command, response, expected_response)
         if False:

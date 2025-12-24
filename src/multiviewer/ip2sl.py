@@ -24,7 +24,7 @@ class Connection:
         reader, writer = await aio.open_connection(config.ITACH_HOST, config.ITACH_PORT)
         return Connection(reader=reader, writer=writer)
 
-    async def read_line(self) -> str | None:
+    async def read_line(self) -> str:
         line = await self.reader.readuntil(b"\n")
         response = line.decode("ascii", errors="strict").strip()
         if False:
@@ -43,7 +43,7 @@ class Connection:
         self.writer.write(line.encode("ascii") + TERM)
         await self.writer.drain()
 
-    async def send_command(self, command: str) -> str | None:
+    async def send_command(self, command: str) -> str:
         await self.write_line(command)
         return await self.read_line()
 
