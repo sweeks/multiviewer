@@ -146,7 +146,9 @@ T = TypeVar("T", bound="MyStrEnum")
 
 class MyStrEnum(_StrEnum):
     @staticmethod
-    def _generate_next_value_(name, start, count, last_values):
+    def _generate_next_value_(
+        name: str, start: int, count: int, last_values: list[str]
+    ) -> str:
         return name
 
     def __repr__(self) -> str:
