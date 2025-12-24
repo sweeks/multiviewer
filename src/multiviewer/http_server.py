@@ -24,7 +24,12 @@ class Server(ThreadingHTTPServer):
 
     run_command: Callable[[list[str]], Awaitable[JSON]]
 
-    def __init__(self, server_address, request_handler_class, run_command):
+    def __init__(
+        self,
+        server_address: tuple[str, int],
+        request_handler_class: type[SimpleHTTPRequestHandler],
+        run_command: Callable[[list[str]], Awaitable[JSON]],
+    ):
         super().__init__(server_address, request_handler_class)
         self.run_command = run_command
         self.stop = False
@@ -32,7 +37,7 @@ class Server(ThreadingHTTPServer):
 
 
 class RequestHandler(SimpleHTTPRequestHandler):
-    def log_message(self, format, *args):
+    def log_message(self, format: str, *args: object) -> None:
         return
 
     def respond(self, code: int, j: JSON):
@@ -67,7 +72,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             self.respond(400, {})
 
 
-def serve_until_stopped(run_command):
+def serve_until_stopped(run_command: Callable[[list[str]], Awaitable[JSON]]) -> Server:
     if False:
         debug_print(run_command)
     server = Server((HTTP_HOST, HTTP_PORT), RequestHandler, run_command)
@@ -76,6 +81,6 @@ def serve_until_stopped(run_command):
     return server
 
 
-def stop(server):
+def stop(server: Server) -> None:
     server.shutdown()
     server.server_close()

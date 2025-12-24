@@ -111,7 +111,7 @@ depth = None
 last_ts = time.monotonic()
 
 
-def debug_print(*args):
+def debug_print(*args: Any) -> None:
     global last_ts
     now = time.monotonic()
     dt = int((now - last_ts) * 1000)
@@ -128,17 +128,17 @@ def debug_print(*args):
     sys.stdout.flush()
 
 
-def fail(*args) -> NoReturn:
+def fail(*args: object) -> NoReturn:
     raise RuntimeError((file_and_line(), *args))
 
 
-def assert_(condition, *args):
+def assert_(condition: bool, *args: object) -> None:
     if not condition:
         fail(*args)
 
 
-def assert_equal(a, b):
-    assert_(a == b, "unexpectedly unequal", a, b)
+def assert_equal(a: Any, b: Any, *args: object) -> None:
+    assert_(a == b, "unexpectedly unequal", a, b, *args)
 
 
 T = TypeVar("T", bound="MyStrEnum")
@@ -168,7 +168,7 @@ class MyStrEnum(_StrEnum):
         type(self).missing_attach_int()
 
 
-def attach_int(cls, table):
+def attach_int(cls: type[T], table: dict[T, int]) -> None:
     # 1) Validate bijection
     members = tuple(cls)
     keyset = set(table.keys())
@@ -176,7 +176,7 @@ def attach_int(cls, table):
         missing = [m for m in members if m not in keyset]
         extra = [k for k in keyset if k not in members]
         fail("attach_int table mismatch", {"missing": missing, "extra": extra})
-    vals = list(table.values())
+    vals: list[Any] = list(table.values())
     if any(not isinstance(v, int) for v in vals):
         fail("attach_int values must be int")
     if len(vals) != len(set(vals)):
@@ -186,18 +186,18 @@ def attach_int(cls, table):
     rev = {v: m for m, v in fwd.items()}
 
     # 3) Rebind methods with named callables
-    def all(_cls):
+    def all(_cls: type[T]) -> tuple[T, ...]:
         return members
 
-    def of_int(_cls, i):
+    def of_int(_cls: type[T], i: int) -> T:
         return rev[i]
 
-    def to_int(self):
+    def to_int(self: T) -> int:
         return fwd[self]
 
-    cls.all = classmethod(all)
-    cls.of_int = classmethod(of_int)
-    cls.to_int = to_int
+    cls.all = classmethod(all)  # type: ignore[assignment]
+    cls.of_int = classmethod(of_int)  # type: ignore[assignment]
+    cls.to_int = to_int  # type: ignore[assignment]
 
 
 # __all__ is necessary in base.py because other code uses "from .base import *",

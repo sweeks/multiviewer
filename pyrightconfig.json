@@ -9,7 +9,7 @@
   "reportMatchNotExhaustive": "error",
   "reportMissingParameterType": "none", // tried before; too noisy
   "reportMissingTypeArgument": "error",
-  "reportUnknownArgumentType": "none",
+  "reportUnknownArgumentType": "error",
   "reportUnknownLambdaType": "none",
   "reportUnknownMemberType": "none",
   "reportUnknownParameterType": "none",

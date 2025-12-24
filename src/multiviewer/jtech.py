@@ -285,7 +285,7 @@ class ModeScreen:
         mode = self.mode
         self.window_inputs = {w: WindowInput() for w in mode.windows()}
 
-        def window_border(window):
+        def window_border(window: Window) -> WindowBorder:
             d = WindowBorder()
             if not mode.window_has_border(window):
                 d.border = Border.Off
@@ -347,11 +347,11 @@ class Jtech:
     def window_border(self, w: Window) -> WindowBorder:
         return self.window_borders[w]
 
-    def check_expectation(self, description, x, y) -> None:
+    def check_expectation(self, description: str, x: object, y: object) -> None:
         if x is not None and y is not None and x != y:
             log(f"jtech mismatch for {description}: expected {x} but got {y}")
 
-    def record_mode(self, m) -> None:
+    def record_mode(self, m: Mode | None) -> None:
         self.check_expectation("mode", self.mode, m)
         self.mode = m
 
@@ -360,7 +360,7 @@ class Jtech:
         self.check_expectation("submode", mode_screen.submode, submode)
         mode_screen.submode = submode
 
-    def record_audio_from(self, h) -> None:
+    def record_audio_from(self, h: Hdmi | None) -> None:
         self.check_expectation("audio from", self.audio_from, h)
         self.audio_from = h
 
@@ -373,7 +373,7 @@ class Jtech:
         self.check_expectation(f"{w} border", wb.border, b)
         wb.border = b
 
-    def record_border_color(self, w: Window, c) -> None:
+    def record_border_color(self, w: Window, c: Color | None) -> None:
         wb = self.window_border(w)
         self.check_expectation(f"{w} color", wb.border_color, c)
         wb.border_color = c
@@ -383,7 +383,9 @@ class Jtech:
         self.check_expectation(f"{w} input", wi.hdmi, h)
         wi.hdmi = h
 
-    def unexpected_response(self, command, response, expected_response=None) -> NoReturn:
+    def unexpected_response(
+        self, command: str, response: str, expected_response: str | None = None
+    ) -> NoReturn:
         message = f"jtech gave unexpected response '{response}' to command '{command}'"
         if expected_response is not None:
             message = f"{message}, expected '{expected_response}'"
@@ -418,7 +420,9 @@ class Jtech:
             log("disconnected from jtech")
             self.connection = None
 
-    async def send_command(self, command: str, *, expected_response=None) -> str:
+    async def send_command(
+        self, command: str, *, expected_response: str | None = None
+    ) -> str:
         if False:
             log(f"jtech<<< {command}")
         connection = await self.get_connection()

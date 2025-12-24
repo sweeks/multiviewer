@@ -31,15 +31,15 @@ IR_MUTE = (
 )
 
 
-def create_connection():
+def create_connection() -> socket.socket:
     return socket.create_connection((config.WF2IR_HOST, config.WF2IR_PORT), timeout=5)
 
 
-def send(s, text):
+def send(s: socket.socket, text: str) -> None:
     s.sendall(text.encode())
 
 
-def recv(s):
+def recv(s: socket.socket) -> str:
     return s.recv(4096).decode().strip()
 
 
@@ -53,7 +53,7 @@ def learn():
         print(recv(s))
 
 
-async def command(text) -> None:
+async def command(text: str) -> None:
     if RunMode.get() == RunMode.Testing:
         return
     else:

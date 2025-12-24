@@ -19,6 +19,6 @@ TV4 = TV.TV4
 attach_int(TV, {TV1: 1, TV2: 2, TV3: 3, TV4: 4})
 
 
-def validate_tv(x) -> None:
+def validate_tv(x: object) -> None:
     if not (isinstance(x, TV)):
         fail("not a TV", x)

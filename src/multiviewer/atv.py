@@ -4,6 +4,7 @@
 import dataclasses
 import time
 from asyncio import Queue, Task
+from typing import cast
 
 # Third-party
 import pyatv
@@ -62,7 +63,7 @@ class AtvConnection:
         if self.apple_tv is not None:
             apple_tv = self.apple_tv
             self.apple_tv = None
-            await aio.gather(*(apple_tv.close()))
+            await aio.gather(*cast(set[Task[None]], apple_tv.close()))
 
     async def do_command(self, command: str, args: list[str]):
         if not self.should_send_commands_to_device:
@@ -76,7 +77,7 @@ class AtvConnection:
     async def down(self):
         await self.do_command("down", [])
 
-    async def launch_url(self, url):
+    async def launch_url(self, url: str):
         await self.do_command("launch_url", [url])
 
     async def left(self):
@@ -193,7 +194,7 @@ class ATV:
     def home(self):
         self.enqueue(self.atv.home())
 
-    def launch(self, url):
+    def launch(self, url: str):
         self.enqueue(self.atv.launch(url))
 
     def left(self):

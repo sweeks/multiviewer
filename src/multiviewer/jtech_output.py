@@ -137,7 +137,7 @@ class JtechOutput:
             sub_str = f"({pip_location})"
         else:
             sub_str = ""
-        parts = []
+        parts: list[str] = []
         for _w, c in sorted(layout_windows(self.layout).items()):
             h = f"{c.hdmi.value}"
             border = c.border

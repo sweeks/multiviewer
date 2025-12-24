@@ -14,9 +14,10 @@ open_connection = asyncio.open_connection
 sleep = asyncio.sleep
 
 event_loop = asyncio.new_event_loop()
+T = TypeVar("T")
 
 
-def handler(_, context):
+def handler(loop: asyncio.AbstractEventLoop | None, context: dict[str, Any]) -> None:
     debug_print("loop exception", context)
 
 
@@ -24,11 +25,11 @@ event_loop.set_exception_handler(handler)
 asyncio.set_event_loop(event_loop)
 
 
-def call_later(seconds, f) -> None:
+def call_later(seconds: float, f: Callable[[], object]) -> None:
     event_loop.call_later(seconds, f)
 
 
-async def wait_for(a, *, timeout):
+async def wait_for(a: Awaitable[T], *, timeout: float) -> T | None:
     start = datetime.datetime.now()
     try:
         return await asyncio.wait_for(a, timeout)
@@ -79,18 +80,18 @@ class Task(asyncio.Task[Any]):
             debug_print("task raised", exc)
 
     @classmethod
-    def create(cls, name: str, coro) -> Task:
+    def create(cls, name: str, coro: Coroutine[Any, Any, T]) -> Task:
         task = Task(coro)
         task.set_name(name)
         task.add_done_callback(lambda task: task.log_done())
         return task
 
 
-def run_coroutine_threadsafe(a):
+def run_coroutine_threadsafe(a: Coroutine[Any, Any, T]) -> T:
     return asyncio.run_coroutine_threadsafe(a, event_loop).result()
 
 
-def run_event_loop(main):
+def run_event_loop(main: Coroutine[Any, Any, object]) -> None:
     try:
         event_loop.run_until_complete(main)
     finally:

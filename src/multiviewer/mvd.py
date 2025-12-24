@@ -29,7 +29,7 @@ async def stop_running_daemon() -> None:
         pass  # no process using that port
 
 
-async def become_daemon():
+async def become_daemon() -> None:
     RunMode.set(RunMode.Daemon)
     log("daemon starting")
     try:
@@ -41,7 +41,7 @@ async def become_daemon():
     mv.set_should_send_commands_to_device(the_mv, True)
     mv.update_devices(the_mv)
 
-    async def run_command(args):
+    async def run_command(args: list[str]) -> JSON:
         if False:
             debug_print(args)
         if True:
@@ -58,7 +58,7 @@ async def become_daemon():
     server = http_server.serve_until_stopped(run_command)
     stop_event = aio.Event()
 
-    def handle_sigterm(signum, frame):
+    def handle_sigterm(signum: int, frame: object | None) -> None:
         log("daemon stopping")
         aio.event_loop.call_soon_threadsafe(stop_event.set)
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 # Standard library
 import inspect
 from enum import Enum
+from typing import cast
 
 from dataclasses_json import config
 
@@ -31,25 +32,31 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
           * primitives/other        → identity
     """
     # Already a codec pair
-    if isinstance(t_or_codec, tuple) and len(t_or_codec) == 2:
-        return t_or_codec  # type: ignore[return-value]
+    if isinstance(t_or_codec, tuple):
+        enc_dec: tuple[Any, Any] = t_or_codec
+        if len(enc_dec) == 2:
+            enc, dec = enc_dec
+            if callable(enc) and callable(dec):
+                return cast(Codec, enc_dec)
+        return _identity_codec()
 
     # Class-based resolution
-    if inspect.isclass(t_or_codec):
-        codec_type = t_or_codec
+    if not inspect.isclass(t_or_codec):
+        return _identity_codec()
+    codec_type = t_or_codec
 
-        # dataclasses_json classes expose class-level schema() and instance to_dict()
-        has_schema = hasattr(codec_type, "schema") and callable(codec_type.schema)
-        has_to_dict = hasattr(codec_type, "to_dict")
-        if has_schema and has_to_dict:
-            return (
-                lambda o: o.to_dict(),
-                lambda d: codec_type.schema().load(d),
-            )  # type: ignore[attr-defined]
+    # dataclasses_json classes expose class-level schema() and instance to_dict()
+    has_schema = hasattr(codec_type, "schema") and callable(codec_type.schema)
+    has_to_dict = hasattr(codec_type, "to_dict")
+    if has_schema and has_to_dict:
+        return (
+            lambda o: o.to_dict(),
+            lambda d: codec_type.schema().load(d),
+        )  # type: ignore[attr-defined]
 
-        # Enums: centralized name-based codec
-        if issubclass(codec_type, Enum):
-            return (lambda e: e.name, lambda s: codec_type[s])  # type: ignore[index]
+    # Enums: centralized name-based codec
+    if issubclass(codec_type, Enum):
+        return (lambda e: e.name, lambda s: codec_type[s])  # type: ignore[index]
 
     # Fallback: numbers, strings, bools, None, plain dict/list, etc.
     return _identity_codec()
