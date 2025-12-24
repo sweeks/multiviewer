@@ -14,7 +14,7 @@
   "reportUnknownMemberType": "error",
   "reportUnknownParameterType": "error",
   "reportUnknownVariableType": "error",
-  "reportUnnecessaryComparison": "none",
+  "reportUnnecessaryComparison": "error",
   "reportUntypedFunctionDecorator": "none",
   "reportUnusedFunction": "none"
 }

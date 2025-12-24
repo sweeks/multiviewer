@@ -26,8 +26,6 @@ class Connection:
 
     async def read_line(self) -> str | None:
         line = await self.reader.readuntil(b"\n")
-        if line is None:
-            return None
         response = line.decode("ascii", errors="strict").strip()
         if False:
             log(f"jtech--> {response}")
