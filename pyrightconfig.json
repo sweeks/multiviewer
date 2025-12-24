@@ -3,7 +3,7 @@
   "venvPath": ".",
   "venv": ".venv",
   "extraPaths": ["src"],
-  "include": ["src"],
+  "include": ["src", "tests"],
   "typeCheckingMode": "strict",
   "exclude": ["build", ".venv", "cruft"],
   "reportMatchNotExhaustive": "error",
