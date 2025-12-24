@@ -288,13 +288,6 @@ class ModeScreen:
         mode = self.mode
         self.window_inputs = {w: WindowInput() for w in mode.windows()}
 
-        def window_border(window: Window) -> WindowBorder:
-            d = WindowBorder()
-            if not mode.window_has_border(window):
-                d.border = Border.Off
-                d.border_color = Color.BLACK
-            return d
-
     def __repr__(self) -> str:
         if not self.mode.has_submode():
             submode = ""
