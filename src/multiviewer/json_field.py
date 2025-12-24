@@ -15,7 +15,15 @@ V = TypeVar("V")
 
 Codec = Tuple[Callable[[Any], Any], Callable[[Any], Any]]
 
-omit = config(encoder=lambda _: None, exclude=lambda _: True)
+def omit_encoder(_: object) -> None:
+    return None
+
+
+def omit_exclude(_: object) -> bool:
+    return True
+
+
+omit = config(encoder=omit_encoder, exclude=omit_exclude)
 
 
 def _identity_codec() -> Codec:

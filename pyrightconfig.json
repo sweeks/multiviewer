@@ -10,7 +10,7 @@
   "reportMissingParameterType": "none", // tried before; too noisy
   "reportMissingTypeArgument": "error",
   "reportUnknownArgumentType": "error",
-  "reportUnknownLambdaType": "none",
+  "reportUnknownLambdaType": "error",
   "reportUnknownMemberType": "none",
   "reportUnknownParameterType": "none",
   "reportUnknownVariableType": "none",
