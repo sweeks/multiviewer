@@ -199,7 +199,7 @@ def attach_int(cls: type[T], table: dict[T, int]) -> None:
 
     cls.all = classmethod(all)  # type: ignore[assignment]
     cls.of_int = classmethod(of_int)  # type: ignore[assignment]
-    cls.to_int = to_int  # type: ignore[assignment]
+    cls.to_int = to_int
 
 
 # __all__ is necessary in base.py because other code uses "from .base import *",

@@ -67,11 +67,11 @@ def _resolve_codec(t_or_codec: Any) -> Codec:
         return (
             lambda o: o.to_dict(),
             lambda d: codec_type.schema().load(d),
-        )  # type: ignore[attr-defined]
+        )
 
     # Enums: centralized name-based codec
     if issubclass(codec_type, Enum):
-        return (lambda e: e.name, lambda s: codec_type[s])  # type: ignore[index]
+        return (lambda e: e.name, lambda s: codec_type[s])
 
     # Fallback: numbers, strings, bools, None, plain dict/list, etc.
     return _identity_codec()
