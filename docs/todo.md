@@ -6,8 +6,6 @@
 
 # rework remote-control-user-guide.md
 
-# extend docs/developer-guide.md
-
 # put VSCode Code/User in git, and push daily to github
 
 # look into latency again - didn't I used to have 300ms?

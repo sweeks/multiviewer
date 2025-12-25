@@ -73,38 +73,8 @@ connected to the daemon via WiFi, and sends IR to the soundbar in response to da
 commands. The Apple TVs are connected to ethernet, and receive commands from the daemon
 using the `pyatv` library.
 
-# Configuration
+# Developer Guide
 
-[config.py](src/multiviewer/config.py) has host names, IP addresses, and ports.
-
-Currently, the daemon uses a `.pyatv.conf` that lives outside this repo. That file has
-pairing info for the Apple TVs that is required in order for `pyatv` to connect to them. I
-plan to move the pairing info into the repo at some point.
-
-# Installation
-
-For each remote-control button, the [remote-control/](remote-control) directory has a
-`.shortcut` file and a `.jpg` file with its icon. To add it to the home screen, from the
-Shortcuts app, do `Add to Home Screen`, and choose the corresponding icon as its image.
-The main shortcut does not need a button, but needs to be added to the Shortcuts app, and
-needs to be changed with the hostname of the daemon.
-
-The daemon Python code uses a virtual environment to install dependencies and the
-multiviewer package (used by tests). To set up `.venv` and install the repo’s git hooks,
-run [setup-repo.sh](bin/setup-repo.sh). That script sets `core.hooksPath=githooks`, so new
-commits automatically run the formatting scripts (Black and mdformat) via the pre-commit
-hook.
-
-[start-mvd.sh](bin/start-mvd.sh) starts the daemon. At startup, the new daemon first kills
-the prior daemon and then starts a new HTTP server.
-
-# Testing
-
-The [tests/](tests) directory has end-to-end tests that run the multiviewer through its
-commands and check that the J-Tech's screen matches what is expected.
-
-To run all tests:
-
-```sh
-bin/test-all.sh
-```
+See [docs/developer-guide.md](docs/developer-guide.md) for information on creating the
+remote-control home screen, setting up the repo, configuring and starting the daemon, and
+for developing and testing the code.
