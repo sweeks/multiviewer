@@ -4,8 +4,6 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from dataclasses_json import dataclass_json
-
 from . import json_field
 from .base import *
 from .json_field import json_dict
