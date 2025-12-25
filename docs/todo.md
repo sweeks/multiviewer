@@ -1,11 +1,3 @@
-# pylance: turn on strict type checking
-
-"reportMissingParameterType": "none", "reportMissingTypeArgument": "none",
-"reportUnknownArgumentType": "none", "reportUnknownLambdaType": "none",
-"reportUnknownMemberType": "none", "reportUnknownParameterType": "none",
-"reportUnknownVariableType": "none", "reportUnnecessaryComparison": "none",
-"reportUntypedFunctionDecorator": "none", "reportUnusedFunction": "none"
-
 # encode fsm states as integers
 
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
