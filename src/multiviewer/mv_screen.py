@@ -736,3 +736,19 @@ class MvScreen(Jsonable):
         return JtechOutput(
             layout=layout, audio_from=self.window_input(self.selected_window)
         )
+
+
+def explore_fsm_cli(
+    *,
+    max_states: int = 10_000_000,
+    report_powers_of_two: bool = True,
+    validate: bool = True,
+) -> tuple[int, int, bool]:
+    mv = MvScreen()
+    states, transitions, complete = mv.explore_fsm(
+        max_states=max_states,
+        report_powers_of_two=report_powers_of_two,
+        validate=validate,
+    )
+    print(f"done: states={states} transitions={transitions} complete={complete}")
+    return states, transitions, complete
