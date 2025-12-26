@@ -21,6 +21,14 @@ Each remote-control button has a `.shortcut` and `.jpg` in
 the matching icon; the main shortcut just needs to be added and pointed at the daemon
 hostname.
 
+# Scripts layout
+
+Small shell wrappers live in [bin/](../bin), and they should do as little Python as
+possible. The corresponding Python entry points live under
+[src/multiviewer/](../src/multiviewer/) and are invoked with `python -m` from the shell
+scripts (e.g., [explore-fsm.sh](../bin/explore-fsm.sh) runs
+`python -m multiviewer.explore_fsm`).
+
 # Configuring and Running the Daemon
 
 The daemon is configured in [config.py](../src/multiviewer/config.py), which holds host
