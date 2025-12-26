@@ -1,4 +1,4 @@
-from .mv_screen import explore_fsm_cli
+from .mv_screen_fsm import explore_fsm_cli
 
 
 def main() -> None:

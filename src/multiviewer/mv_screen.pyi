@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from enum import StrEnum, auto
-from pathlib import Path
 
 # Local package
 from .atv import TV
 from .base import JSON
+from .jtech import PipLocation, Submode, Window
 from .jtech_output import JtechOutput
 
 class Arrow(StrEnum):
@@ -17,6 +17,14 @@ class Arrow(StrEnum):
 class RemoteMode(StrEnum):
     APPLE_TV = auto()
     MULTIVIEWER = auto()
+
+class LayoutMode(StrEnum):
+    MULTIVIEW = auto()
+    FULLSCREEN = auto()
+
+class FullscreenMode(StrEnum):
+    FULL = auto()
+    PIP = auto()
 
 class Button(StrEnum):
     REMOTE = auto()
@@ -35,39 +43,25 @@ class Button(StrEnum):
 class MvScreen:
     @classmethod
     def field(cls) -> MvScreen: ...
+    window_tv: dict[Window, TV]
+    layout_mode: LayoutMode
+    num_active_windows: int
+    multiview_submode: Submode
+    fullscreen_mode: FullscreenMode
+    full_window: Window
+    pip_window: Window
+    pip_location_by_tv: dict[TV, PipLocation]
+    selected_window: Window
+    selected_window_has_distinct_border: bool
     remote_mode: RemoteMode
+    last_button: Button | None
+    last_selected_window: Window
     def pressed(self, button: Button, *, maybe_double_tap: bool = False) -> JSON: ...
-    def explore_fsm(
-        self,
-        max_states: int = ...,
-        validate: bool = ...,
-        report_powers_of_two: bool = ...,
-        save_json_to: str | Path | None = ...,
-    ) -> tuple[int, int, bool]: ...
-    def explore_fsm_machine(
-        self,
-        max_states: int = ...,
-        validate: bool = ...,
-        report_powers_of_two: bool = ...,
-    ) -> FsmStateMachine: ...
     def validate(self) -> None: ...
     def reset(self) -> None: ...
     def render(self) -> JtechOutput: ...
     def power_on(self) -> None: ...
     def selected_tv(self) -> TV: ...
 
-def explore_fsm_cli(
-    *,
-    max_states: int = ...,
-    report_powers_of_two: bool = ...,
-    validate: bool = ...,
-) -> tuple[int, int, bool]: ...
-
-class FsmStateMachine:
-    entries: list[tuple[int, list[int]]]
-    buttons: list[Button]
-    transitions: int
-    complete: bool
-    def summary(self) -> dict[str, object]: ...
-    def write(self, path: str | Path) -> None: ...
-    def write_summary(self, path: str | Path) -> None: ...
+def initial_pip_location_by_tv() -> dict[TV, PipLocation]: ...
+def initial_window_tv() -> dict[Window, TV]: ...

@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .mv_screen import MvScreen
+from .mv_screen_fsm import explore_fsm_machine
 
 
 def compute_summary() -> dict[str, object]:
-    machine = MvScreen().explore_fsm_machine()
+    machine = explore_fsm_machine()
     return machine.summary()
 
 
