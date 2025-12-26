@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import StrEnum, auto
+from pathlib import Path
 
 # Local package
 from .atv import TV
@@ -41,6 +42,7 @@ class MvScreen:
         max_states: int = ...,
         validate: bool = ...,
         report_powers_of_two: bool = ...,
+        save_json_to: str | Path | None = ...,
     ) -> tuple[int, int, bool]: ...
     def validate(self) -> None: ...
     def reset(self) -> None: ...

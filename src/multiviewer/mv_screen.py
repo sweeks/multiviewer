@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import timedelta
+from pathlib import Path
+
+from dataclasses_json import dataclass_json
 
 from . import json_field
 from .base import *
@@ -76,8 +81,9 @@ class Button(MyStrEnum):
     ARROW_S = auto()
 
 
+@dataclass_json
 @dataclass(frozen=True)
-class FsmState:
+class FsmStateRecord:
     layout_mode: LayoutMode
     num_active_windows: int
     multiview_submode: Submode
@@ -90,9 +96,69 @@ class FsmState:
     last_button: Button | None
     last_selected_window: Window
 
-    @classmethod
-    def from_screen(cls, screen: MvScreen) -> FsmState:
-        return cls(
+
+class FsmState(int):
+    @staticmethod
+    def create(screen: MvScreen) -> FsmState:
+        state = 0
+        state |= (screen.num_active_windows - 1) << _NUM_ACTIVE_POS
+        state |= (1 if screen.layout_mode == LayoutMode.FULLSCREEN else 0) << _LAYOUT_POS
+        state |= (
+            1 if screen.multiview_submode == W1_PROMINENT else 0
+        ) << _MULTIVIEW_SUBMODE_POS
+        state |= (
+            1 if screen.fullscreen_mode == FullscreenMode.PIP else 0
+        ) << _FULLSCREEN_MODE_POS
+        state |= window_code(screen.full_window) << _FULL_WINDOW_POS
+        state |= window_code(screen.pip_window) << _PIP_WINDOW_POS
+        state |= window_code(screen.selected_window) << _SELECTED_WINDOW_POS
+        state |= (
+            1 if screen.selected_window_has_distinct_border else 0
+        ) << _SELECTED_BORDER_POS
+        state |= (
+            1 if screen.remote_mode == RemoteMode.APPLE_TV else 0
+        ) << _REMOTE_MODE_POS
+        state |= _BUTTON_TO_CODE[screen.last_button] << _LAST_BUTTON_POS
+        state |= window_code(screen.last_selected_window) << _LAST_SELECTED_WINDOW_POS
+        return FsmState(state)
+
+    def hydrate(self, screen: MvScreen) -> None:
+        state = int(self)
+        wt = screen.window_tv
+        wt.clear()
+        wt[W1] = TV.TV1
+        wt[W2] = TV.TV2
+        wt[W3] = TV.TV3
+        wt[W4] = TV.TV4
+        pl = screen.pip_location_by_tv
+        pl.clear()
+        for tv in TV.all():
+            pl[tv] = PipLocation.NE
+
+        def get(bits: int, pos: int) -> int:
+            mask = (1 << bits) - 1
+            return (state >> pos) & mask
+
+        screen.num_active_windows = get(_NUM_ACTIVE_BITS, _NUM_ACTIVE_POS) + 1
+        screen.layout_mode = FULLSCREEN if get(1, _LAYOUT_POS) else MULTIVIEW
+        screen.multiview_submode = (
+            W1_PROMINENT if get(1, _MULTIVIEW_SUBMODE_POS) else WINDOWS_SAME
+        )
+        screen.fullscreen_mode = PIP if get(1, _FULLSCREEN_MODE_POS) else FULL
+        screen.full_window = window_from_code(get(_WINDOW_BITS, _FULL_WINDOW_POS))
+        screen.pip_window = window_from_code(get(_WINDOW_BITS, _PIP_WINDOW_POS))
+        screen.selected_window = window_from_code(get(_WINDOW_BITS, _SELECTED_WINDOW_POS))
+        screen.selected_window_has_distinct_border = bool(get(1, _SELECTED_BORDER_POS))
+        screen.remote_mode = APPLE_TV if get(1, _REMOTE_MODE_POS) else MULTIVIEWER
+        screen.last_button = _CODE_TO_BUTTON[get(_LAST_BUTTON_BITS, _LAST_BUTTON_POS)]
+        screen.last_selected_window = window_from_code(
+            get(_WINDOW_BITS, _LAST_SELECTED_WINDOW_POS)
+        )
+
+    def to_record(self) -> FsmStateRecord:
+        screen = MvScreen()
+        self.hydrate(screen)
+        return FsmStateRecord(
             layout_mode=screen.layout_mode,
             num_active_windows=screen.num_active_windows,
             multiview_submode=screen.multiview_submode,
@@ -105,6 +171,92 @@ class FsmState:
             last_button=screen.last_button,
             last_selected_window=screen.last_selected_window,
         )
+
+
+@dataclass_json
+@dataclass(frozen=True)
+class FsmStateMachine:
+    entries: list[tuple[FsmState, list[FsmState]]]
+    buttons: list[Button]
+    transitions: int
+    complete: bool
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "buttons": [b.name for b in self.buttons],
+            "complete": self.complete,
+            "states": len(self.entries),
+            "transitions": self.transitions,
+            "entries": [
+                [int(state), [int(t) for t in transitions]]
+                for state, transitions in self.entries
+            ],
+        }
+
+    def to_pretty_json(self) -> str:
+        return json.dumps(self.to_dict(), indent=2)
+
+    def write(self, path: str | Path) -> None:
+        p = Path(path)
+        p.write_text(self.to_pretty_json())
+
+    def summary(self) -> dict[str, object]:
+        digest = hashlib.sha256(
+            json.dumps(self.to_dict(), separators=(",", ":")).encode()
+        ).hexdigest()
+        return {
+            "states": len(self.entries),
+            "transitions": self.transitions,
+            "complete": self.complete,
+            "sha256": digest,
+        }
+
+    def write_summary(self, path: str | Path) -> None:
+        p = Path(path)
+        p.write_text(json.dumps(self.summary(), indent=2))
+
+
+MAX_FSM_STATES = 1 << 19
+
+# Bit packing helpers for FSM state -> int
+_BUTTONS = list(Button)
+_BUTTON_TO_CODE: dict[Button | None, int] = {None: 0} | {
+    b: i + 1 for i, b in enumerate(_BUTTONS)
+}
+_CODE_TO_BUTTON: list[Button | None] = [None] + _BUTTONS
+
+_NUM_ACTIVE_POS = 0
+_NUM_ACTIVE_BITS = 2
+_LAYOUT_POS = 2
+_MULTIVIEW_SUBMODE_POS = 3
+_FULLSCREEN_MODE_POS = 4
+_FULL_WINDOW_POS = 5
+_WINDOW_BITS = 2
+_PIP_WINDOW_POS = 7
+_SELECTED_WINDOW_POS = 9
+_SELECTED_BORDER_POS = 11
+_REMOTE_MODE_POS = 12
+_LAST_BUTTON_POS = 13
+_LAST_BUTTON_BITS = 4
+_LAST_SELECTED_WINDOW_POS = 17
+
+
+def window_code(w: Window) -> int:
+    return w.to_int() - 1
+
+
+def window_from_code(code: int) -> Window:
+    return Window.of_int(code + 1)
+
+
+def decode_fsm_state_fields(state: FsmState) -> FsmStateRecord:
+    return state.to_record()
+
+
+def fsm_state_to_screen(state: FsmState) -> MvScreen:
+    screen = MvScreen()
+    state.hydrate(screen)
+    return screen
 
 
 H1 = Hdmi.H1
@@ -577,60 +729,36 @@ class MvScreen(Jsonable):
                 fail("invalid button", button)
         return result
 
-    def fsm_key(self) -> FsmState:
-        return FsmState.from_screen(self)
+    def fsm_key(self) -> int:
+        return int(FsmState.create(self))
 
-    def explore_fsm(
+    def explore_fsm_machine(
         self,
         max_states: int = 500_000,
         validate: bool = True,
         report_powers_of_two: bool = False,
-    ) -> tuple[int, int, bool]:
-        """Breadth-first exploration of reachable FSM states.
-
-        Returns (num_states, num_transitions, complete) where complete=False if the
-        search hit max_states and stopped early.
-        """
+    ) -> FsmStateMachine:
+        """Breadth-first exploration of reachable FSM states."""
         base = MvScreen()
-        queue: deque[FsmState] = deque([FsmState.from_screen(base)])
-        seen: set[FsmState] = set(queue)
+        start_state = FsmState.create(base)
+        queue: deque[FsmState] = deque([start_state])
+        visited: list[list[FsmState] | None] = [None] * MAX_FSM_STATES
+        visited[int(start_state)] = []
+        seen = 1
         transitions = 0
         next_report = 1
 
-        buttons = list(Button)
-
-        def hydrate(state: FsmState) -> None:
-            # Fields not tracked in FSM state: reset to defaults.
-            wt = base.window_tv
-            wt.clear()
-            wt[W1] = TV.TV1
-            wt[W2] = TV.TV2
-            wt[W3] = TV.TV3
-            wt[W4] = TV.TV4
-            pl = base.pip_location_by_tv
-            pl.clear()
-            for tv in TV.all():
-                pl[tv] = PipLocation.NE
-            # Overwrite tracked fields from FSM state.
-            base.layout_mode = state.layout_mode
-            base.num_active_windows = state.num_active_windows
-            base.multiview_submode = state.multiview_submode
-            base.fullscreen_mode = state.fullscreen_mode
-            base.full_window = state.full_window
-            base.pip_window = state.pip_window
-            base.selected_window = state.selected_window
-            base.selected_window_has_distinct_border = (
-                state.selected_window_has_distinct_border
-            )
-            base.remote_mode = state.remote_mode
-            base.last_button = state.last_button
-            base.last_selected_window = state.last_selected_window
+        buttons = _BUTTONS
+        transitions_per_state = len(buttons) * 2
+        entries: list[tuple[FsmState, list[FsmState]]] = []
 
         while queue:
             state = queue.popleft()
-            for button in buttons:
-                for maybe_double_tap in (False, True):
-                    hydrate(state)
+            assert visited[int(state)] == []
+            transitions_for_state: list[FsmState] = [FsmState(0)] * transitions_per_state
+            for b_idx, button in enumerate(buttons):
+                for d_idx, maybe_double_tap in enumerate((False, True)):
+                    state.hydrate(base)
                     base.pressed(button, maybe_double_tap=maybe_double_tap)
                     if validate:
                         try:
@@ -639,32 +767,70 @@ class MvScreen(Jsonable):
                             print(
                                 "validate failed",
                                 {
-                                    "from": state,
+                                    "from": decode_fsm_state_fields(state),
                                     "button": button,
                                     "double": maybe_double_tap,
-                                    "after": FsmState.from_screen(base),
+                                    "after": decode_fsm_state_fields(
+                                        FsmState.create(base)
+                                    ),
                                     "window_tv": base.window_tv,
                                     "pip_location_by_tv": base.pip_location_by_tv,
                                 },
                                 flush=True,
                             )
                             raise
-                    key = FsmState.from_screen(base)
+                    key = FsmState.create(base)
                     transitions += 1
-                    if key not in seen:
-                        seen.add(key)
-                        if report_powers_of_two and len(seen) >= next_report:
-                            while next_report <= len(seen):
+                    idx = b_idx * 2 + d_idx
+                    transitions_for_state[idx] = key
+                    if visited[int(key)] is None:
+                        visited[int(key)] = []
+                        seen += 1
+                        if report_powers_of_two and seen >= next_report:
+                            while next_report <= seen:
                                 print(
-                                    f"states={len(seen)} transitions={transitions}",
+                                    f"states={seen} transitions={transitions}",
                                     flush=True,
                                 )
                                 next_report *= 2
-                        if len(seen) >= max_states:
-                            return (len(seen), transitions, False)
+                        if seen >= max_states:
+                            return FsmStateMachine(
+                                entries=entries,
+                                buttons=buttons,
+                                transitions=transitions,
+                                complete=False,
+                            )
                         queue.append(key)
+            visited[int(state)] = transitions_for_state
+            entries.append((state, transitions_for_state))
 
-        return (len(seen), transitions, True)
+        return FsmStateMachine(
+            entries=entries, buttons=buttons, transitions=transitions, complete=True
+        )
+
+    def explore_fsm(
+        self,
+        max_states: int = 500_000,
+        validate: bool = True,
+        report_powers_of_two: bool = False,
+        save_json_to: str | Path | None = None,
+    ) -> tuple[int, int, bool]:
+        """Breadth-first exploration of reachable FSM states.
+
+        Returns (num_states, num_transitions, complete) where complete=False if the
+        search hit max_states and stopped early.
+        """
+        machine = self.explore_fsm_machine(
+            max_states=max_states,
+            validate=validate,
+            report_powers_of_two=report_powers_of_two,
+        )
+        if save_json_to is not None:
+            save_path = Path(save_json_to)
+            machine.write(save_path)
+            summary_path = save_path.with_name(f"{save_path.stem}-summary.json")
+            machine.write_summary(summary_path)
+        return (len(machine.entries), machine.transitions, machine.complete)
 
     def render(self) -> JtechOutput:
         def window(
@@ -749,6 +915,7 @@ def explore_fsm_cli(
         max_states=max_states,
         report_powers_of_two=report_powers_of_two,
         validate=validate,
+        save_json_to=Path(__file__).resolve().parent / "mv_screen_fsm.json",
     )
     print(f"done: states={states} transitions={transitions} complete={complete}")
     return states, transitions, complete

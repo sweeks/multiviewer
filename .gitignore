@@ -15,6 +15,7 @@ build/
 # runtime artifacts
 var/*
 !var/.gitkeep
+mv_screen_fsm.json
 
 # My cruft
 cruft/
