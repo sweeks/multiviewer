@@ -27,7 +27,7 @@ Small shell wrappers live in [bin/](../bin), and they should do as little Python
 possible. The corresponding Python entry points live under
 [src/multiviewer/](../src/multiviewer/) and are invoked with `python -m` from the shell
 scripts (e.g., [explore-fsm.sh](../bin/explore-fsm.sh) runs
-`python -m multiviewer.explore_fsm`).
+`python -m multiviewer.mv_screen_fsm --generate`).
 
 # Configuring and Running the Daemon
 
