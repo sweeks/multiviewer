@@ -213,6 +213,9 @@ class MvScreen(Jsonable):
     def last_active_window(self) -> Window:
         return Window.of_int(self.num_active_windows)
 
+    def active_windows(self) -> list[Window]:
+        return [Window.of_int(i) for i in range(1, 1 + self.num_active_windows)]
+
     def next_active_window(self, w: Window) -> Window:
         return Window.of_int(w.to_int() % self.num_active_windows + 1)
 
@@ -261,9 +264,10 @@ class MvScreen(Jsonable):
         if self.num_active_windows == 1:
             return
         windows = Window.all()
-        tv = self.window_tv[self.selected_window]
+        selected_tv = self.window_tv[self.selected_window]
         full_tv = self.window_tv[self.full_window]
         pip_tv = self.window_tv[self.pip_window]
+        full_is_selected = full_tv == selected_tv
         if place_first_in_inactive:
             insert_at = self.num_active_windows - 1
         else:
@@ -272,7 +276,7 @@ class MvScreen(Jsonable):
         while i < insert_at:
             self.window_tv[windows[i]] = self.window_tv[windows[i + 1]]
             i += 1
-        self.window_tv[windows[insert_at]] = tv
+        self.window_tv[windows[insert_at]] = selected_tv
         self.num_active_windows -= 1
         self.selected_window_has_distinct_border = True
         if self.selected_window.to_int() > self.num_active_windows:
@@ -285,7 +289,7 @@ class MvScreen(Jsonable):
                 case FullscreenMode.FULL:
                     self.full_window = self.selected_window
                 case FullscreenMode.PIP:
-                    if self.selected_window == self.full_window:
+                    if full_is_selected:
                         self.pip_window = self.tv_window(pip_tv)
                         self.full_window = self.next_active_window(self.pip_window)
                         self.selected_window = self.full_window
@@ -370,13 +374,15 @@ class MvScreen(Jsonable):
         if self.num_active_windows == 1:
             assert_(self.layout_mode == FULLSCREEN)
             assert_(self.fullscreen_mode == FULL)
-        v = [Window.of_int(i) for i in range(1, 1 + self.num_active_windows)]
+        active_windows = self.active_windows()
+        assert_(self.selected_window in active_windows)
         match self.layout_mode:
             case LayoutMode.FULLSCREEN:
-                pass
+                assert_(self.full_window in active_windows)
+                if self.fullscreen_mode == FullscreenMode.PIP:
+                    assert_(self.pip_window in active_windows)
             case LayoutMode.MULTIVIEW:
                 assert_(self.num_active_windows >= 2)
-                assert_(self.selected_window in v)
 
     def reset(self) -> None:
         new = MvScreen()
@@ -404,7 +410,10 @@ class MvScreen(Jsonable):
                 fail(
                     "arrow_points_to invalid num_active_windows", self.num_active_windows
                 )
-        return _arrow_points_to[key][self.selected_window].get(arrow)
+        table = _arrow_points_to.get(key)
+        if table is None:
+            return None
+        return table.get(self.selected_window, {}).get(arrow)
 
     def rotate_pip_window(self, direction: Arrow) -> None:
         if direction == Arrow.E:
@@ -624,7 +633,22 @@ class MvScreen(Jsonable):
                     hydrate(state)
                     base.pressed(button, maybe_double_tap=maybe_double_tap)
                     if validate:
-                        base.validate()
+                        try:
+                            base.validate()
+                        except Exception:
+                            print(
+                                "validate failed",
+                                {
+                                    "from": state,
+                                    "button": button,
+                                    "double": maybe_double_tap,
+                                    "after": FsmState.from_screen(base),
+                                    "window_tv": base.window_tv,
+                                    "pip_location_by_tv": base.pip_location_by_tv,
+                                },
+                                flush=True,
+                            )
+                            raise
                     key = FsmState.from_screen(base)
                     transitions += 1
                     if key not in seen:

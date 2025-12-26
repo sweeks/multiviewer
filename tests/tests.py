@@ -417,7 +417,7 @@ async def _():
     await tv_do("Reset; E; Select; Home; Select")
     await tv_is("PIP(NE) A4 H4 [H3]A")
     await tv_do("Deactivate_tv")
-    await tv_is("PIP(NE) A2 H4 [H2]G")
+    await tv_is("PIP(NE) A1 H1 [H3]A")
 
 
 @test("Deactivate_tv preserves submode")
