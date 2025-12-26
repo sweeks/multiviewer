@@ -35,5 +35,6 @@ run_quiet ruff "$ROOT/.venv/bin/ruff" check src tests
 run_quiet pyright env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"
 
 run_quiet tests "$ROOT/bin/test-all.sh"
+run_quiet fsm-summary "$ROOT/.venv/bin/python" -m multiviewer.check_fsm_summary
 
 echo "validate-repo: ok"
