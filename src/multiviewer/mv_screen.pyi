@@ -1,10 +1,14 @@
+"""
+See ../../docs/multiviewer-spec.md for the spec of this module.
+"""
+
 from __future__ import annotations
 
-from enum import StrEnum, auto
+from enum import StrEnum
 
 # Local package
 from .atv import TV
-from .base import JSON
+from .base import *
 from .jtech import PipLocation, Submode, Window
 from .jtech_output import JtechOutput
 
@@ -41,11 +45,9 @@ class Button(StrEnum):
     ARROW_S = auto()
 
 class MvScreen:
-    @classmethod
-    def field(cls) -> MvScreen: ...
-    window_tv: dict[Window, TV]
     layout_mode: LayoutMode
     num_active_windows: int
+    window_tv: dict[Window, TV]
     multiview_submode: Submode
     fullscreen_mode: FullscreenMode
     full_window: Window
@@ -56,6 +58,9 @@ class MvScreen:
     remote_mode: RemoteMode
     last_button: Button | None
     last_selected_window: Window
+
+    @classmethod
+    def field(cls) -> MvScreen: ...
     def pressed(self, button: Button, *, maybe_double_tap: bool = False) -> JSON: ...
     def validate(self) -> None: ...
     def reset(self) -> None: ...
