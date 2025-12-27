@@ -233,7 +233,7 @@ def fsm_state_to_screen(state: FsmState) -> MvScreen:
     return screen
 
 
-def explore_fsm_machine(
+def explore_fsm(
     max_states: int = 500_000,
     validate: bool = True,
     report_powers_of_two: bool = False,
@@ -304,131 +304,17 @@ def explore_fsm_machine(
     )
 
 
-def explore_fsm(
-    max_states: int = 500_000,
-    validate: bool = True,
-    report_powers_of_two: bool = False,
-    save_json_to: str | Path | None = None,
-    profile_explore: bool = False,
-) -> tuple[int, int, bool]:
-    """Breadth-first exploration of reachable FSM states.
-
-    Returns (num_states, num_transitions, complete) where complete=False if the
-    search hit max_states and stopped early.
-    """
-    machine = _explore_with_optional_profile(
-        max_states=max_states,
-        validate=validate,
-        report_powers_of_two=report_powers_of_two,
-        profile_explore=profile_explore,
-    )
-    if save_json_to is not None:
-        save_path = Path(save_json_to)
-        machine.write(save_path)
-        summary_path = save_path.with_name(f"{save_path.stem}-summary.json")
-        machine.write_summary(summary_path)
-    return (len(machine.entries), machine.transitions, machine.complete)
-
-
-def explore_fsm_cli(
-    *,
-    max_states: int = 10_000_000,
-    report_powers_of_two: bool = True,
-    validate: bool = True,
-    save_json_to: str | Path | None = None,
-    profile_explore: bool = False,
-) -> tuple[int, int, bool]:
-    if save_json_to is None:
-        save_json_to = Path(__file__).resolve().parent / "mv_screen_fsm.json"
-    states, transitions, complete = explore_fsm(
-        max_states=max_states,
-        report_powers_of_two=report_powers_of_two,
-        validate=validate,
-        save_json_to=save_json_to,
-        profile_explore=profile_explore,
-    )
-    print(f"done: states={states} transitions={transitions} complete={complete}")
-    return states, transitions, complete
-
-
 DEFAULT_SAVE_PATH = Path(__file__).resolve().parent / "mv_screen_fsm.json"
 DEFAULT_SUMMARY_PATH = DEFAULT_SAVE_PATH.with_name("mv_screen_fsm-summary.json")
 
 
-def _explore_with_optional_profile(
-    *,
-    max_states: int = 500_000,
-    validate: bool,
-    report_powers_of_two: bool = False,
-    profile_explore: bool,
-) -> FsmStateMachine:
-    if not profile_explore:
-        return explore_fsm_machine(
-            max_states=max_states,
-            validate=validate,
-            report_powers_of_two=report_powers_of_two,
-        )
-
-    profiler = cProfile.Profile()
-    profiler.enable()
-    machine = explore_fsm_machine(
-        max_states=max_states,
-        validate=validate,
-        report_powers_of_two=report_powers_of_two,
-    )
-    profiler.disable()
-
-    buf = io.StringIO()
-    Stats(profiler, stream=buf).sort_stats("cumtime").print_stats(30)
-    print("explore_fsm_machine profile (top 30 by cumulative time):")
-    print(buf.getvalue())
-    return machine
-
-
-def generate(
-    *,
-    max_states: int = 10_000_000,
-    report_powers_of_two: bool = True,
-    validate: bool = True,
-    save_path: Path = DEFAULT_SAVE_PATH,
-    profile_explore: bool = False,
-) -> tuple[int, int, bool]:
-    return explore_fsm_cli(
-        max_states=max_states,
-        report_powers_of_two=report_powers_of_two,
-        validate=validate,
-        save_json_to=save_path,
-        profile_explore=profile_explore,
-    )
-
-
-def validate_against_summary(
-    summary_path: Path | None = None, *, profile_explore: bool = False
-) -> None:
-    if summary_path is None:
-        summary_path = DEFAULT_SUMMARY_PATH
-    if not summary_path.exists():
-        print(f"FSM summary file missing: {summary_path}")
-        raise SystemExit(1)
-    expected = json.loads(summary_path.read_text())
-    current = _explore_with_optional_profile(
-        validate=True,
-        profile_explore=profile_explore,
-    ).summary()
-    if current != expected:
-        print("FSM summary mismatch; run bin/generate-mv-screen-fsm.sh to regenerate")
-        print("expected:", expected)
-        print("current :", current)
-        raise SystemExit(1)
-
-
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Explore mv_screen FSM")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    mode_group = parser.add_mutually_exclusive_group(required=True)
+    mode_group.add_argument(
         "--generate", action="store_true", help="Generate FSM JSON and summary"
     )
-    group.add_argument(
+    mode_group.add_argument(
         "--validate", action="store_true", help="Validate current FSM against summary"
     )
     parser.add_argument(
@@ -438,10 +324,42 @@ def main(argv: list[str] | None = None) -> None:
     )
     args = parser.parse_args(argv)
 
+    summary_path = DEFAULT_SUMMARY_PATH
+    if args.validate and not summary_path.exists():
+        print(f"FSM summary file missing: {summary_path}")
+        raise SystemExit(1)
+
+    profiler = cProfile.Profile() if args.profile_explore else None
+    if profiler:
+        profiler.enable()
+    machine = explore_fsm(
+        max_states=10_000_000,
+        validate=True,
+        report_powers_of_two=True,
+    )
+    if profiler:
+        profiler.disable()
+        buf = io.StringIO()
+        Stats(profiler, stream=buf).sort_stats("cumtime").print_stats(30)
+        print("explore_fsm profile (top 30 by cumulative time):")
+        print(buf.getvalue())
+
     if args.generate:
-        generate(profile_explore=args.profile_explore)
-    else:
-        validate_against_summary(profile_explore=args.profile_explore)
+        machine.write(DEFAULT_SAVE_PATH)
+        machine.write_summary(summary_path)
+        print(
+            f"done: states={len(machine.entries)} transitions={machine.transitions} "
+            f"complete={machine.complete}"
+        )
+        return
+
+    expected = json.loads(summary_path.read_text())
+    current = machine.summary()
+    if current != expected:
+        print("FSM summary mismatch; run bin/generate-mv-screen-fsm.sh to regenerate")
+        print("expected:", expected)
+        print("current :", current)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
