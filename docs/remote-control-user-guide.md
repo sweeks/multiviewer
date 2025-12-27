@@ -10,11 +10,11 @@ individual Apple TVs, and the soundbar volume:
 The **Power** button toggles on/off the power of all the hardware in the system, including
 Apple TVs, Jtech, soundbar, and TV.
 
-# TV Layouts
+# Window Layouts
 
-The Apple TVs can be arranged on screen in windows of various sizes. There are five window
-sizes, relative to TV width: full (1/1), prominent (2/3), medium (1/2), small (1/3), and
-pip (1/5). There are eight layouts:
+The Apple TVs can be layed out on screen in windows of various sizes. There are five
+window sizes, relative to TV width: full (1/1), prominent (2/3), medium (1/2), small
+(1/3), and pip (1/5). There are eight layouts:
 
 - `FULL`: one full-size window.
 - `PIP`: one full-size window and a second pip window, overlayed in a corner.
@@ -100,9 +100,9 @@ The **TV** button toggles visibility of a PIP (picture-in-picture) window.
 If there is no PIP window, then **Right** and **Left** cycle the fullscreen window through
 the active TVs.
 
-If there a PIP window, then **Right** and **Left** cycle the PIP window through the active
-TVs except the fullscreen TV. **Select** swaps the TVs shown in the PIP and fullscreen
-windows. Pressing **Up** or **Down** toward the PIP window selects it, and pressing
-**Down** or **Up** the other direction selects the fullscreen window. Double tapping
-arrows moves the PIP window around the corners. Each TV can have its PIP window in a
-different location.
+If there is a PIP window, then **Right** and **Left** cycle the PIP window through the
+active TVs except the fullscreen TV. **Select** swaps the TVs shown in the PIP and
+fullscreen windows. Pressing **Up** or **Down** toward the PIP window selects it, and
+pressing **Down** or **Up** the other direction selects the fullscreen window. Double
+tapping arrows moves the PIP window around the corners. Each TV can have its PIP window in
+a different location.
