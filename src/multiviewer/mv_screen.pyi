@@ -30,7 +30,7 @@ class FullscreenMode(StrEnum):
     FULL = auto()
     PIP = auto()
 
-class Button(StrEnum):
+class Button(MyStrEnum):
     REMOTE = auto()
     SELECT = auto()
     BACK = auto()

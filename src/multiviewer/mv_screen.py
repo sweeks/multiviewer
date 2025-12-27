@@ -74,6 +74,25 @@ class Button(MyStrEnum):
     ARROW_S = auto()
 
 
+attach_int(
+    Button,
+    {
+        Button.REMOTE: 1,
+        Button.SELECT: 2,
+        Button.BACK: 3,
+        Button.PLAY_PAUSE: 4,
+        Button.ACTIVATE_TV: 5,
+        Button.DEACTIVATE_TV_FIRST: 6,
+        Button.DEACTIVATE_TV_LAST: 7,
+        Button.TOGGLE_SUBMODE: 8,
+        Button.ARROW_N: 9,
+        Button.ARROW_E: 10,
+        Button.ARROW_W: 11,
+        Button.ARROW_S: 12,
+    },
+)
+
+
 H1 = Hdmi.H1
 H2 = Hdmi.H2
 H3 = Hdmi.H3
