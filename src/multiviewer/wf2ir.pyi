@@ -1,5 +1,6 @@
-"""The Global Cache WF2IR is connected to my WiFi network, and can send IR
-sequences to my soundbar.  MVR uses it for controlling volume (+, -, mute).
+"""
+The Global Cache WF2IR is connected to the WiFi network, and can send IR sequences to the
+soundbar.  The volume module uses it for controlling volume (+, -, mute).
 """
 
 # Local package

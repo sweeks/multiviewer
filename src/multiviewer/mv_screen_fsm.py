@@ -5,11 +5,8 @@ import hashlib
 import json
 import sys
 from collections import deque
-from dataclasses import dataclass
-from pathlib import Path
 
-from dataclasses_json import dataclass_json
-
+from .base import *
 from .jtech import Submode, Window
 from .mv_screen import (
     Button,

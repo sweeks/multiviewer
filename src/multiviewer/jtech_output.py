@@ -1,11 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
-# Standard library
-from dataclasses import dataclass
-from typing import TypeAlias
-
 # Local package
 from .base import *
 from .jtech import Border, Color, Hdmi, Jtech, Mode, PipLocation, Submode, Window

@@ -111,9 +111,7 @@ class Volume:
 
     def power_on(self) -> None:
         # We reset all the volume deltas to zero, because this is a new TV session for the
-        # user.  This causes the initial update_jtech_output to set the desired
-        # volume_delta to zero, which in turn causes the Volume manager to set the actual
-        # volume_delta to zero.
+        # user.
         self.reset()
 
     def set_should_send_commands_to_device(self, b: bool) -> None:

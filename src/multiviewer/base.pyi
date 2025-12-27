@@ -8,6 +8,7 @@ Stuff used throughout the project.  Most other code does:
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import (
     Any,
     Generic,
@@ -117,9 +118,11 @@ __all__ = [
     "MyStrEnum",
     "NoReturn",
     "Optional",
+    "Path",
     "RunMode",
     "Self",
     "Tuple",
+    "TypeAlias",
     "TypeVar",
     "Union",
 ]

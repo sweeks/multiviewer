@@ -12,7 +12,11 @@ from .base import *
 
 Metadata = dict[str, dict[str, Any]]
 
-omit: Metadata  # Elide the field from json
+omit: Metadata
+"""
+Elide the field from json.  Usage:
+    some_field: X = field(metadata=json_field.omit)
+"""
 
 def json_dict(domain: type, range: type) -> Metadata:
     """

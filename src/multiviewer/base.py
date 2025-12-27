@@ -12,6 +12,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum as _StrEnum
 from enum import auto
+from pathlib import Path
 from typing import (
     Any,
     ClassVar,
@@ -229,9 +230,11 @@ __all__ = [
     "MyStrEnum",
     "NoReturn",
     "Optional",
+    "Path",
     "RunMode",
     "Self",
     "Tuple",
+    "TypeAlias",
     "TypeVar",
     "Union",
 ]

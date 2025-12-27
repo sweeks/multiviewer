@@ -5,7 +5,6 @@ import os
 import signal
 import subprocess
 import time
-from pathlib import Path
 
 from . import aio, http_server, mv
 

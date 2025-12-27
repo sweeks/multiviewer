@@ -29,7 +29,7 @@ run_quiet black "$ROOT/.venv/bin/black" --quiet src tests
 run_quiet mdformat "$ROOT/.venv/bin/mdformat" --wrap 90 README.md docs
 
 # Ruff (configured in pyproject)
-run_quiet ruff "$ROOT/.venv/bin/ruff" check src tests
+run_quiet ruff "$ROOT/.venv/bin/ruff" check --fix src tests
 
 # Type checking
 run_quiet pyright env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"

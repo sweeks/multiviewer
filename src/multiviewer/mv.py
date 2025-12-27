@@ -2,7 +2,6 @@ from __future__ import annotations
 
 # Standard library
 from datetime import datetime, timedelta
-from pathlib import Path
 
 # Local package
 from . import json_field

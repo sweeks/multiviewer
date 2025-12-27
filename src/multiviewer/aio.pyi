@@ -1,6 +1,5 @@
 """
-Wrapper around the asyncio library, specialized to the bits that I understand and
-use.
+Wrapper around the asyncio library, specialized to the parts used in this project.
 """
 
 # Standard library

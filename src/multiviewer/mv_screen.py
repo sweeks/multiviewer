@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from datetime import timedelta
-
-from dataclasses_json import dataclass_json
 
 from . import json_field
 from .base import *

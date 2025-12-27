@@ -11,9 +11,6 @@ has functions to load and save it from disk, update the jtech output based on ch
 inputs, and do commands from the user.
 """
 
-# Standard library
-from pathlib import Path
-
 # Local package
 from .base import *
 from .jtech_manager import JtechManager
