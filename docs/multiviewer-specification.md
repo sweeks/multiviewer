@@ -3,9 +3,9 @@ aimed at developers rather than users of the remote control. We use python pseud
 clarity. We first describe the bits of state in the multiviewer, and how that state
 determines the device settings (screen layout, volume). We then describe the
 remote-control buttons, and how they change the multiviewer state. This structure reflects
-the software architecture, which has the abstract multiviewer state (`mv.py`) and buttons
-that make straightforward changes to that state. There are distinct subsystems that
-propagate bits of the multiviewer state to devices (`atvs.py`, `jtech_manager.py`,
+the software architecture, which has the abstract multiviewer state (`mv_screen.py`) and
+buttons that make straightforward changes to that state. There are distinct subsystems
+that propagate bits of the multiviewer state to devices (`atvs.py`, `jtech_manager.py`,
 `volume.py`).
 
 # Power
