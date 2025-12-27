@@ -39,6 +39,8 @@ row of buttons (**Mute**, **Volume Up**, **Volume Down**) control the volume. Th
 multiviewer has a different volume setting for each TV, and automatically adjusts volume
 when switching TVs. Mute is shared across all TVs.
 
+For more detail, see the [Remote Control User Guide](docs/remote-control-user-guide.md).
+
 # Implementation
 
 The system consists of the remote control, a daemon running on a MacBook, and software and
