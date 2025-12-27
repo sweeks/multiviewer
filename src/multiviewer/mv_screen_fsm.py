@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import argparse
+import cProfile
 import hashlib
+import io
 import json
 import sys
 from collections import deque
+from pstats import Stats
 
 from .base import *
 from .jtech import Submode, Window
@@ -70,18 +73,14 @@ class FsmState(int):
         state |= (
             1 if screen.remote_mode == RemoteMode.APPLE_TV else 0
         ) << _REMOTE_MODE_POS
-        state |= _BUTTON_TO_CODE[screen.last_button] << _LAST_BUTTON_POS
+        state |= button_code(screen.last_button) << _LAST_BUTTON_POS
         state |= window_code(screen.last_selected_window) << _LAST_SELECTED_WINDOW_POS
         return FsmState(state)
 
     def hydrate(self, screen: MvScreen) -> None:
         state = int(self)
-        wt = screen.window_tv
-        wt.clear()
-        wt.update(initial_window_tv())
-        pl = screen.pip_location_by_tv
-        pl.clear()
-        pl.update(initial_pip_location_by_tv())
+        screen.window_tv.update(_DEFAULT_WINDOW_TV)
+        screen.pip_location_by_tv.update(_DEFAULT_PIP_LOCATION_BY_TV)
 
         def get(bits: int, pos: int) -> int:
             mask = (1 << bits) - 1
@@ -98,7 +97,7 @@ class FsmState(int):
         screen.selected_window = window_from_code(get(_WINDOW_BITS, _SELECTED_WINDOW_POS))
         screen.selected_window_has_distinct_border = bool(get(1, _SELECTED_BORDER_POS))
         screen.remote_mode = APPLE_TV if get(1, _REMOTE_MODE_POS) else MULTIVIEWER
-        screen.last_button = _CODE_TO_BUTTON[get(_LAST_BUTTON_BITS, _LAST_BUTTON_POS)]
+        screen.last_button = button_from_code(get(_LAST_BUTTON_BITS, _LAST_BUTTON_POS))
         screen.last_selected_window = window_from_code(
             get(_WINDOW_BITS, _LAST_SELECTED_WINDOW_POS)
         )
@@ -166,12 +165,12 @@ class FsmStateMachine:
 
 MAX_FSM_STATES = 1 << 19
 
+# Cached defaults to avoid reallocating dictionaries on every hydrate
+_DEFAULT_WINDOW_TV = initial_window_tv()
+_DEFAULT_PIP_LOCATION_BY_TV = initial_pip_location_by_tv()
+
 # Bit packing helpers for FSM state -> int
 _BUTTONS = list(Button)
-_BUTTON_TO_CODE: dict[Button | None, int] = {None: 0} | {
-    b: i + 1 for i, b in enumerate(_BUTTONS)
-}
-_CODE_TO_BUTTON: list[Button | None] = [None] + _BUTTONS
 
 _NUM_ACTIVE_POS = 0
 _NUM_ACTIVE_BITS = 2
@@ -187,6 +186,14 @@ _REMOTE_MODE_POS = 12
 _LAST_BUTTON_POS = 13
 _LAST_BUTTON_BITS = 4
 _LAST_SELECTED_WINDOW_POS = 17
+
+
+def button_code(btn: Button | None) -> int:
+    return 0 if btn is None else btn.to_int()
+
+
+def button_from_code(code: int) -> Button | None:
+    return None if code == 0 else Button.of_int(code)
 
 
 def window_code(w: Window) -> int:
@@ -283,16 +290,18 @@ def explore_fsm(
     validate: bool = True,
     report_powers_of_two: bool = False,
     save_json_to: str | Path | None = None,
+    profile_explore: bool = False,
 ) -> tuple[int, int, bool]:
     """Breadth-first exploration of reachable FSM states.
 
     Returns (num_states, num_transitions, complete) where complete=False if the
     search hit max_states and stopped early.
     """
-    machine = explore_fsm_machine(
+    machine = _explore_with_optional_profile(
         max_states=max_states,
         validate=validate,
         report_powers_of_two=report_powers_of_two,
+        profile_explore=profile_explore,
     )
     if save_json_to is not None:
         save_path = Path(save_json_to)
@@ -308,6 +317,7 @@ def explore_fsm_cli(
     report_powers_of_two: bool = True,
     validate: bool = True,
     save_json_to: str | Path | None = None,
+    profile_explore: bool = False,
 ) -> tuple[int, int, bool]:
     if save_json_to is None:
         save_json_to = Path(__file__).resolve().parent / "mv_screen_fsm.json"
@@ -316,6 +326,7 @@ def explore_fsm_cli(
         report_powers_of_two=report_powers_of_two,
         validate=validate,
         save_json_to=save_json_to,
+        profile_explore=profile_explore,
     )
     print(f"done: states={states} transitions={transitions} complete={complete}")
     return states, transitions, complete
@@ -325,29 +336,66 @@ DEFAULT_SAVE_PATH = Path(__file__).resolve().parent / "mv_screen_fsm.json"
 DEFAULT_SUMMARY_PATH = DEFAULT_SAVE_PATH.with_name("mv_screen_fsm-summary.json")
 
 
+def _explore_with_optional_profile(
+    *,
+    max_states: int = 500_000,
+    validate: bool,
+    report_powers_of_two: bool = False,
+    profile_explore: bool,
+) -> FsmStateMachine:
+    if not profile_explore:
+        return explore_fsm_machine(
+            max_states=max_states,
+            validate=validate,
+            report_powers_of_two=report_powers_of_two,
+        )
+
+    profiler = cProfile.Profile()
+    profiler.enable()
+    machine = explore_fsm_machine(
+        max_states=max_states,
+        validate=validate,
+        report_powers_of_two=report_powers_of_two,
+    )
+    profiler.disable()
+
+    buf = io.StringIO()
+    Stats(profiler, stream=buf).sort_stats("cumtime").print_stats(30)
+    print("explore_fsm_machine profile (top 30 by cumulative time):")
+    print(buf.getvalue())
+    return machine
+
+
 def generate(
     *,
     max_states: int = 10_000_000,
     report_powers_of_two: bool = True,
     validate: bool = True,
     save_path: Path = DEFAULT_SAVE_PATH,
+    profile_explore: bool = False,
 ) -> tuple[int, int, bool]:
     return explore_fsm_cli(
         max_states=max_states,
         report_powers_of_two=report_powers_of_two,
         validate=validate,
         save_json_to=save_path,
+        profile_explore=profile_explore,
     )
 
 
-def validate_against_summary(summary_path: Path | None = None) -> None:
+def validate_against_summary(
+    summary_path: Path | None = None, *, profile_explore: bool = False
+) -> None:
     if summary_path is None:
         summary_path = DEFAULT_SUMMARY_PATH
     if not summary_path.exists():
         print(f"FSM summary file missing: {summary_path}")
         raise SystemExit(1)
     expected = json.loads(summary_path.read_text())
-    current = explore_fsm_machine().summary()
+    current = _explore_with_optional_profile(
+        validate=True,
+        profile_explore=profile_explore,
+    ).summary()
     if current != expected:
         print("FSM summary mismatch; run bin/generate-mv-screen-fsm.sh to regenerate")
         print("expected:", expected)
@@ -364,12 +412,17 @@ def main(argv: list[str] | None = None) -> None:
     group.add_argument(
         "--validate", action="store_true", help="Validate current FSM against summary"
     )
+    parser.add_argument(
+        "--profile-explore",
+        action="store_true",
+        help="cProfile explore_fsm_machine and print top cumulative stats",
+    )
     args = parser.parse_args(argv)
 
     if args.generate:
-        generate()
+        generate(profile_explore=args.profile_explore)
     else:
-        validate_against_summary()
+        validate_against_summary(profile_explore=args.profile_explore)
 
 
 if __name__ == "__main__":
