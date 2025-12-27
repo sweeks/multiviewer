@@ -20,6 +20,7 @@ from .mv_screen import (
     initial_pip_location_by_tv,
     initial_window_tv,
 )
+from .tv import TV
 
 APPLE_TV = RemoteMode.APPLE_TV
 MULTIVIEWER = RemoteMode.MULTIVIEWER
@@ -79,8 +80,14 @@ class FsmState(int):
 
     def hydrate(self, screen: MvScreen) -> None:
         state = int(self)
-        screen.window_tv.update(_DEFAULT_WINDOW_TV)
-        screen.pip_location_by_tv.update(_DEFAULT_PIP_LOCATION_BY_TV)
+        screen.window_tv[W1] = _DEFAULT_W1
+        screen.window_tv[W2] = _DEFAULT_W2
+        screen.window_tv[W3] = _DEFAULT_W3
+        screen.window_tv[W4] = _DEFAULT_W4
+        screen.pip_location_by_tv[TV.TV1] = _DEFAULT_TV1
+        screen.pip_location_by_tv[TV.TV2] = _DEFAULT_TV2
+        screen.pip_location_by_tv[TV.TV3] = _DEFAULT_TV3
+        screen.pip_location_by_tv[TV.TV4] = _DEFAULT_TV4
 
         screen.num_active_windows = (
             (state >> _NUM_ACTIVE_POS) & ((1 << _NUM_ACTIVE_BITS) - 1)
@@ -172,6 +179,14 @@ MAX_FSM_STATES = 1 << 19
 # Cached defaults to avoid reallocating dictionaries on every hydrate
 _DEFAULT_WINDOW_TV = initial_window_tv()
 _DEFAULT_PIP_LOCATION_BY_TV = initial_pip_location_by_tv()
+_DEFAULT_W1 = _DEFAULT_WINDOW_TV[W1]
+_DEFAULT_W2 = _DEFAULT_WINDOW_TV[W2]
+_DEFAULT_W3 = _DEFAULT_WINDOW_TV[W3]
+_DEFAULT_W4 = _DEFAULT_WINDOW_TV[W4]
+_DEFAULT_TV1 = _DEFAULT_PIP_LOCATION_BY_TV[TV.TV1]
+_DEFAULT_TV2 = _DEFAULT_PIP_LOCATION_BY_TV[TV.TV2]
+_DEFAULT_TV3 = _DEFAULT_PIP_LOCATION_BY_TV[TV.TV3]
+_DEFAULT_TV4 = _DEFAULT_PIP_LOCATION_BY_TV[TV.TV4]
 
 # Bit packing helpers for FSM state -> int
 _BUTTONS = list(Button)
