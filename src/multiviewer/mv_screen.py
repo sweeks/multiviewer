@@ -336,6 +336,9 @@ class MvScreen(Jsonable):
     def pip_location(self) -> PipLocation:
         return self.pip_location_by_tv[self.window_tv[self.full_window]]
 
+    def window_is_active(self, w: Window) -> bool:
+        return w.to_int() <= self.num_active_windows
+
     def selected_tv(self) -> TV:
         return self.window_tv[self.selected_window]
 
@@ -354,21 +357,36 @@ class MvScreen(Jsonable):
             return {}
 
     def validate(self) -> None:
-        assert_equal(set(self.window_tv.keys()), set(Mode.QUAD.windows()))
-        assert_equal(len(set(self.window_tv.values())), len(self.window_tv))
+        # This code is intentionally allocation free and efficient, because it is
+        # used on every state in the FSM.
+        # Ensure all four windows are present.
+        assert_equal(len(self.window_tv), 4)
+        assert_(W1 in self.window_tv)
+        assert_(W2 in self.window_tv)
+        assert_(W3 in self.window_tv)
+        assert_(W4 in self.window_tv)
+        # Ensure distinct TVs in all windows.
+        tv1 = self.window_tv[W1]
+        tv2 = self.window_tv[W2]
+        tv3 = self.window_tv[W3]
+        tv4 = self.window_tv[W4]
+        assert_(tv1 != tv2 and tv1 != tv3 and tv1 != tv4)
+        assert_(tv2 != tv3 and tv2 != tv4)
+        assert_(tv3 != tv4)
+        # Ensure valid num_active_windows.
         assert_(min_num_windows <= self.num_active_windows <= max_num_windows)
+        # Ensure num_active_windows == 1 implies FULL.
         if self.num_active_windows == 1:
             assert_(self.layout_mode == FULLSCREEN)
             assert_(self.fullscreen_mode == FULL)
-        active_windows = self.active_windows()
-        assert_(self.selected_window in active_windows)
+        assert_(self.window_is_active(self.selected_window))
         match self.layout_mode:
-            case LayoutMode.FULLSCREEN:
-                assert_(self.full_window in active_windows)
-                if self.fullscreen_mode == FullscreenMode.PIP:
-                    assert_(self.pip_window in active_windows)
             case LayoutMode.MULTIVIEW:
                 assert_(self.num_active_windows >= 2)
+            case LayoutMode.FULLSCREEN:
+                assert_(self.window_is_active(self.full_window))
+                if self.fullscreen_mode == FullscreenMode.PIP:
+                    assert_(self.window_is_active(self.pip_window))
 
     def reset(self) -> None:
         new = MvScreen()
