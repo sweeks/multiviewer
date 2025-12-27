@@ -10,13 +10,36 @@ cd "$ROOT"
 export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 
 mkdir -p "$ROOT/var"
+VALIDATE_LOG="$ROOT/var/validate-repo.log"
+: >"$VALIDATE_LOG"
+validate_start_seconds=$SECONDS
+validate_start_time=$(date +"%Y-%m-%dT%H:%M:%S%z")
+echo "validate-repo start ${validate_start_time}" >>"$VALIDATE_LOG"
 
 # Run a command quietly; on failure, point to its log.
 run_quiet() {
   local name="$1"
   shift
   local log="$ROOT/var/${name##*/}.log"
-  if ! "$@" >"$log" 2>&1; then
+  local start_seconds=$SECONDS
+  local start_time
+  start_time=$(date +"%Y-%m-%dT%H:%M:%S%z")
+
+  {
+    echo "==> ${name}: start ${start_time}"
+    "$@"
+  } >"$log" 2>&1
+  local status=$?
+
+  local end_time
+  end_time=$(date +"%Y-%m-%dT%H:%M:%S%z")
+  local duration=$((SECONDS - start_seconds))
+  printf '==> %s: end %s (duration: %ss, exit=%s)\n' \
+    "$name" "$end_time" "$duration" "$status" >>"$log"
+  printf '%-16s duration=%ss exit=%s\n' \
+    "$name" "$duration" "$status" >>"$VALIDATE_LOG"
+
+  if (( status != 0 )); then
     echo "validate-repo: ${name} failed (see ${log})" >&2
     exit 1
   fi
@@ -36,5 +59,9 @@ run_quiet pyright env PYTHONPATH="$PYTHONPATH" "$ROOT/.venv/bin/pyright"
 
 run_quiet tests "$ROOT/bin/test-all.sh"
 run_quiet fsm-summary "$ROOT/.venv/bin/python" -m multiviewer.mv_screen_fsm --validate
+
+validate_end_time=$(date +"%Y-%m-%dT%H:%M:%S%z")
+validate_duration=$((SECONDS - validate_start_seconds))
+echo "validate-repo end ${validate_end_time} (duration: ${validate_duration}s)" >>"$VALIDATE_LOG"
 
 echo "validate-repo: ok"
