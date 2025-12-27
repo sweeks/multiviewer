@@ -82,24 +82,28 @@ class FsmState(int):
         screen.window_tv.update(_DEFAULT_WINDOW_TV)
         screen.pip_location_by_tv.update(_DEFAULT_PIP_LOCATION_BY_TV)
 
-        def get(bits: int, pos: int) -> int:
-            mask = (1 << bits) - 1
-            return (state >> pos) & mask
-
-        screen.num_active_windows = get(_NUM_ACTIVE_BITS, _NUM_ACTIVE_POS) + 1
-        screen.layout_mode = FULLSCREEN if get(1, _LAYOUT_POS) else MULTIVIEW
+        screen.num_active_windows = (
+            (state >> _NUM_ACTIVE_POS) & ((1 << _NUM_ACTIVE_BITS) - 1)
+        ) + 1
+        screen.layout_mode = FULLSCREEN if (state >> _LAYOUT_POS) & 1 else MULTIVIEW
         screen.multiview_submode = (
-            W1_PROMINENT if get(1, _MULTIVIEW_SUBMODE_POS) else WINDOWS_SAME
+            W1_PROMINENT if (state >> _MULTIVIEW_SUBMODE_POS) & 1 else WINDOWS_SAME
         )
-        screen.fullscreen_mode = PIP if get(1, _FULLSCREEN_MODE_POS) else FULL
-        screen.full_window = window_from_code(get(_WINDOW_BITS, _FULL_WINDOW_POS))
-        screen.pip_window = window_from_code(get(_WINDOW_BITS, _PIP_WINDOW_POS))
-        screen.selected_window = window_from_code(get(_WINDOW_BITS, _SELECTED_WINDOW_POS))
-        screen.selected_window_has_distinct_border = bool(get(1, _SELECTED_BORDER_POS))
-        screen.remote_mode = APPLE_TV if get(1, _REMOTE_MODE_POS) else MULTIVIEWER
-        screen.last_button = button_from_code(get(_LAST_BUTTON_BITS, _LAST_BUTTON_POS))
+        screen.fullscreen_mode = PIP if (state >> _FULLSCREEN_MODE_POS) & 1 else FULL
+        window_mask = (1 << _WINDOW_BITS) - 1
+        screen.full_window = window_from_code((state >> _FULL_WINDOW_POS) & window_mask)
+        screen.pip_window = window_from_code((state >> _PIP_WINDOW_POS) & window_mask)
+        screen.selected_window = window_from_code(
+            (state >> _SELECTED_WINDOW_POS) & window_mask
+        )
+        screen.selected_window_has_distinct_border = bool(
+            (state >> _SELECTED_BORDER_POS) & 1
+        )
+        screen.remote_mode = APPLE_TV if (state >> _REMOTE_MODE_POS) & 1 else MULTIVIEWER
+        last_button_code = (state >> _LAST_BUTTON_POS) & ((1 << _LAST_BUTTON_BITS) - 1)
+        screen.last_button = button_from_code(last_button_code)
         screen.last_selected_window = window_from_code(
-            get(_WINDOW_BITS, _LAST_SELECTED_WINDOW_POS)
+            (state >> _LAST_SELECTED_WINDOW_POS) & window_mask
         )
 
     def to_record(self) -> FsmStateRecord:
