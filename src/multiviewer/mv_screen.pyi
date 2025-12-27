@@ -1,5 +1,5 @@
 """
-See ../../docs/multiviewer-spec.md for the spec of this module.
+See ../../docs/multiviewer-specification.md for the spec of this module.
 """
 
 from __future__ import annotations
