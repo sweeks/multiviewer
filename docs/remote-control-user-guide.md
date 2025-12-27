@@ -98,10 +98,11 @@ The **Back** button returns to multiview.
 The **TV** button toggles visibility of a PIP (picture-in-picture) window.
 
 If there is no PIP window, then **Right** and **Left** cycle the fullscreen window through
-the active TVs. If there a PIP window, then **Right** and **Left** cycle the PIP window
-through the active TVs except the fullscreen TV.
+the active TVs.
 
-If there is a PIP window, **Select** swaps the TVs shown in the PIP and fullscreen
+If there a PIP window, then **Right** and **Left** cycle the PIP window through the active
+TVs except the fullscreen TV. **Select** swaps the TVs shown in the PIP and fullscreen
 windows. Pressing **Up** or **Down** toward the PIP window selects it, and pressing
-**Down** or **Up** the other direction selects the fullscreen TV. Double tapping arrows
-moves the PIP window around the corners.
+**Down** or **Up** the other direction selects the fullscreen window. Double tapping
+arrows moves the PIP window around the corners. Each TV can have its PIP window in a
+different location.
