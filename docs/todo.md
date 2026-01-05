@@ -2,8 +2,6 @@
 
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set
 
-# put VSCode Code/User in git, and push daily to github
-
 # look into latency again - didn't I used to have 300ms?
 
 # mvd.py: improve shutdown of prior daemon to use kill if necessary
