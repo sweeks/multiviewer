@@ -80,7 +80,6 @@ class JtechManager:
         await jtech.set_power(self.desired_power)
         if self.desired_power == Power.OFF:
             return True
-        await jtech.unmute()
         if self.should_abort():
             return False
         desired_output = self.desired_output
@@ -108,6 +107,8 @@ class JtechManager:
             is_synced = self.jtech_output == desired_output
             if not is_synced:
                 log("jtech output mismatch")
+            if is_synced:
+                await jtech.unmute(force=True)
             return is_synced
 
     # The call to self.sync in sync_forever is the only code that sends commands to the

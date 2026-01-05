@@ -559,8 +559,8 @@ class Jtech:
         self.record_audio_mute(mute)
         return mute
 
-    async def set_audio_mute(self, mute: Mute) -> None:
-        if self.audio_mute == mute:
+    async def set_audio_mute(self, mute: Mute, force: bool = False) -> None:
+        if not force and self.audio_mute == mute:
             return
         if False:
             debug_print(mute)
@@ -579,8 +579,8 @@ class Jtech:
     async def mute(self) -> None:
         return await self.set_audio_mute(MUTED)
 
-    async def unmute(self) -> None:
-        return await self.set_audio_mute(UNMUTED)
+    async def unmute(self, force: bool = False) -> None:
+        return await self.set_audio_mute(UNMUTED, force=force)
 
     async def read_audio_from(self) -> Hdmi:
         command = "r output audio!"
