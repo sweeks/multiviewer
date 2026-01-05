@@ -88,6 +88,7 @@ class JtechManager:
         log(f"setting jtech output: {desired_output}")
         if await desired_output.set(jtech, self.should_abort):
             log("set jtech output finished")
+            await jtech.unmute(force=True)
         else:
             log("set jtech output aborted")
             return False
@@ -107,8 +108,6 @@ class JtechManager:
             is_synced = self.jtech_output == desired_output
             if not is_synced:
                 log("jtech output mismatch")
-            if is_synced:
-                await jtech.unmute(force=True)
             return is_synced
 
     # The call to self.sync in sync_forever is the only code that sends commands to the
