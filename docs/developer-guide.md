@@ -58,6 +58,13 @@ We avoid leading underscores on helper functions; to keep interfaces clean, hide
 details in the `.pyi` stubs instead of prefixing names. This keeps the runtime code more
 readable while still controlling what’s exported.
 
+## Dataclasses and slots
+
+Always declare dataclasses with `@dataclass(slots=True)`. Slots cut memory use, prevent
+accidental attribute creation (useful with our dynamic state objects), and keep attribute
+access fast. If you have a case where slots truly don’t work, call it out in a brief
+comment next to the declaration.
+
 # Pyright
 
 We configure pyright using [pyrightconfig.json](../pyrightconfig.json), so that CLI,

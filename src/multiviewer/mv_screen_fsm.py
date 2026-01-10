@@ -38,7 +38,7 @@ W4 = Window.W4
 
 
 @dataclass_json
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FsmStateRecord:
     layout_mode: LayoutMode
     num_active_windows: int
@@ -132,7 +132,7 @@ class FsmState(int):
 
 
 @dataclass_json
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class FsmStateMachine:
     entries: list[tuple[FsmState, list[FsmState]]]
     buttons: list[Button]
