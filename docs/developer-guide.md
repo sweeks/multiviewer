@@ -24,16 +24,17 @@ hostname.
 # Scripts layout
 
 Small shell wrappers live in [bin/](../bin), and they should do as little Python as
-possible. The corresponding Python entry points live under
-[src/multiviewer/](../src/multiviewer/) and are invoked with `python -m` from the shell
-scripts (e.g., [explore-fsm.sh](../bin/explore-fsm.sh) runs
+possible. Keep Python source under [src/](../src/) and invoke it with `python -m` from
+shell wrappers—no standalone Python files in `bin/`. The corresponding Python entry points
+live under [src/multiviewer/](../src/multiviewer/) and are invoked with `python -m` from
+the shell scripts (e.g., [explore-fsm.sh](../bin/explore-fsm.sh) runs
 `python -m multiviewer.mv_screen_fsm --generate`).
 
 # Configuring and Running the Daemon
 
 The daemon is configured in [config.py](../src/multiviewer/config.py), which holds host
-names, IPs, and ports. The daemon also uses a `.pyatv.conf` outside this repo with pairing
-info for the Apple TVs (needed for `pyatv` to connect).
+names, IPs, and ports. Apple TV pairing info now lives in
+[`pyatv.conf`](../src/multiviewer/pyatv.conf) in this repo (used by `pyatv` to connect).
 
 Start the daemon with [start-mvd.sh](../bin/start-mvd.sh); it stops any prior instance,
 then launches the HTTP server.

@@ -51,6 +51,9 @@ run_quiet black "$ROOT/.venv/bin/black" --quiet src tests
 # Docs formatting (auto-fix)
 run_quiet mdformat "$ROOT/.venv/bin/mdformat" --wrap 90 README.md docs
 
+# Apple TV credentials formatting (auto-fix)
+run_quiet pyatv-conf "$ROOT/bin/format-json.sh" "$ROOT/src/multiviewer/pyatv.conf"
+
 # Ruff (configured in pyproject)
 run_quiet ruff "$ROOT/.venv/bin/ruff" check --fix src tests
 

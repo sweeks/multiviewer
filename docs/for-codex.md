@@ -31,8 +31,8 @@
 - Workflow note: user runs tests (see `bin/test-all.sh`) and provides the log; Codex
   should run `bin/test-all.sh` after changes (device I/O disabled by default) and include
   the results in the response.
-- Config: `src/multiviewer/config.py` holds IP/hostnames; Apple TV pairing lives in
-  external `.pyatv.conf` (not in repo).
+- Config: `src/multiviewer/config.py` holds IP/hostnames; Apple TV pairing now lives in
+  `src/multiviewer/pyatv.conf` (tracked in repo).
 - Notes: prefer `rg` for search; files of interest include `mv.py` (state machine),
   `jtech.py` (device sync), `atv.py` (Apple TV control), `volume.py` (soundbar IR via
   WF2IR), `http_server.py` (command endpoint).

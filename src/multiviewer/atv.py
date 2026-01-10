@@ -26,6 +26,16 @@ tv_ips = {
     TV.TV4: config.TV4_IP,
 }
 
+PYATV_STORAGE_PATH = Path(__file__).resolve().with_name("pyatv.conf")
+
+
+async def load_pyatv_storage() -> FileStorage:
+    if not PYATV_STORAGE_PATH.exists():
+        fail("pyatv config not found", PYATV_STORAGE_PATH)
+    storage = FileStorage(PYATV_STORAGE_PATH.as_posix(), aio.event_loop)
+    await storage.load()
+    return storage
+
 
 @dataclass(slots=True)
 class AtvConnection:
@@ -40,8 +50,7 @@ class AtvConnection:
         if not self.should_send_commands_to_device:
             fail("connect should not be called when commands are disabled")
         t0 = time.perf_counter()
-        storage = FileStorage.default_storage(aio.event_loop)
-        await storage.load()
+        storage = await load_pyatv_storage()
         devices = await pyatv.scan(aio.event_loop, hosts=[tv_ips[tv]], storage=storage)
         if not devices:
             fail(f"could not connect to {tv}")
