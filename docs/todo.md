@@ -1,7 +1,5 @@
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 
-# jtech.py: add a mode to check for redundant sets, by doing a read before the set
-
 # look into latency again - didn't I used to have 300ms?
 
 # mvd.py: improve shutdown of prior daemon to use kill if necessary
