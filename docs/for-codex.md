@@ -11,6 +11,8 @@
   errors.
 - Rule: make only narrow, task-relevant edits; don't “improve” nearby code unless it is
   part of the requested task or needed to fix a resulting error.
+- Rule: keep this doc lean—avoid duplicating `docs/developer-guide.md`; prefer linking or
+  deferring to it instead of restating details here.
 - Rule: when cleaning unused imports, use the static analyzer (Pyright/Pylance) or a quick
   AST-based check (e.g., `.venv/bin/python - <<'PY' ...`) to identify and remove only what
   is truly unused; keep it fast and automated rather than guessing.
@@ -23,25 +25,9 @@
 - Project: multiviewer remote-control daemon for J-Tech MV41A + four Apple TVs + LG
   soundbar/TV. Python asyncio daemon under `src/multiviewer`, remote buttons send HTTP to
   daemon.
-- Start daemon: `bin/start-mvd.sh` (kills prior daemon, logs under `var/mvd.log`).
-- Stop daemon: `python -m multiviewer.stop_mvd` (or let start script kill prior instance).
-- Tests: `PYTHONPATH=src .venv/bin/python tests/tests.py` (end-to-end, but jtech commands
-  disabled in tests via `should_send_commands_to_device = False`; still uses asyncio event
-  loop). Make sure the repo `.venv` is active or referenced explicitly.
-- Workflow note: user runs tests (see `bin/test-all.sh`) and provides the log; Codex
-  should run `bin/test-all.sh` after changes (device I/O disabled by default) and include
-  the results in the response.
-- Config: `src/multiviewer/config.py` holds IP/hostnames; Apple TV pairing now lives in
-  `src/multiviewer/pyatv.conf` (tracked in repo).
 - Notes: prefer `rg` for search; files of interest include `mv.py` (state machine),
   `jtech.py` (device sync), `atv.py` (Apple TV control), `volume.py` (soundbar IR via
   WF2IR), `http_server.py` (command endpoint).
-- Default workflow: after changes, run `bin/test-all.sh` to exercise the end-to-end tests
-  (they now disable device I/O by default), and share the log.
-- Docs: doc formatting now runs inside `bin/validate-repo.sh` (mdformat, wrap 90); use
-  that after editing markdown files.
-- Pyright: `pyrightconfig.json` points the CLI at the repo `.venv` and adds `src` to
-  `extraPaths`; Pylance already picks this up via VS Code settings.
 - VS Code: `.vscode/settings.json` is tracked; team is macOS and uses a repo-root `.venv`
   (settings point Python/terminal to `.venv/bin/python` and add `src` to
   `python.analysis.extraPaths`). `.vscode` folder is not gitignored; add new files
