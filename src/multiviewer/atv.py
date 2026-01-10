@@ -3,6 +3,7 @@
 # Standard library
 import asyncio
 import dataclasses
+import socket
 import time
 from asyncio import Queue
 from typing import cast
@@ -19,13 +20,6 @@ from .aio import Task
 from .base import *
 from .tv import TV
 
-tv_ips = {
-    TV.TV1: config.TV1_IP,
-    TV.TV2: config.TV2_IP,
-    TV.TV3: config.TV3_IP,
-    TV.TV4: config.TV4_IP,
-}
-
 PYATV_STORAGE_PATH = Path(__file__).resolve().with_name("pyatv.conf")
 
 
@@ -37,7 +31,7 @@ async def load_pyatv_storage() -> FileStorage:
     return storage
 
 
-def log_connection_info(tv: TV, apple_tv: AppleTV, device: object) -> None:
+def log_connection_info(tv: TV, apple_tv: AppleTV, device: object, host_ip: str) -> None:
     service_id = getattr(apple_tv.service, "identifier", None)
     info = apple_tv.device_info
     airplay_id = getattr(info, "output_device_id", None)
@@ -46,7 +40,8 @@ def log_connection_info(tv: TV, apple_tv: AppleTV, device: object) -> None:
     log(
         "apple tv connected",
         tv=tv.name,
-        host=tv_ips[tv],
+        host=config.TV_HOSTS[tv],
+        host_ip=host_ip,
         device_id=device_id or "?",
         service_id=service_id or "?",
         airplay_id=airplay_id or "?",
@@ -68,13 +63,18 @@ class AtvConnection:
             fail("connect should not be called when commands are disabled")
         t0 = time.perf_counter()
         storage = await load_pyatv_storage()
-        devices = await pyatv.scan(aio.event_loop, hosts=[tv_ips[tv]], storage=storage)
+        host = config.TV_HOSTS[tv]
+        try:
+            host_ip = socket.gethostbyname(host)
+        except Exception as e:
+            fail(f"could not resolve host {host}", e)
+        devices = await pyatv.scan(aio.event_loop, hosts=[host_ip], storage=storage)
         if not devices:
             fail(f"could not connect to {tv}")
         device = devices[0]
         apple_tv = await pyatv.connect(device, aio.event_loop, storage=storage)
         apple_tv.push_updater.stop()
-        log_connection_info(tv, apple_tv, device)
+        log_connection_info(tv, apple_tv, device, host_ip)
         self.apple_tv = apple_tv
         ms = int((time.perf_counter() - t0) * 1000)
         log(f"connected to {tv} ({ms}ms)")

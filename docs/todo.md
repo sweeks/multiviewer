@@ -2,8 +2,6 @@
 
 # look into latency again - didn't I used to have 300ms?
 
-# config.py: switch TVs from IP addresses to host names
-
 # Mac still sleeps with lid closed, stopping mvd
 
 # fix fuzzy remote-control icons
