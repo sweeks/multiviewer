@@ -24,6 +24,13 @@ async def stop_existing_daemon() -> None:
                 log(f"stopping mvd {pid}")
                 os.kill(int(pid), signal.SIGTERM)
                 await aio.sleep(1)  # Give the old mvd a second to shutdown
+                try:
+                    os.kill(int(pid), 0)  # Check if process still exists
+                except ProcessLookupError:
+                    continue
+                else:
+                    log(f"killing stubborn mvd {pid}")
+                    os.kill(int(pid), signal.SIGKILL)
     except subprocess.CalledProcessError:
         pass  # no process using that port
 

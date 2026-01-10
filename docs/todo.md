@@ -2,8 +2,6 @@
 
 # look into latency again - didn't I used to have 300ms?
 
-# mvd.py: improve shutdown of prior daemon to use kill if necessary
-
 # atv.py: move in atv credentials from .pyatv.conf
 
 # config.py: switch TVs from IP addresses to host names
