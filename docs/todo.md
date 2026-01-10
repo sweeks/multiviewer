@@ -1,5 +1,3 @@
-# build-in retry to ATV commands, so that reconnect happens
-
 # check out the jtech windows app and see if I can adjust w1_prominent window sizes
 
 # jtech.py: add a mode to check for redundant sets, by doing a read before the set

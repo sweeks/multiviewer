@@ -2,6 +2,7 @@
 
 - Purpose: quick shared context for Codex tasks in this repo. Keep concise; update when
   workflows change.
+- Reminder: you are a developer—read and follow `docs/developer-guide.md` before working.
 - Rule: never change code unless explicitly instructed to do so; discuss designs and agree
   on them before writing any code; only start coding after I explicitly say "code it".
 - Rule: keep changes minimal and focused on the current goal; avoid unrelated rewrites.
@@ -37,7 +38,8 @@
   WF2IR), `http_server.py` (command endpoint).
 - Default workflow: after changes, run `bin/test-all.sh` to exercise the end-to-end tests
   (they now disable device I/O by default), and share the log.
-- Docs: use `bin/format-docs.sh` (mdformat, wrap 90) after editing markdown files.
+- Docs: doc formatting now runs inside `bin/validate-repo.sh` (mdformat, wrap 90); use
+  that after editing markdown files.
 - Pyright: `pyrightconfig.json` points the CLI at the repo `.venv` and adds `src` to
   `extraPaths`; Pylance already picks this up via VS Code settings.
 - VS Code: `.vscode/settings.json` is tracked; team is macOS and uses a repo-root `.venv`
@@ -46,5 +48,5 @@
   intentionally.
 - Editor: VS Code on macOS; in inline git diffs use the editor title bar “…” menu → “Open
   File” to jump to the real file at the same line.
-- Formatting: run `bin/format-code.sh` to apply Black across `src` and `tests`, and
-  `bin/format-docs.sh` for markdown.
+- Formatting: run `bin/validate-repo.sh` (Black, mdformat, Ruff, Pyright, tests); the old
+  `bin/format-code.sh` has been subsumed.
