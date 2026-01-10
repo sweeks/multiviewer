@@ -37,6 +37,23 @@ async def load_pyatv_storage() -> FileStorage:
     return storage
 
 
+def log_connection_info(tv: TV, apple_tv: AppleTV, device: object) -> None:
+    service_id = getattr(apple_tv.service, "identifier", None)
+    info = apple_tv.device_info
+    airplay_id = getattr(info, "output_device_id", None)
+    mac = getattr(info, "mac", None)
+    device_id = getattr(device, "identifier", None)
+    log(
+        "apple tv connected",
+        tv=tv.name,
+        host=tv_ips[tv],
+        device_id=device_id or "?",
+        service_id=service_id or "?",
+        airplay_id=airplay_id or "?",
+        mac=mac or "?",
+    )
+
+
 @dataclass(slots=True)
 class AtvConnection:
     tv: TV
@@ -54,8 +71,10 @@ class AtvConnection:
         devices = await pyatv.scan(aio.event_loop, hosts=[tv_ips[tv]], storage=storage)
         if not devices:
             fail(f"could not connect to {tv}")
-        apple_tv = await pyatv.connect(devices[0], aio.event_loop, storage=storage)
+        device = devices[0]
+        apple_tv = await pyatv.connect(device, aio.event_loop, storage=storage)
         apple_tv.push_updater.stop()
+        log_connection_info(tv, apple_tv, device)
         self.apple_tv = apple_tv
         ms = int((time.perf_counter() - t0) * 1000)
         log(f"connected to {tv} ({ms}ms)")
