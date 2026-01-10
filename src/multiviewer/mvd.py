@@ -12,7 +12,7 @@ from . import aio, http_server, mv
 from .base import *
 
 
-async def stop_running_daemon() -> None:
+async def stop_existing_daemon() -> None:
     try:
         out = (
             subprocess.check_output(["lsof", "-ti", f"tcp:{http_server.HTTP_PORT}"])
@@ -32,7 +32,7 @@ async def become_daemon() -> None:
     RunMode.set(RunMode.Daemon)
     log("daemon starting")
     try:
-        await stop_running_daemon()
+        await stop_existing_daemon()
     except Exception as e:
         log_exc(e)
     mvd_state_path = Path("state.json").resolve()
